@@ -140,7 +140,7 @@ void PokerHand::Sort()
     return;
 
   for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
-    num_cards_with_same_rank = 0;
+    num_cards_with_same_rank = 1;
 
     for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
       if (n == m)
@@ -150,6 +150,7 @@ void PokerHand::Sort()
         num_cards_with_same_rank++;
     }
 
+    _num_cards_with_same_rank[m] = num_cards_with_same_rank;
     _sort_val[m] = _rank[m] + num_cards_with_same_rank * NUM_CARDS_IN_SUIT;
   }
 
@@ -240,35 +241,19 @@ int PokerHand::StraightFlush()
 
 int PokerHand::FourOfAKind()
 {
-  int n;
+  if (_num_cards_with_same_rank[_order[0]] == 4)
+    return 1;
 
-  for (n = 1; n < 4; n++) {
-    if (_rank[_order[n]] != _rank[_order[0]])
-      break;
-  }
-
-  if (n < 4)
-    return 0;
-
-  return 1;
+  return 0;
 }
 
 int PokerHand::FullHouse()
 {
-  int n;
+  if ((_num_cards_with_same_rank[_order[0]] == 3) &&
+      (_num_cards_with_same_rank[_order[3]] == 2))
+    return 1;
 
-  for (n = 1; n < 3; n++) {
-    if (_rank[_order[n]] != _rank[_order[0]])
-      break;
-  }
-
-  if (n < 3)
-    return 0;
-
-  if (_rank[_order[3]] != _rank[_order[4]])
-    return 0;
-
-  return 1;
+  return 0;
 }
 
 int PokerHand::Flush()
@@ -314,23 +299,16 @@ int PokerHand::Straight()
 
 int PokerHand::ThreeOfAKind()
 {
-  int n;
+  if (_num_cards_with_same_rank[_order[0]] == 3)
+    return 1;
 
-  for (n = 1; n < 3; n++) {
-    if (_rank[_order[n]] != _rank[_order[0]])
-      break;
-  }
-
-  if (n < 3)
-    return 0;
-
-  return 1;
+  return 0;
 }
 
 int PokerHand::TwoPairs()
 {
-  if ((_rank[_order[0]] == _rank[_order[1]]) &&
-      (_rank[_order[2]] == _rank[_order[3]]))
+  if ((_num_cards_with_same_rank[_order[0]] == 2) &&
+      (_num_cards_with_same_rank[_order[2]] == 2))
     return 1;
 
   return 0;
@@ -338,7 +316,7 @@ int PokerHand::TwoPairs()
 
 int PokerHand::OnePair()
 {
-  if (_rank[_order[0]] == _rank[_order[1]])
+  if (_num_cards_with_same_rank[_order[0]] == 2)
     return 1;
 
   return 0;
