@@ -17,7 +17,6 @@ PokerHand::PokerHand()
   _have_cards = 0;
   _hand_sorted = 0;
   _hand_evaluated = 0;
-  _no_wheel = 0;
 }
 
 // copy constructor
@@ -37,7 +36,6 @@ PokerHand::PokerHand(const PokerHand& hand)
   _have_cards = hand._have_cards;
   _hand_sorted = hand._hand_sorted;
   _hand_evaluated = hand._hand_evaluated;
-  _no_wheel = hand._no_wheel;
 
   _hand_type = hand._hand_type;
 }
@@ -59,7 +57,6 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _have_cards = hand._have_cards;
   _hand_sorted = hand._hand_sorted;
   _hand_evaluated = hand._hand_evaluated;
-  _no_wheel = hand._no_wheel;
 
   _hand_type = hand._hand_type;
 
@@ -90,7 +87,6 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
   _have_cards = 1;
   _hand_sorted = 0;
   _hand_evaluated = 0;
-  _no_wheel = 0;
 }
 
 void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
@@ -275,16 +271,14 @@ int PokerHand::Straight()
 {
   int n;
 
-  if (!_no_wheel) {
-    // first, handle the special case of a wheel (A, 2, 3, 4, 5)
+  // first, handle the special case of a wheel (A, 2, 3, 4, 5)
 
-    if ((_rank[_order[0]] == ACE) &&
-        (_rank[_order[1]] == FIVE) &&
-        (_rank[_order[2]] == FOUR) &&
-        (_rank[_order[3]] == THREE) &&
-        (_rank[_order[4]] == TWO))
-      return 1;
-  }
+  if ((_rank[_order[0]] == ACE) &&
+      (_rank[_order[1]] == FIVE) &&
+      (_rank[_order[2]] == FOUR) &&
+      (_rank[_order[3]] == THREE) &&
+      (_rank[_order[4]] == TWO))
+    return 1;
 
   for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
     if (_rank[_order[n-1]] != _rank[_order[n]] + 1)
@@ -320,16 +314,6 @@ int PokerHand::OnePair()
     return 1;
 
   return 0;
-}
-
-void PokerHand::SetNoWheel(int no_wheel)
-{
-  _no_wheel = no_wheel;
-}
-
-int PokerHand::GetNoWheel()
-{
-  return _no_wheel;
 }
 
 HandType PokerHand::GetHandType()
@@ -568,7 +552,7 @@ void PokerHand::print(ostream& out) const
     case 2:
       // first, handle the special case of a wheel (A, 2, 3, 4, 5)
       if (((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
-           (_hand_type == ROYAL_FLUSH)) && !_no_wheel &&
+           (_hand_type == ROYAL_FLUSH)) &&
            (_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE))
         sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
           rank_strings[ACE],
@@ -596,7 +580,6 @@ ostream& operator<<(ostream& out,const PokerHand& hand)
 BoardPokerHand::BoardPokerHand()
 {
   _have_cards = 0;
-  _no_wheel = 0;
 }
 
 // copy constructor
@@ -609,7 +592,6 @@ BoardPokerHand::BoardPokerHand(const BoardPokerHand& hand)
     _card[n] = hand._card[n];
 
   _have_cards = hand._have_cards;
-  _no_wheel = hand._no_wheel;
 }
 
 // assignment operator
@@ -622,7 +604,6 @@ BoardPokerHand& BoardPokerHand::operator=(const BoardPokerHand& hand)
     _card[n] = hand._card[n];
 
   _have_cards = hand._have_cards;
-  _no_wheel = hand._no_wheel;
 
   return *this;
 }
@@ -659,16 +640,6 @@ void BoardPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,
   _have_cards = 1;
 }
 
-void BoardPokerHand::SetNoWheel(int no_wheel)
-{
-  _no_wheel = no_wheel;
-}
-
-int BoardPokerHand::GetNoWheel()
-{
-  return _no_wheel;
-}
-
 PokerHand& BoardPokerHand::BestPokerHand()
 {
   int m;
@@ -680,74 +651,6 @@ PokerHand& BoardPokerHand::BestPokerHand()
   int ixs[NUM_CARDS_IN_HAND];
   PokerHand hand;
   int ret_compare;
-
-  hand.SetNoWheel(GetNoWheel());
-
-  for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    get_permutation_instance(&m,&n,&o,&p,&q,r,&ixs[0]);
-
-    hand.NewCards(_card[ixs[0]],_card[ixs[1]],_card[ixs[2]],
-      _card[ixs[3]],_card[ixs[4]]);
-
-    if (!r)
-      _best_poker_hand = hand;
-    else {
-      ret_compare = hand.Compare(_best_poker_hand);
-
-      if (ret_compare == 1)
-        _best_poker_hand = hand;
-    }
-  }
-
-  return _best_poker_hand;
-}
-
-PokerHand& BoardPokerHand::BestPokerHandWheel()
-{
-  int m;
-  int n;
-  int o;
-  int p;
-  int q;
-  int r;
-  int ixs[NUM_CARDS_IN_HAND];
-  PokerHand hand;
-  int ret_compare;
-
-  hand.SetNoWheel(0);
-
-  for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    get_permutation_instance(&m,&n,&o,&p,&q,r,&ixs[0]);
-
-    hand.NewCards(_card[ixs[0]],_card[ixs[1]],_card[ixs[2]],
-      _card[ixs[3]],_card[ixs[4]]);
-
-    if (!r)
-      _best_poker_hand = hand;
-    else {
-      ret_compare = hand.Compare(_best_poker_hand);
-
-      if (ret_compare == 1)
-        _best_poker_hand = hand;
-    }
-  }
-
-  return _best_poker_hand;
-}
-
-PokerHand& BoardPokerHand::BestPokerHandNoWheel()
-{
-  int m;
-  int n;
-  int o;
-  int p;
-  int q;
-  int r;
-  int ixs[NUM_CARDS_IN_HAND];
-  PokerHand hand;
-  int ret_compare;
-
-  hand.SetNoWheel(1);
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
     get_permutation_instance(&m,&n,&o,&p,&q,r,&ixs[0]);

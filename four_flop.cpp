@@ -70,9 +70,6 @@ int main(int argc,char **argv)
     return 2;
   }
 
-  for (n = 0; n < FOUR; n++)
-    board_hand[n].SetNoWheel(0);
-
   if ((fptr = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
     return 3;

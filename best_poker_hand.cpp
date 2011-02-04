@@ -12,7 +12,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: best_poker_hand (-no_wheel) filename";
+static char usage[] = "usage: best_poker_hand (-debug) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -22,7 +22,6 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   int bDebug;
-  int bNoWheel;
   int m;
   int n;
   int retval;
@@ -33,19 +32,16 @@ int main(int argc,char **argv)
   BoardPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 3)) {
     cout << usage << endl;
     return 1;
   }
 
   bDebug = FALSE;
-  bNoWheel = FALSE;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = TRUE;
-    else if (!strcmp(argv[curr_arg],"-no_wheel"))
-      bNoWheel = TRUE;
     else
       break;
   }
@@ -54,8 +50,6 @@ int main(int argc,char **argv)
     cout << usage << endl;
     return 2;
   }
-
-  board_poker_hand.SetNoWheel(bNoWheel);
 
   if ((fptr = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);

@@ -79,9 +79,6 @@ int main(int argc,char **argv)
     return 2;
   }
 
-  board_hand1.SetNoWheel(0);
-  board_hand2.SetNoWheel(0);
-
   if ((fptr = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
     return 3;

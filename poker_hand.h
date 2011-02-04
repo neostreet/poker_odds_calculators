@@ -118,8 +118,6 @@ class PokerHand {
   int ThreeOfAKind();
   int TwoPairs();
   int OnePair();
-  void SetNoWheel(int no_wheel);
-  int GetNoWheel();
 
   HandType GetHandType();
 
@@ -139,7 +137,6 @@ class PokerHand {
   int _have_cards;
   int _hand_sorted;
   int _hand_evaluated;
-  int _no_wheel;
 
   HandType _hand_type;
 };
@@ -161,12 +158,7 @@ class BoardPokerHand {
   BoardPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
 
-  void SetNoWheel(int no_wheel);
-  int GetNoWheel();
-
   PokerHand& BestPokerHand();
-  PokerHand& BestPokerHandWheel();
-  PokerHand& BestPokerHandNoWheel();
 
   void print(ostream& out) const;
 
@@ -176,7 +168,6 @@ class BoardPokerHand {
   PokerHand _best_poker_hand;
 
   int _have_cards;
-  int _no_wheel;
 };
 
 ostream& operator<<(ostream& out,const BoardPokerHand& board_hand);
