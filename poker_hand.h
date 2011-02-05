@@ -131,7 +131,6 @@ class PokerHand {
   int _suit[NUM_CARDS_IN_HAND];
   int _rank[NUM_CARDS_IN_HAND];
   int _num_cards_with_same_rank[NUM_CARDS_IN_HAND];
-  int _sort_val[NUM_CARDS_IN_HAND];
   int _order[NUM_CARDS_IN_HAND];
 
   int _have_cards;

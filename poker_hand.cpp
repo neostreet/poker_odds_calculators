@@ -29,7 +29,7 @@ PokerHand::PokerHand(const PokerHand& hand)
     _card[n] = hand._card[n];
     _suit[n] = hand._suit[n];
     _rank[n] = hand._rank[n];
-    _sort_val[n] = hand._sort_val[n];
+    _num_cards_with_same_rank[n] = hand._num_cards_with_same_rank[n];
     _order[n] = hand._order[n];
   }
 
@@ -50,7 +50,7 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
     _card[n] = hand._card[n];
     _suit[n] = hand._suit[n];
     _rank[n] = hand._rank[n];
-    _sort_val[n] = hand._sort_val[n];
+    _num_cards_with_same_rank[n] = hand._num_cards_with_same_rank[n];
     _order[n] = hand._order[n];
   }
 
@@ -147,7 +147,6 @@ void PokerHand::Sort()
     }
 
     _num_cards_with_same_rank[m] = num_cards_with_same_rank;
-    _sort_val[m] = _rank[m] + num_cards_with_same_rank * NUM_CARDS_IN_SUIT;
   }
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++)
@@ -155,10 +154,17 @@ void PokerHand::Sort()
 
   for (m = 0; m < NUM_CARDS_IN_HAND - 1; m++) {
     for (n = m + 1; n < NUM_CARDS_IN_HAND; n++) {
-      if (_sort_val[_order[m]] < _sort_val[_order[n]]) {
+      if (_num_cards_with_same_rank[_order[m]] < _num_cards_with_same_rank[_order[n]]) {
         temp = _order[m];
         _order[m] = _order[n];
         _order[n] = temp;
+      }
+      else if (_num_cards_with_same_rank[_order[m]] == _num_cards_with_same_rank[_order[n]]) {
+        if (_rank[_order[m]] < _rank[_order[n]]) {
+          temp = _order[m];
+          _order[m] = _order[n];
+          _order[n] = temp;
+        }
       }
     }
   }
