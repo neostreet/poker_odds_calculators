@@ -36,7 +36,6 @@ extern char suit_chars[];
 extern char rank_chars[];
 #endif
 
-#define NUM_CARDS_IN_POOL 7
 #define NUM_CARDS_IN_HAND 5
 
 #define POKER_7_5_PERMUTATIONS       21
@@ -51,6 +50,8 @@ extern char rank_chars[];
 #define NUM_HOLE_CARDS_IN_HOLDEM_HAND 2
 #define NUM_CARDS_IN_FLOP 3
 #define NUM_CARDS_AFTER_FLOP 2
+#define NUM_CARDS_IN_HOLDEM_POOL (NUM_HOLE_CARDS_IN_HOLDEM_HAND + NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
+#define NUM_HOLE_CARDS_IN_OMAHA_HAND 4
 #define NUM_CARDS_AFTER_TURN 2
 #define NUM_CARDS_AFTER_DEAL (NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
 
@@ -142,19 +143,19 @@ class PokerHand {
 
 ostream& operator<<(ostream& out,const PokerHand& hand);
 
-class BoardPokerHand {
+class HoldemPokerHand {
   public:
 
   // default constructor
-  BoardPokerHand();
+  HoldemPokerHand();
   // copy constructor
-  BoardPokerHand(const BoardPokerHand&);
+  HoldemPokerHand(const HoldemPokerHand&);
   // assignment operator
-  BoardPokerHand& operator=(const BoardPokerHand&);
+  HoldemPokerHand& operator=(const HoldemPokerHand&);
   // destructor
-  ~BoardPokerHand();
+  ~HoldemPokerHand();
 
-  BoardPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
+  HoldemPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
 
   PokerHand& BestPokerHand();
@@ -163,13 +164,13 @@ class BoardPokerHand {
 
   private:
 
-  int _card[NUM_CARDS_IN_POOL];
+  int _card[NUM_CARDS_IN_HOLDEM_POOL];
   PokerHand _best_poker_hand;
 
   int _have_cards;
 };
 
-ostream& operator<<(ostream& out,const BoardPokerHand& board_hand);
+ostream& operator<<(ostream& out,const HoldemPokerHand& board_hand);
 
 int card_value_from_card_string(char *card_string,int *card_value);
 int card_string_from_card_value(int card_value,char *card_string);

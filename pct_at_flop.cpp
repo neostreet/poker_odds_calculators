@@ -10,7 +10,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static void get_permutation_instance(
-  int *m,int *n,int instance_ix
+  int set_size,int subset_size,int *m,int *n,int instance_ix
 );
 
 #define NUM_PCT_AT_FLOP_CARDS 5
@@ -20,7 +20,7 @@ static void get_permutation_instance(
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: pct_at_flop (-debug) filename";
+static char usage[] = "usage: pct_at_flop (-debug) (-deep_debug) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -30,6 +30,8 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   int bDebug;
+  int deep_debug;
+  int deep_debug_counter;
   int outer_m;
   int outer_n;
   int outer_o;
@@ -45,8 +47,8 @@ int main(int argc,char **argv)
   int cards[NUM_PCT_AT_FLOP_CARDS];
   int remaining_cards1[NUM_REMAINING_CARDS1];
   int remaining_cards2[NUM_REMAINING_CARDS2];
-  BoardPokerHand board_hand1;
-  BoardPokerHand board_hand2;
+  HoldemPokerHand holdem_hand1;
+  HoldemPokerHand holdem_hand2;
   PokerHand hand1;
   PokerHand hand2;
   int ret_compare;
@@ -66,10 +68,13 @@ int main(int argc,char **argv)
   }
 
   bDebug = FALSE;
+  deep_debug = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = TRUE;
+    else if (!strncmp(argv[curr_arg],"-deep_debug",11))
+      sscanf(&argv[curr_arg][11],"%d",&deep_debug);
     else
       break;
   }
@@ -161,8 +166,12 @@ int main(int argc,char **argv)
       }
     }
 
+    deep_debug_counter = 0;
+
     for (outer_o = 0; outer_o < POKER_47_2_PERMUTATIONS; outer_o++) {
-      get_permutation_instance(&outer_m,&outer_n,outer_o);
+      get_permutation_instance(
+        NUM_REMAINING_CARDS1,NUM_HOLE_CARDS_IN_HOLDEM_HAND,
+        &outer_m,&outer_n,outer_o);
 
       q = 0;
 
@@ -173,22 +182,42 @@ int main(int argc,char **argv)
         remaining_cards2[q++] = remaining_cards1[p];
       }
 
-      for (o = 0; o < POKER_45_2_PERMUTATIONS; o++) {
-        get_permutation_instance(&m,&n,o);
+      for (o = 0; o < POKER_45_2_PERMUTATIONS; o++, deep_debug_counter++) {
+        get_permutation_instance(
+          NUM_REMAINING_CARDS2,NUM_CARDS_AFTER_FLOP,
+          &m,&n,o);
 
-        board_hand1.NewCards(cards[0],cards[1],
+        if (deep_debug > 1) {
+          if (deep_debug_counter != deep_debug)
+            continue;
+        }
+
+        holdem_hand1.NewCards(cards[0],cards[1],
           cards[2],cards[3],cards[4],
           remaining_cards2[m],remaining_cards2[n]);
 
-        board_hand2.NewCards(
+        holdem_hand2.NewCards(
           remaining_cards1[outer_m],remaining_cards1[outer_n],
           cards[2],cards[3],cards[4],
           remaining_cards2[m],remaining_cards2[n]);
 
-        hand1 = board_hand1.BestPokerHand();
-        hand2 = board_hand2.BestPokerHand();
+        hand1 = holdem_hand1.BestPokerHand();
+        hand2 = holdem_hand2.BestPokerHand();
 
         ret_compare = hand1.Compare(hand2);
+
+        if (deep_debug) {
+          cout << o << " " << deep_debug_counter << " " << endl;
+          holdem_hand1.print(cout);
+          cout << endl;
+          holdem_hand2.print(cout);
+          cout << endl;
+          hand1.print(cout);
+          cout << endl;
+          hand2.print(cout);
+          cout << endl;
+          cout << ret_compare << endl;
+        }
 
         if (ret_compare == 1) {
           wins++;
@@ -303,14 +332,14 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 }
 
 static void get_permutation_instance(
-  int *m,int *n,int instance_ix
+  int set_size,int subset_size,int *m,int *n,int instance_ix
 )
 {
   if (instance_ix)
     goto return_point;
 
-  for (*m = 0; *m < NUM_REMAINING_CARDS2 - NUM_CARDS_AFTER_FLOP + 1; (*m)++) {
-    for (*n = *m + 1; *n < NUM_REMAINING_CARDS2 - NUM_CARDS_AFTER_FLOP + 2; (*n)++) {
+  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
       return;
 
       return_point:

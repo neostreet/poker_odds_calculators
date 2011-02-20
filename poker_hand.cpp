@@ -6,6 +6,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static void get_permutation_instance(
+  int set_size,int subset_size,
   int *m,int *n,int *o,int *p,int *q,
   int instance_ix,int *ixs
 );
@@ -583,18 +584,18 @@ ostream& operator<<(ostream& out,const PokerHand& hand)
 
 // default constructor
 
-BoardPokerHand::BoardPokerHand()
+HoldemPokerHand::HoldemPokerHand()
 {
   _have_cards = 0;
 }
 
 // copy constructor
 
-BoardPokerHand::BoardPokerHand(const BoardPokerHand& hand)
+HoldemPokerHand::HoldemPokerHand(const HoldemPokerHand& hand)
 {
   int n;
 
-  for (n = 0; n < NUM_CARDS_IN_POOL; n++)
+  for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++)
     _card[n] = hand._card[n];
 
   _have_cards = hand._have_cards;
@@ -602,11 +603,11 @@ BoardPokerHand::BoardPokerHand(const BoardPokerHand& hand)
 
 // assignment operator
 
-BoardPokerHand& BoardPokerHand::operator=(const BoardPokerHand& hand)
+HoldemPokerHand& HoldemPokerHand::operator=(const HoldemPokerHand& hand)
 {
   int n;
 
-  for (n = 0; n < NUM_CARDS_IN_POOL; n++)
+  for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++)
     _card[n] = hand._card[n];
 
   _have_cards = hand._have_cards;
@@ -616,24 +617,11 @@ BoardPokerHand& BoardPokerHand::operator=(const BoardPokerHand& hand)
 
 // destructor
 
-BoardPokerHand::~BoardPokerHand()
+HoldemPokerHand::~HoldemPokerHand()
 {
 }
 
-BoardPokerHand::BoardPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
-{
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
-  _card[6] = card7 % NUM_CARDS_IN_DECK;
-
-  _have_cards = 1;
-}
-
-void BoardPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
+HoldemPokerHand::HoldemPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
 {
   _card[0] = card1 % NUM_CARDS_IN_DECK;
   _card[1] = card2 % NUM_CARDS_IN_DECK;
@@ -646,7 +634,20 @@ void BoardPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,
   _have_cards = 1;
 }
 
-PokerHand& BoardPokerHand::BestPokerHand()
+void HoldemPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
+{
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card[3] = card4 % NUM_CARDS_IN_DECK;
+  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card[5] = card6 % NUM_CARDS_IN_DECK;
+  _card[6] = card7 % NUM_CARDS_IN_DECK;
+
+  _have_cards = 1;
+}
+
+PokerHand& HoldemPokerHand::BestPokerHand()
 {
   int m;
   int n;
@@ -659,7 +660,9 @@ PokerHand& BoardPokerHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    get_permutation_instance(&m,&n,&o,&p,&q,r,&ixs[0]);
+    get_permutation_instance(
+      NUM_CARDS_IN_HOLDEM_POOL,NUM_CARDS_IN_HAND,
+      &m,&n,&o,&p,&q,r,&ixs[0]);
 
     hand.NewCards(_card[ixs[0]],_card[ixs[1]],_card[ixs[2]],
       _card[ixs[3]],_card[ixs[4]]);
@@ -677,7 +680,7 @@ PokerHand& BoardPokerHand::BestPokerHand()
   return _best_poker_hand;
 }
 
-void BoardPokerHand::print(ostream& out) const
+void HoldemPokerHand::print(ostream& out) const
 {
   int n;
   char card_string[3];
@@ -687,19 +690,17 @@ void BoardPokerHand::print(ostream& out) const
 
   card_string[2] = 0;
 
-  for (n = 0; n < NUM_CARDS_IN_POOL; n++) {
+  for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++) {
     card_string_from_card_value(_card[n],card_string);
 
     out << card_string;
 
-    if (n < NUM_CARDS_IN_POOL - 1)
+    if (n < NUM_CARDS_IN_HOLDEM_POOL - 1)
       out << " ";
-    else
-      out << endl;
   }
 }
 
-ostream& operator<<(ostream& out,const BoardPokerHand& board_hand)
+ostream& operator<<(ostream& out,const HoldemPokerHand& board_hand)
 {
   board_hand.print(out);
 
@@ -707,6 +708,7 @@ ostream& operator<<(ostream& out,const BoardPokerHand& board_hand)
 }
 
 static void get_permutation_instance(
+  int set_size,int subset_size,
   int *m,int *n,int *o,int *p,int *q,
   int instance_ix,int *ixs
 )
@@ -714,19 +716,19 @@ static void get_permutation_instance(
   if (instance_ix)
     goto return_point;
 
-  for (*m = 0; *m < NUM_CARDS_IN_POOL - NUM_CARDS_IN_HAND + 1; (*m)++) {
+  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
     ixs[0] = *m;
 
-    for (*n = *m + 1; *n < NUM_CARDS_IN_POOL - NUM_CARDS_IN_HAND + 2; (*n)++) {
+    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
       ixs[1] = *n;
 
-      for (*o = *n + 1; *o < NUM_CARDS_IN_POOL - NUM_CARDS_IN_HAND + 3; (*o)++) {
+      for (*o = *n + 1; *o < set_size - subset_size + 3; (*o)++) {
         ixs[2] = *o;
 
-        for (*p = *o + 1; *p < NUM_CARDS_IN_POOL - NUM_CARDS_IN_HAND + 4; (*p)++) {
+        for (*p = *o + 1; *p < set_size - subset_size + 4; (*p)++) {
           ixs[3] = *p;
 
-          for (*q = *p + 1; *q < NUM_CARDS_IN_POOL - NUM_CARDS_IN_HAND + 5; (*q)++) {
+          for (*q = *p + 1; *q < set_size - subset_size + 5; (*q)++) {
             ixs[4] = *q;
 
             return;
