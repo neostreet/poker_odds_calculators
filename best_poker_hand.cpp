@@ -12,7 +12,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: best_poker_hand (-debug) filename\n";
+static char usage[] = "usage: best_poker_hand filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -20,39 +20,23 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 
 int main(int argc,char **argv)
 {
-  int curr_arg;
-  int bDebug;
   int m;
   int n;
   int retval;
   FILE *fptr;
   int line_no;
   int line_len;
-  int cards[NUM_CARDS_IN_POOL];
-  BoardPokerHand board_poker_hand;
+  int cards[NUM_CARDS_IN_HOLDEM_POOL];
+  HoldemPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 2) || (argc > 3)) {
+  if (argc != 2) {
     cout << usage << endl;
     return 1;
   }
 
-  bDebug = FALSE;
-
-  for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug"))
-      bDebug = TRUE;
-    else
-      break;
-  }
-
-  if (argc - curr_arg != 1) {
-    cout << usage << endl;
-    return 2;
-  }
-
-  if ((fptr = fopen(argv[curr_arg],"r")) == NULL) {
-    printf(couldnt_open,argv[curr_arg]);
+  if ((fptr = fopen(argv[1],"r")) == NULL) {
+    printf(couldnt_open,argv[1]);
     return 3;
   }
 
@@ -80,7 +64,7 @@ int main(int argc,char **argv)
       return 4;
     }
 
-    for (n = 0; n < NUM_CARDS_IN_POOL; n++) {
+    for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++) {
       retval = card_value_from_card_string(&line[m],&cards[n]);
 
       if (retval) {
@@ -90,7 +74,7 @@ int main(int argc,char **argv)
 
       m += 2;
 
-      if (n < NUM_CARDS_IN_POOL - 1) {
+      if (n < NUM_CARDS_IN_HOLDEM_POOL - 1) {
         // skip whitespace
 
         for ( ; m < line_len; m++) {
