@@ -10,7 +10,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static void get_permutation_instance(
-  int *m,int instance_ix
+  int set_size,int subset_size,int *m,int instance_ix
 );
 
 #define TWO 2
@@ -40,7 +40,7 @@ int main(int argc,char **argv)
   int line_len;
   int cards[NUM_HEADS_UP_TURN_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
-  BoardPokerHand board_hand[TWO];
+  HoldemPokerHand holdem_hand[TWO];
   PokerHand hand[TWO];
   int ret_compare;
   int wins;
@@ -155,18 +155,20 @@ int main(int argc,char **argv)
     }
 
     for (o = 0; o < POKER_44_1_PERMUTATIONS; o++) {
-      get_permutation_instance(&m,o);
+      get_permutation_instance(
+        NUM_REMAINING_CARDS,NUM_CARDS_AFTER_TURN,
+        &m,o);
 
-      board_hand[0].NewCards(cards[0],cards[1],
+      holdem_hand[0].NewCards(cards[0],cards[1],
         cards[4],cards[5],cards[6],cards[7],
         remaining_cards[m]);
 
-      board_hand[1].NewCards(cards[2],cards[3],
+      holdem_hand[1].NewCards(cards[2],cards[3],
         cards[4],cards[5],cards[6],cards[7],
         remaining_cards[m]);
 
       for (p = 0; p < TWO; p++)
-        hand[p] = board_hand[p].BestPokerHand();
+        hand[p] = holdem_hand[p].BestPokerHand();
 
       ret_compare = hand[0].Compare(hand[1]);
 
@@ -286,13 +288,13 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 }
 
 static void get_permutation_instance(
-  int *m,int instance_ix
+  int set_size,int subset_size,int *m,int instance_ix
 )
 {
   if (instance_ix)
     goto after_return_point;
 
-  for (*m = 0; *m < NUM_REMAINING_CARDS - NUM_CARDS_AFTER_TURN + 1; (*m)++) {
+  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
     return;
 
     after_return_point:

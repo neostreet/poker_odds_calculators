@@ -714,7 +714,7 @@ static void get_permutation_instance(
 )
 {
   if (instance_ix)
-    goto return_point;
+    goto after_return_point;
 
   for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
     ixs[0] = *m;
@@ -733,7 +733,7 @@ static void get_permutation_instance(
 
             return;
 
-            return_point:
+            after_return_point:
             ;
           }
         }
