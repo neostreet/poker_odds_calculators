@@ -534,9 +534,28 @@ void PokerHand::print(ostream& out) const
   }
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    card_string_from_card_value(
-      _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
-      card_string);
+    if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
+        (_hand_type == ROYAL_FLUSH)) {
+      if (_rank[_order[0]] == ACE) {
+        if (!n) {
+          card_string_from_card_value(
+            _card[_order[0]],
+            card_string);
+        }
+        else {
+          card_string_from_card_value(
+            _card[_order[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
+            card_string);
+        }
+      }
+      else {
+        card_string_from_card_value(
+          _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
+          card_string);
+      }
+    }
+    else
+      card_string_from_card_value(_card[_order[n]],card_string);
 
     out << card_string;
 
