@@ -536,7 +536,7 @@ void PokerHand::print(ostream& out) const
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
         (_hand_type == ROYAL_FLUSH)) {
-      if (_rank[_order[0]] == ACE) {
+      if ((_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE)) {
         if (!n) {
           card_string_from_card_value(
             _card[_order[0]],
