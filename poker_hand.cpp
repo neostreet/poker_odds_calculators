@@ -8,7 +8,7 @@ using namespace std;
 static void get_permutation_instance(
   int set_size,int subset_size,
   int *m,int *n,int *o,int *p,int *q,
-  int instance_ix,int *ixs
+  int instance_ix
 );
 
 // default constructor
@@ -18,6 +18,7 @@ PokerHand::PokerHand()
   _have_cards = 0;
   _hand_sorted = 0;
   _hand_evaluated = 0;
+  _verbose = 0;
 }
 
 // copy constructor
@@ -37,6 +38,7 @@ PokerHand::PokerHand(const PokerHand& hand)
   _have_cards = hand._have_cards;
   _hand_sorted = hand._hand_sorted;
   _hand_evaluated = hand._hand_evaluated;
+  _verbose = hand._verbose;
 
   _hand_type = hand._hand_type;
 }
@@ -58,6 +60,7 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _have_cards = hand._have_cards;
   _hand_sorted = hand._hand_sorted;
   _hand_evaluated = hand._hand_evaluated;
+  _verbose = hand._verbose;
 
   _hand_type = hand._hand_type;
 
@@ -88,6 +91,7 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
   _have_cards = 1;
   _hand_sorted = 0;
   _hand_evaluated = 0;
+  _verbose = 0;
 }
 
 void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
@@ -108,6 +112,7 @@ void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
   _have_cards = 1;
   _hand_sorted = 0;
   _hand_evaluated = 0;
+  _verbose = 0;
 }
 
 int PokerHand::GetRank(int card)
@@ -533,36 +538,38 @@ void PokerHand::print(ostream& out) const
     return;
   }
 
-  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
-        (_hand_type == ROYAL_FLUSH)) {
-      if ((_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE)) {
-        if (!n) {
-          card_string_from_card_value(
-            _card[_order[0]],
-            card_string);
+  if (_verbose) {
+    for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+      if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
+          (_hand_type == ROYAL_FLUSH)) {
+        if ((_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE)) {
+          if (!n) {
+            card_string_from_card_value(
+              _card[_order[0]],
+              card_string);
+          }
+          else {
+            card_string_from_card_value(
+              _card[_order[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
+              card_string);
+          }
         }
         else {
           card_string_from_card_value(
-            _card[_order[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
+            _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
             card_string);
         }
       }
-      else {
-        card_string_from_card_value(
-          _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
-          card_string);
-      }
+      else
+        card_string_from_card_value(_card[_order[n]],card_string);
+
+      out << card_string;
+
+      if (n < NUM_CARDS_IN_HAND - 1)
+        out << " ";
+      else
+        out << endl;
     }
-    else
-      card_string_from_card_value(_card[_order[n]],card_string);
-
-    out << card_string;
-
-    if (n < NUM_CARDS_IN_HAND - 1)
-      out << " ";
-    else
-      out << endl;
   }
 
   switch (hand_types[_hand_type].num_var_info_vars) {
@@ -599,6 +606,16 @@ ostream& operator<<(ostream& out,const PokerHand& hand)
   hand.print(out);
 
   return out;
+}
+
+void PokerHand::Verbose()
+{
+  _verbose = 1;
+}
+
+void PokerHand::Terse()
+{
+  _verbose = 0;
 }
 
 // default constructor
@@ -674,17 +691,15 @@ PokerHand& HoldemPokerHand::BestPokerHand()
   int p;
   int q;
   int r;
-  int ixs[NUM_CARDS_IN_HAND];
   PokerHand hand;
   int ret_compare;
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
     get_permutation_instance(
       NUM_CARDS_IN_HOLDEM_POOL,NUM_CARDS_IN_HAND,
-      &m,&n,&o,&p,&q,r,&ixs[0]);
+      &m,&n,&o,&p,&q,r);
 
-    hand.NewCards(_card[ixs[0]],_card[ixs[1]],_card[ixs[2]],
-      _card[ixs[3]],_card[ixs[4]]);
+    hand.NewCards(_card[m],_card[n],_card[o],_card[p],_card[q]);
 
     if (!r)
       _best_poker_hand = hand;
@@ -729,27 +744,17 @@ ostream& operator<<(ostream& out,const HoldemPokerHand& board_hand)
 static void get_permutation_instance(
   int set_size,int subset_size,
   int *m,int *n,int *o,int *p,int *q,
-  int instance_ix,int *ixs
+  int instance_ix
 )
 {
   if (instance_ix)
     goto after_return_point;
 
   for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    ixs[0] = *m;
-
     for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      ixs[1] = *n;
-
       for (*o = *n + 1; *o < set_size - subset_size + 3; (*o)++) {
-        ixs[2] = *o;
-
         for (*p = *o + 1; *p < set_size - subset_size + 4; (*p)++) {
-          ixs[3] = *p;
-
           for (*q = *p + 1; *q < set_size - subset_size + 5; (*q)++) {
-            ixs[4] = *q;
-
             return;
 
             after_return_point:

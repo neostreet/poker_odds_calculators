@@ -46,6 +46,7 @@ extern char rank_chars[];
 #define POKER_47_2_PERMUTATIONS    1081
 #define POKER_52_2_PERMUTATIONS    1326
 #define POKER_48_5_PERMUTATIONS 1712304
+#define POKER_52_5_PERMUTATIONS 2598960
 
 #define NUM_HOLE_CARDS_IN_HOLDEM_HAND 2
 #define NUM_CARDS_IN_FLOP 3
@@ -125,6 +126,8 @@ class PokerHand {
   int Compare(PokerHand& compare_hand);
 
   void print(ostream& out) const;
+  void Verbose();
+  void Terse();
 
   private:
 
@@ -137,6 +140,7 @@ class PokerHand {
   int _have_cards;
   int _hand_sorted;
   int _hand_evaluated;
+  int _verbose;
 
   HandType _hand_type;
 };
