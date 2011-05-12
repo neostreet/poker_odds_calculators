@@ -10,7 +10,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static void get_permutation_instance(
-  int *m,int instance_ix
+  int set_size,int subset_size,int *m,int instance_ix
 );
 
 #define FOUR 4
@@ -40,7 +40,7 @@ int main(int argc,char **argv)
   int line_len;
   int cards[NUM_FOUR_TURN_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
-  BoardPokerHand board_hand[FOUR];
+  HoldemPokerHand board_hand[FOUR];
   PokerHand hand[FOUR];
   int ret_compare;
   int wins;
@@ -144,7 +144,9 @@ int main(int argc,char **argv)
     total = 0;
 
     for (o = 0; o < POKER_40_1_PERMUTATIONS; o++) {
-      get_permutation_instance(&m,o);
+      get_permutation_instance(
+        NUM_REMAINING_CARDS,NUM_CARDS_AFTER_TURN,
+        &m,o);
 
       board_hand[0].NewCards(cards[0],cards[1],
         cards[8],cards[9],cards[10],cards[11],
@@ -237,13 +239,13 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 }
 
 static void get_permutation_instance(
-  int *m,int instance_ix
+  int set_size,int subset_size,int *m,int instance_ix
 )
 {
   if (instance_ix)
     goto after_return_point;
 
-  for (*m = 0; *m < NUM_REMAINING_CARDS - NUM_CARDS_AFTER_TURN + 1; (*m)++) {
+  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
     return;
 
     after_return_point:
