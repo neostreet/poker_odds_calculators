@@ -40,8 +40,10 @@ extern char rank_chars[];
 
 #define POKER_7_5_PERMUTATIONS         21
 #define POKER_40_1_PERMUTATIONS        40
+#define POKER_42_1_PERMUTATIONS        42
 #define POKER_44_1_PERMUTATIONS        44
 #define POKER_41_2_PERMUTATIONS       820
+#define POKER_43_2_PERMUTATIONS       903
 #define POKER_45_2_PERMUTATIONS       990
 #define POKER_47_2_PERMUTATIONS      1081
 #define POKER_52_2_PERMUTATIONS      1326

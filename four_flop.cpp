@@ -13,7 +13,7 @@ static void get_permutation_instance(
   int set_size,int subset_size,int *m,int *n,int instance_ix
 );
 
-#define FOUR 4
+#define NUM_PLAYERS 4
 #define NUM_FOUR_FLOP_CARDS 11
 #define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_FOUR_FLOP_CARDS)
 
@@ -40,8 +40,8 @@ int main(int argc,char **argv)
   int line_len;
   int cards[NUM_FOUR_FLOP_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
-  HoldemPokerHand board_hand[FOUR];
-  PokerHand hand[FOUR];
+  HoldemPokerHand board_hand[NUM_PLAYERS];
+  PokerHand hand[NUM_PLAYERS];
   int ret_compare;
   int wins;
   int losses;
@@ -164,13 +164,13 @@ int main(int argc,char **argv)
         cards[8],cards[9],cards[10],
         remaining_cards[m],remaining_cards[n]);
 
-      for (p = 0; p < FOUR; p++)
+      for (p = 0; p < NUM_PLAYERS; p++)
         hand[p] = board_hand[p].BestPokerHand();
 
       work_wins = 0;
       work_losses = 0;
 
-      for (p = 0; p < FOUR - 1; p++) {
+      for (p = 0; p < NUM_PLAYERS - 1; p++) {
         ret_compare = hand[0].Compare(hand[1+p]);
 
         if (ret_compare == 1)
@@ -179,7 +179,7 @@ int main(int argc,char **argv)
           work_losses++;
       }
 
-      if (work_wins == FOUR - 1)
+      if (work_wins == NUM_PLAYERS - 1)
         wins++;
       else if (work_losses)
         losses++;

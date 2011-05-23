@@ -10,17 +10,17 @@ using namespace std;
 #include "poker_hand.h"
 
 static void get_permutation_instance(
-  int set_size,int subset_size,int *m,int instance_ix
+  int set_size,int subset_size,int *m,int *n,int instance_ix
 );
 
-#define NUM_PLAYERS 4
-#define NUM_FOUR_TURN_CARDS 12
-#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_FOUR_TURN_CARDS)
+#define NUM_PLAYERS 3
+#define NUM_THREE_FLOP_CARDS 9
+#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_THREE_FLOP_CARDS)
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: four_turn (-debug) filename";
+static char usage[] = "usage: three_flop (-debug) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -38,7 +38,7 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_no;
   int line_len;
-  int cards[NUM_FOUR_TURN_CARDS];
+  int cards[NUM_THREE_FLOP_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
   HoldemPokerHand board_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
@@ -101,7 +101,7 @@ int main(int argc,char **argv)
       return 4;
     }
 
-    for (n = 0; n < NUM_FOUR_TURN_CARDS; n++) {
+    for (n = 0; n < NUM_THREE_FLOP_CARDS; n++) {
       retval = card_value_from_card_string(&line[m],&cards[n]);
 
       if (retval) {
@@ -111,7 +111,7 @@ int main(int argc,char **argv)
 
       m += 2;
 
-      if (n < NUM_FOUR_TURN_CARDS - 1) {
+      if (n < NUM_THREE_FLOP_CARDS - 1) {
         // skip whitespace
 
         for ( ; m < line_len; m++) {
@@ -129,12 +129,12 @@ int main(int argc,char **argv)
     m = 0;
 
     for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
-      for (o = 0; o < NUM_FOUR_TURN_CARDS; o++) {
+      for (o = 0; o < NUM_THREE_FLOP_CARDS; o++) {
         if (n == cards[o])
           break;
       }
 
-      if (o == NUM_FOUR_TURN_CARDS)
+      if (o == NUM_THREE_FLOP_CARDS)
         remaining_cards[m++] = n;
     }
 
@@ -143,26 +143,22 @@ int main(int argc,char **argv)
     ties = 0;
     total = 0;
 
-    for (o = 0; o < POKER_40_1_PERMUTATIONS; o++) {
+    for (o = 0; o < POKER_43_2_PERMUTATIONS; o++) {
       get_permutation_instance(
-        NUM_REMAINING_CARDS,NUM_CARDS_AFTER_TURN,
-        &m,o);
+        NUM_REMAINING_CARDS,NUM_CARDS_AFTER_FLOP,
+        &m,&n,o);
 
       board_hand[0].NewCards(cards[0],cards[1],
-        cards[8],cards[9],cards[10],cards[11],
-        remaining_cards[m]);
+        cards[6],cards[7],cards[8],
+        remaining_cards[m],remaining_cards[n]);
 
       board_hand[1].NewCards(cards[2],cards[3],
-        cards[8],cards[9],cards[10],cards[11],
-        remaining_cards[m]);
+        cards[6],cards[7],cards[8],
+        remaining_cards[m],remaining_cards[n]);
 
       board_hand[2].NewCards(cards[4],cards[5],
-        cards[8],cards[9],cards[10],cards[11],
-        remaining_cards[m]);
-
-      board_hand[3].NewCards(cards[6],cards[7],
-        cards[8],cards[9],cards[10],cards[11],
-        remaining_cards[m]);
+        cards[6],cards[7],cards[8],
+        remaining_cards[m],remaining_cards[n]);
 
       for (p = 0; p < NUM_PLAYERS; p++)
         hand[p] = board_hand[p].BestPokerHand();
@@ -239,16 +235,18 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 }
 
 static void get_permutation_instance(
-  int set_size,int subset_size,int *m,int instance_ix
+  int set_size,int subset_size,int *m,int *n,int instance_ix
 )
 {
   if (instance_ix)
     goto after_return_point;
 
   for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    return;
+    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
+      return;
 
-    after_return_point:
-    ;
+      after_return_point:
+      ;
+    }
   }
 }
