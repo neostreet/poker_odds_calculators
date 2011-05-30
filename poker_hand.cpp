@@ -734,9 +734,9 @@ void HoldemPokerHand::print(ostream& out) const
   }
 }
 
-ostream& operator<<(ostream& out,const HoldemPokerHand& board_hand)
+ostream& operator<<(ostream& out,const HoldemPokerHand& holdem_hand)
 {
-  board_hand.print(out);
+  holdem_hand.print(out);
 
   return out;
 }

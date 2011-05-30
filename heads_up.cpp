@@ -13,6 +13,7 @@ static void get_permutation_instance(
   int set_size,int subset_size,int *m,int *n,int *o,int *p,int *q,int instance_ix
 );
 
+#define NUM_PLAYERS 2
 #define NUM_HEADS_UP_CARDS 4
 #define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_CARDS)
 
@@ -41,10 +42,8 @@ int main(int argc,char **argv)
   int line_len;
   int cards[NUM_HEADS_UP_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
-  HoldemPokerHand holdem_hand1;
-  HoldemPokerHand holdem_hand2;
-  PokerHand hand1;
-  PokerHand hand2;
+  HoldemPokerHand holdem_hand[NUM_PLAYERS];
+  PokerHand hand[NUM_PLAYERS];
   int ret_compare;
   int wins;
   int losses;
@@ -160,38 +159,38 @@ int main(int argc,char **argv)
     for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
       get_permutation_instance(NUM_REMAINING_CARDS,NUM_CARDS_AFTER_DEAL,&m,&n,&o,&p,&q,r);
 
-      holdem_hand1.NewCards(cards[0],cards[1],
+      holdem_hand[0].NewCards(cards[0],cards[1],
         remaining_cards[m],remaining_cards[n],
         remaining_cards[o],remaining_cards[p],
         remaining_cards[q]);
 
-      holdem_hand2.NewCards(cards[2],cards[3],
+      holdem_hand[1].NewCards(cards[2],cards[3],
         remaining_cards[m],remaining_cards[n],
         remaining_cards[o],remaining_cards[p],
         remaining_cards[q]);
 
-      hand1 = holdem_hand1.BestPokerHand();
-      hand2 = holdem_hand2.BestPokerHand();
+      hand[0] = holdem_hand[0].BestPokerHand();
+      hand[1] = holdem_hand[1].BestPokerHand();
 
-      ret_compare = hand1.Compare(hand2);
+      ret_compare = hand[0].Compare(hand[1]);
 
       if (ret_compare == 1) {
         wins++;
 
         if (bDebug)
-          hand1_winning_hand_counts[hand1.GetHandType()]++;
+          hand1_winning_hand_counts[hand[0].GetHandType()]++;
       }
       else if (ret_compare == -1) {
         losses++;
 
         if (bDebug)
-          hand2_winning_hand_counts[hand2.GetHandType()]++;
+          hand2_winning_hand_counts[hand[1].GetHandType()]++;
       }
       else {
         ties++;
 
         if (bDebug)
-          tie_hand_counts[hand1.GetHandType()]++;
+          tie_hand_counts[hand[0].GetHandType()]++;
       }
 
       total++;

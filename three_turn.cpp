@@ -40,7 +40,7 @@ int main(int argc,char **argv)
   int line_len;
   int cards[NUM_THREE_TURN_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
-  HoldemPokerHand board_hand[NUM_PLAYERS];
+  HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
   int ret_compare;
   int wins;
@@ -148,20 +148,20 @@ int main(int argc,char **argv)
         NUM_REMAINING_CARDS,NUM_CARDS_AFTER_TURN,
         &m,o);
 
-      board_hand[0].NewCards(cards[0],cards[1],
+      holdem_hand[0].NewCards(cards[0],cards[1],
         cards[6],cards[7],cards[8],cards[9],
         remaining_cards[m]);
 
-      board_hand[1].NewCards(cards[2],cards[3],
+      holdem_hand[1].NewCards(cards[2],cards[3],
         cards[6],cards[7],cards[8],cards[9],
         remaining_cards[m]);
 
-      board_hand[2].NewCards(cards[4],cards[5],
+      holdem_hand[2].NewCards(cards[4],cards[5],
         cards[6],cards[7],cards[8],cards[9],
         remaining_cards[m]);
 
       for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = board_hand[p].BestPokerHand();
+        hand[p] = holdem_hand[p].BestPokerHand();
 
       work_wins = 0;
       work_losses = 0;
