@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 using namespace std;
 
 #define MAIN_MODULE
@@ -23,6 +24,10 @@ int main(int argc,char **argv)
   PokerHand hand;
   int hand_counts[NUM_HAND_TYPES];
   double pct;
+  time_t start_time;
+  time_t end_time;
+
+  time(&start_time);
 
   for (n = 0; n < NUM_HAND_TYPES; n++)
     hand_counts[n] = 0;
@@ -37,6 +42,8 @@ int main(int argc,char **argv)
     hand_counts[hand.GetHandType()]++;
   }
 
+  time(&end_time);
+
   for (n = NUM_HAND_TYPES - 1; (n >= 0); n--) {
     pct = (double)hand_counts[n] / (double)POKER_52_5_PERMUTATIONS;
     printf("%s %7d %9.6lf\n",hand_type_abbrevs[n],hand_counts[n],pct);
@@ -44,6 +51,8 @@ int main(int argc,char **argv)
 
   printf("==========\n");
   printf("   %7d\n",POKER_52_5_PERMUTATIONS);
+
+  printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
   return 0;
 }
