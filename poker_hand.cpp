@@ -225,6 +225,11 @@ HandType PokerHand::Evaluate()
   return _hand_type;
 }
 
+int PokerHand::Evaluated()
+{
+  return _hand_evaluated;
+}
+
 int PokerHand::RoyalFlush()
 {
   if (!StraightFlush())
@@ -346,8 +351,15 @@ int PokerHand::Compare(PokerHand& compare_hand)
 
   num_comparisons++;
 
-  hand_type = Evaluate();
-  compare_hand_type = compare_hand.Evaluate();
+  if (!_hand_evaluated)
+    hand_type = Evaluate();
+  else
+    hand_type = _hand_type;
+
+  if (!compare_hand.Evaluated())
+    compare_hand_type = compare_hand.Evaluate();
+  else
+    compare_hand_type = compare_hand.GetHandType();
 
   if (hand_type > compare_hand_type)
     return 1;

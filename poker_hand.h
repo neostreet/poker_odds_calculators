@@ -116,6 +116,7 @@ class PokerHand {
   int GetRank(int card);
   void Sort();
   HandType Evaluate();
+  int Evaluated();
   int RoyalFlush();
   int StraightFlush();
   int FourOfAKind();
