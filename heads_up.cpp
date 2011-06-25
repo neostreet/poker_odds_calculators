@@ -177,7 +177,7 @@ int main(int argc,char **argv)
       hand[0] = holdem_hand[0].BestPokerHand();
       hand[1] = holdem_hand[1].BestPokerHand();
 
-      ret_compare = hand[0].Compare(hand[1]);
+      ret_compare = hand[0].Compare(hand[1],0);
 
       if (ret_compare == 1) {
         wins++;
@@ -257,9 +257,12 @@ int main(int argc,char **argv)
         }
       }
 
-      printf("  num_evaluations        %10d\n",num_evaluations);
-      printf("  num_unique_evaluations %10d\n",num_unique_evaluations);
-      printf("  num_comparisons        %10d\n",num_comparisons);
+      printf("  num_evaluations                        %10d\n",num_evaluations);
+      printf("  num_unique_evaluations                 %10d\n",num_unique_evaluations);
+      printf("  num_comparisons                        %10d\n",num_comparisons);
+      printf("  num_holdem_best_poker_hand_comparisons %10d\n",num_holdem_best_poker_hand_comparisons);
+      printf("  total_comparisons                      %10d\n",
+        num_comparisons + num_holdem_best_poker_hand_comparisons);
     }
   }
 

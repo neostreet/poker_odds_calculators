@@ -91,11 +91,13 @@ char *hand_type_abbrevs[] = {
 int num_evaluations;
 int num_unique_evaluations;
 int num_comparisons;
+int num_holdem_best_poker_hand_comparisons;
 #else
 extern char *hand_type_abbrevs[];
 extern int num_evaluations;
 extern int num_unique_evaluations;
 extern int num_comparisons;
+extern int num_holdem_best_poker_hand_comparisons;
 #endif
 
 class PokerHand {
@@ -129,7 +131,7 @@ class PokerHand {
 
   HandType GetHandType();
 
-  int Compare(PokerHand& compare_hand);
+  int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
 
   void print(ostream& out) const;
   void Verbose();

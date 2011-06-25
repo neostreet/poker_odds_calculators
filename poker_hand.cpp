@@ -341,7 +341,7 @@ HandType PokerHand::GetHandType()
   return _hand_type;
 }
 
-int PokerHand::Compare(PokerHand& compare_hand)
+int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
 {
   int n;
   HandType hand_type;
@@ -349,7 +349,10 @@ int PokerHand::Compare(PokerHand& compare_hand)
   int rank;
   int compare_rank;
 
-  num_comparisons++;
+  if (!in_holdem_best_poker_hand)
+    num_comparisons++;
+  else
+    num_holdem_best_poker_hand_comparisons++;
 
   if (!_hand_evaluated)
     hand_type = Evaluate();
@@ -716,7 +719,7 @@ PokerHand& HoldemPokerHand::BestPokerHand()
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.Compare(_best_poker_hand);
+      ret_compare = hand.Compare(_best_poker_hand,1);
 
       if (ret_compare == 1)
         _best_poker_hand = hand;
