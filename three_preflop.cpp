@@ -180,8 +180,10 @@ int main(int argc,char **argv)
 
         if (ret_compare == 1)
           work_wins++;
-        else if (ret_compare == -1)
+        else if (ret_compare == -1) {
           work_losses++;
+          break;
+        }
       }
 
       if (work_wins == NUM_PLAYERS - 1)
