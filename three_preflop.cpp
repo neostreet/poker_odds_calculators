@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 using namespace std;
 
 #define FALSE 0
@@ -53,6 +54,8 @@ int main(int argc,char **argv)
   double pct;
   int work_wins;
   int work_losses;
+  time_t start_time;
+  time_t end_time;
 
   if ((argc < 2) || (argc > 3)) {
     cout << usage << endl;
@@ -77,6 +80,8 @@ int main(int argc,char **argv)
     printf(couldnt_open,argv[curr_arg]);
     return 3;
   }
+
+  time(&start_time);
 
   line_no = 0;
 
@@ -171,7 +176,7 @@ int main(int argc,char **argv)
       work_losses = 0;
 
       for (s = 0; s < NUM_PLAYERS - 1; s++) {
-        ret_compare = hand[0].Compare(hand[1+s]);
+        ret_compare = hand[0].Compare(hand[1+s],0);
 
         if (ret_compare == 1)
           work_wins++;
@@ -208,6 +213,9 @@ int main(int argc,char **argv)
   }
 
   fclose(fptr);
+  time(&end_time);
+
+  printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
   return 0;
 }
