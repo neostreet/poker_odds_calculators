@@ -14,14 +14,14 @@ static void get_permutation_instance(
   int set_size,int subset_size,int *m,int *n,int *o,int *p,int *q,int instance_ix
 );
 
-#define NUM_PLAYERS 2
+#define NUM_PLAYERS 4
 #define NUM_PREFLOP_CARDS (NUM_PLAYERS * NUM_HOLE_CARDS_IN_HOLDEM_HAND)
 #define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_PREFLOP_CARDS)
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: heads_up (-debug) filename";
+static char usage[] = "usage: four_preflop (-debug) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -37,6 +37,7 @@ int main(int argc,char **argv)
   int p;
   int q;
   int r;
+  int s;
   int retval;
   FILE *fptr;
   int line_no;
@@ -51,10 +52,8 @@ int main(int argc,char **argv)
   int ties;
   int total;
   double pct;
-  int hand1_winning_hand_counts[NUM_HAND_TYPES];
-  int hand2_winning_hand_counts[NUM_HAND_TYPES];
-  int tie_hand_counts[NUM_HAND_TYPES];
-  int total_hand_counts[NUM_HAND_TYPES];
+  int work_wins;
+  int work_losses;
   time_t start_time;
   time_t end_time;
 
@@ -152,16 +151,7 @@ int main(int argc,char **argv)
     ties = 0;
     total = 0;
 
-    if (bDebug) {
-      for (o = 0; o < NUM_HAND_TYPES; o++) {
-        hand1_winning_hand_counts[o] = 0;
-        hand2_winning_hand_counts[o] = 0;
-        tie_hand_counts[o] = 0;
-        total_hand_counts[o] = 0;
-      }
-    }
-
-    for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
+    for (r = 0; r < POKER_44_5_PERMUTATIONS; r++) {
       get_permutation_instance(NUM_REMAINING_CARDS,NUM_CARDS_AFTER_DEAL,&m,&n,&o,&p,&q,r);
 
       holdem_hand[0].NewCards(cards[0],cards[1],
@@ -174,29 +164,39 @@ int main(int argc,char **argv)
         remaining_cards[o],remaining_cards[p],
         remaining_cards[q]);
 
-      hand[0] = holdem_hand[0].BestPokerHand();
-      hand[1] = holdem_hand[1].BestPokerHand();
+      holdem_hand[2].NewCards(cards[4],cards[5],
+        remaining_cards[m],remaining_cards[n],
+        remaining_cards[o],remaining_cards[p],
+        remaining_cards[q]);
 
-      ret_compare = hand[0].Compare(hand[1],0);
+      holdem_hand[3].NewCards(cards[6],cards[7],
+        remaining_cards[m],remaining_cards[n],
+        remaining_cards[o],remaining_cards[p],
+        remaining_cards[q]);
 
-      if (ret_compare == 1) {
+      for (s = 0; s < NUM_PLAYERS; s++)
+        hand[s] = holdem_hand[s].BestPokerHand();
+
+      work_wins = 0;
+      work_losses = 0;
+
+      for (s = 0; s < NUM_PLAYERS - 1; s++) {
+        ret_compare = hand[0].Compare(hand[1+s],0);
+
+        if (ret_compare == 1)
+          work_wins++;
+        else if (ret_compare == -1) {
+          work_losses++;
+          break;
+        }
+      }
+
+      if (work_wins == NUM_PLAYERS - 1)
         wins++;
-
-        if (bDebug)
-          hand1_winning_hand_counts[hand[0].GetHandType()]++;
-      }
-      else if (ret_compare == -1) {
+      else if (work_losses)
         losses++;
-
-        if (bDebug)
-          hand2_winning_hand_counts[hand[1].GetHandType()]++;
-      }
-      else {
+      else
         ties++;
-
-        if (bDebug)
-          tie_hand_counts[hand[0].GetHandType()]++;
-      }
 
       total++;
     }
@@ -204,65 +204,18 @@ int main(int argc,char **argv)
     pct = (double)wins * (double)100 / (double)total;
     printf("  wins      %7d (%5.2lf)\n",wins,pct);
 
-    if (bDebug) {
-      for (o = 0; o < NUM_HAND_TYPES; o++) {
-        if (hand1_winning_hand_counts[o]) {
-          printf("    %s      %7d\n",
-            hand_type_abbrevs[o],
-            hand1_winning_hand_counts[o]);
-
-          total_hand_counts[o] += hand1_winning_hand_counts[o];
-        }
-      }
-    }
-
     pct = (double)losses * (double)100 / (double)total;
     printf("  losses    %7d (%5.2lf)\n",losses,pct);
-
-    if (bDebug) {
-      for (o = 0; o < NUM_HAND_TYPES; o++) {
-        if (hand2_winning_hand_counts[o]) {
-          printf("    %s      %7d\n",
-            hand_type_abbrevs[o],
-            hand2_winning_hand_counts[o]);
-
-          total_hand_counts[o] += hand2_winning_hand_counts[o];
-        }
-      }
-    }
 
     pct = (double)ties * (double)100 / (double)total;
     printf("  ties      %7d (%5.2lf)\n",ties,pct);
 
-    if (bDebug) {
-      for (o = 0; o < NUM_HAND_TYPES; o++) {
-        if (tie_hand_counts[o]) {
-          printf("    %s      %7d\n",
-            hand_type_abbrevs[o],
-            tie_hand_counts[o]);
-
-          total_hand_counts[o] += tie_hand_counts[o];
-        }
-      }
-    }
-
     printf("  total     %7d\n",total);
 
     if (bDebug) {
-      for (o = 0; o < NUM_HAND_TYPES; o++) {
-        if (total_hand_counts[o]) {
-          printf("    %s      %7d\n",
-            hand_type_abbrevs[o],
-            total_hand_counts[o]);
-        }
-      }
-
-      printf("  num_evaluations                        %10d\n",num_evaluations);
-      printf("  num_unique_evaluations                 %10d\n",num_unique_evaluations);
-      printf("  num_comparisons                        %10d\n",num_comparisons);
-      printf("  num_holdem_best_poker_hand_comparisons %10d\n",num_holdem_best_poker_hand_comparisons);
-      printf("  total_comparisons                      %10d\n",
-        num_comparisons + num_holdem_best_poker_hand_comparisons);
+      printf("  num_evaluations        %10d\n",num_evaluations);
+      printf("  num_unique_evaluations %10d\n",num_unique_evaluations);
+      printf("  num_comparisons        %10d\n",num_comparisons);
     }
   }
 

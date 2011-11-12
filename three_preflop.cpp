@@ -15,8 +15,8 @@ static void get_permutation_instance(
 );
 
 #define NUM_PLAYERS 3
-#define NUM_THREE_PREFLOP_CARDS 6
-#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_THREE_PREFLOP_CARDS)
+#define NUM_PREFLOP_CARDS (NUM_PLAYERS * NUM_HOLE_CARDS_IN_HOLDEM_HAND)
+#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_PREFLOP_CARDS)
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
@@ -42,7 +42,7 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_no;
   int line_len;
-  int cards[NUM_THREE_PREFLOP_CARDS];
+  int cards[NUM_PREFLOP_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
@@ -109,7 +109,7 @@ int main(int argc,char **argv)
       return 4;
     }
 
-    for (n = 0; n < NUM_THREE_PREFLOP_CARDS; n++) {
+    for (n = 0; n < NUM_PREFLOP_CARDS; n++) {
       retval = card_value_from_card_string(&line[m],&cards[n]);
 
       if (retval) {
@@ -119,7 +119,7 @@ int main(int argc,char **argv)
 
       m += 2;
 
-      if (n < NUM_THREE_PREFLOP_CARDS - 1) {
+      if (n < NUM_PREFLOP_CARDS - 1) {
         // skip whitespace
 
         for ( ; m < line_len; m++) {
@@ -137,12 +137,12 @@ int main(int argc,char **argv)
     m = 0;
 
     for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
-      for (o = 0; o < NUM_THREE_PREFLOP_CARDS; o++) {
+      for (o = 0; o < NUM_PREFLOP_CARDS; o++) {
         if (n == cards[o])
           break;
       }
 
-      if (o == NUM_THREE_PREFLOP_CARDS)
+      if (o == NUM_PREFLOP_CARDS)
         remaining_cards[m++] = n;
     }
 
