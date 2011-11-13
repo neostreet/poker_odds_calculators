@@ -756,6 +756,290 @@ ostream& operator<<(ostream& out,const HoldemPokerHand& holdem_hand)
   return out;
 }
 
+// default constructor
+
+Flop::Flop()
+{
+  _have_cards = 0;
+  _flop_sorted = 0;
+  _flop_evaluated = 0;
+  _verbose = 0;
+}
+
+// copy constructor
+
+Flop::Flop(const Flop& flop)
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
+    _card[n] = flop._card[n];
+    _suit[n] = flop._suit[n];
+    _rank[n] = flop._rank[n];
+    _num_cards_with_same_rank[n] = flop._num_cards_with_same_rank[n];
+    _order[n] = flop._order[n];
+  }
+
+  _have_cards = flop._have_cards;
+  _flop_sorted = flop._flop_sorted;
+  _flop_evaluated = flop._flop_evaluated;
+  _verbose = flop._verbose;
+
+  _flop_type = flop._flop_type;
+}
+
+// assignment operator
+
+Flop& Flop::operator=(const Flop& flop)
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
+    _card[n] = flop._card[n];
+    _suit[n] = flop._suit[n];
+    _rank[n] = flop._rank[n];
+    _num_cards_with_same_rank[n] = flop._num_cards_with_same_rank[n];
+    _order[n] = flop._order[n];
+  }
+
+  _have_cards = flop._have_cards;
+  _flop_sorted = flop._flop_sorted;
+  _flop_evaluated = flop._flop_evaluated;
+  _verbose = flop._verbose;
+
+  _flop_type = flop._flop_type;
+
+  return *this;
+}
+
+// destructor
+
+Flop::~Flop()
+{
+}
+
+Flop::Flop(int card1,int card2,int card3)
+{
+  int n;
+
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+
+  for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
+    _suit[n] = suit_of(_card[n]);
+    _rank[n] = rank_of(_card[n]);
+  }
+
+  _have_cards = 1;
+  _flop_sorted = 0;
+  _flop_evaluated = 0;
+  _verbose = 0;
+}
+
+void Flop::NewCards(int card1,int card2,int card3)
+{
+  int n;
+
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+
+  for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
+    _suit[n] = suit_of(_card[n]);
+    _rank[n] = rank_of(_card[n]);
+  }
+
+  _have_cards = 1;
+  _flop_sorted = 0;
+  _flop_evaluated = 0;
+  _verbose = 0;
+}
+
+int Flop::GetRank(int card)
+{
+  if (!_have_cards)
+    return -1;
+
+  if (!_flop_sorted) {
+    Sort();
+    _flop_evaluated = 0;
+  }
+
+  return _rank[_order[card]];
+}
+
+void Flop::Sort()
+{
+  int m;
+  int n;
+  int num_cards_with_same_rank;
+  int temp;
+
+  if (!_have_cards)
+    return;
+
+  if (_flop_sorted)
+    return;
+
+  for (m = 0; m < NUM_CARDS_IN_FLOP; m++) {
+    num_cards_with_same_rank = 1;
+
+    for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
+      if (n == m)
+        continue;
+
+      if (_rank[m] == _rank[n])
+        num_cards_with_same_rank++;
+    }
+
+    _num_cards_with_same_rank[m] = num_cards_with_same_rank;
+  }
+
+  for (n = 0; n < NUM_CARDS_IN_FLOP; n++)
+    _order[n] = n;
+
+  for (m = 0; m < NUM_CARDS_IN_FLOP - 1; m++) {
+    for (n = m + 1; n < NUM_CARDS_IN_FLOP; n++) {
+      if (_num_cards_with_same_rank[_order[m]] < _num_cards_with_same_rank[_order[n]]) {
+        temp = _order[m];
+        _order[m] = _order[n];
+        _order[n] = temp;
+      }
+      else if (_num_cards_with_same_rank[_order[m]] == _num_cards_with_same_rank[_order[n]]) {
+        if (_rank[_order[m]] < _rank[_order[n]]) {
+          temp = _order[m];
+          _order[m] = _order[n];
+          _order[n] = temp;
+        }
+      }
+    }
+  }
+
+  _flop_sorted = 1;
+}
+
+FlopType Flop::Evaluate()
+{
+  num_evaluations++;
+
+  if (!_have_cards)
+    return DRY;
+
+  if (!_flop_sorted) {
+    Sort();
+
+    if (!_flop_sorted)
+      return DRY;
+
+    _flop_evaluated = 0;
+  }
+
+  if (_flop_evaluated)
+    return _flop_type;
+
+  num_unique_evaluations++;
+
+  if (Flush() || Straight() || PairOrBetter())
+    _flop_type = WET;
+  else
+    _flop_type = DRY;
+
+  _flop_evaluated = 1;
+
+  return _flop_type;
+}
+
+int Flop::Evaluated()
+{
+  return _flop_evaluated;
+}
+
+int Flop::Flush()
+{
+  int n;
+
+  for (n = 1; n < NUM_CARDS_IN_FLOP; n++) {
+    if (_suit[_order[n]] != _suit[_order[0]])
+      break;
+  }
+
+  if (n < NUM_CARDS_IN_FLOP)
+    return 0;
+
+  return 1;
+}
+
+int Flop::Straight()
+{
+  if (PairOrBetter())
+    return 0;
+
+  if (GetRank(0) - GetRank(2) <= 4)
+    return 1;
+
+  return 0;
+}
+
+int Flop::PairOrBetter()
+{
+  if (_num_cards_with_same_rank[_order[0]] >= 2)
+    return 1;
+
+  return 0;
+}
+
+FlopType Flop::GetFlopType()
+{
+  if (!_flop_evaluated)
+    Evaluate();
+
+  return _flop_type;
+}
+
+void Flop::print(ostream& out) const
+{
+  int n;
+  char card_string[3];
+
+  if (!_have_cards)
+    return;
+
+  card_string[2] = 0;
+
+  //if (!_flop_evaluated) {
+    for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
+      card_string_from_card_value(_card[n],card_string);
+
+      out << card_string;
+
+      if (n < NUM_CARDS_IN_FLOP - 1)
+        out << " ";
+    }
+
+    return;
+  //}
+
+  //out << print_buf;
+}
+
+ostream& operator<<(ostream& out,const Flop& flop)
+{
+  flop.print(out);
+
+  return out;
+}
+
+void Flop::Verbose()
+{
+  _verbose = 1;
+}
+
+void Flop::Terse()
+{
+  _verbose = 0;
+}
+
 static void get_permutation_instance(
   int set_size,int subset_size,
   int *m,int *n,int *o,int *p,int *q,
