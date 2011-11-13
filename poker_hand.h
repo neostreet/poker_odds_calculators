@@ -128,7 +128,7 @@ class PokerHand {
   PokerHand(int card1,int card2,int card3,int card4, int card5);
   void NewCards(int card1,int card2,int card3,int card4, int card5);
 
-  int GetRank(int card);
+  int GetRank(int card_ix);
   void Sort();
   HandType Evaluate();
   int Evaluated();
@@ -212,7 +212,8 @@ class Flop {
   Flop(int card1,int card2,int card3);
   void NewCards(int card1,int card2,int card3);
 
-  int GetRank(int card);
+  int GetCard(int card_ix);
+  int GetRank(int card_ix);
   void Sort();
   FlopType Evaluate();
   int Evaluated();

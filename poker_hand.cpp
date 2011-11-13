@@ -115,7 +115,7 @@ void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
   _verbose = 0;
 }
 
-int PokerHand::GetRank(int card)
+int PokerHand::GetRank(int card_ix)
 {
   if (!_have_cards)
     return -1;
@@ -125,7 +125,7 @@ int PokerHand::GetRank(int card)
     _hand_evaluated = 0;
   }
 
-  return _rank[_order[card]];
+  return _rank[_order[card_ix]];
 }
 
 void PokerHand::Sort()
@@ -856,7 +856,12 @@ void Flop::NewCards(int card1,int card2,int card3)
   _verbose = 0;
 }
 
-int Flop::GetRank(int card)
+int Flop::GetCard(int card_ix)
+{
+  return _card[card_ix];
+}
+
+int Flop::GetRank(int card_ix)
 {
   if (!_have_cards)
     return -1;
@@ -866,7 +871,7 @@ int Flop::GetRank(int card)
     _flop_evaluated = 0;
   }
 
-  return _rank[_order[card]];
+  return _rank[_order[card_ix]];
 }
 
 void Flop::Sort()
@@ -974,6 +979,13 @@ int Flop::Straight()
 {
   if (PairOrBetter())
     return 0;
+
+  // handle wheel case
+
+  if (GetRank(0) == ACE) {
+    if (GetRank(1) <= FIVE)
+      return 1;
+  }
 
   if (GetRank(0) - GetRank(2) <= 4)
     return 1;
