@@ -9,8 +9,6 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-using namespace std;
-
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
