@@ -170,7 +170,7 @@ int main(int argc,char **argv)
       for (p = 0; p < TWO; p++)
         hand[p] = holdem_hand[p].BestPokerHand();
 
-      ret_compare = hand[0].Compare(hand[1]);
+      ret_compare = hand[0].Compare(hand[1],0);
 
       if (ret_compare == 1) {
         wins++;
