@@ -204,7 +204,7 @@ int main(int argc,char **argv)
         hand1 = holdem_hand1.BestPokerHand();
         hand2 = holdem_hand2.BestPokerHand();
 
-        ret_compare = hand1.Compare(hand2);
+        ret_compare = hand1.Compare(hand2,0);
 
         if (deep_debug) {
           cout << o << " " << deep_debug_counter << " " << endl;
