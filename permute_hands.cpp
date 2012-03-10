@@ -46,11 +46,11 @@ int main(int argc,char **argv)
 
   for (n = NUM_HAND_TYPES - 1; (n >= 0); n--) {
     pct = (double)hand_counts[n] / (double)POKER_52_5_PERMUTATIONS;
-    printf("%s %7d %9.6lf\n",hand_type_abbrevs[n],hand_counts[n],pct);
+    printf("%s %9d %9.6lf\n",hand_type_abbrevs[n],hand_counts[n],pct);
   }
 
   printf("==========\n");
-  printf("   %7d\n",POKER_52_5_PERMUTATIONS);
+  printf("   %9d\n",POKER_52_5_PERMUTATIONS);
 
   printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
