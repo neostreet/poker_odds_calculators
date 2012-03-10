@@ -79,6 +79,7 @@ int main(int argc,char **argv)
   int suit_ix1;
   int suit_ix2;
   int map_ix;
+  double pct;
 
   for (n = 0; n < NUM_SUIT_COMBOS_COLLAPSED; n++)
     breakouts[n] = 0;
@@ -96,8 +97,10 @@ int main(int argc,char **argv)
     breakouts[suit_combos_map_to_collapsed[map_ix]]++;
   }
 
-  for (n = 0; n < NUM_SUIT_COMBOS_COLLAPSED; n++)
-    printf("%4d %s\n",breakouts[n],suit_crosstab2[n]);
+  for (n = 0; n < NUM_SUIT_COMBOS_COLLAPSED; n++) {
+    pct = (double)breakouts[n] / (double)POKER_52_2_PERMUTATIONS;
+    printf("%4d (%6.3lf) %s\n",breakouts[n],pct,suit_crosstab2[n]);
+  }
 
   return 0;
 }
