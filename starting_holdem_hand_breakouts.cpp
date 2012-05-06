@@ -99,8 +99,10 @@ int main(int argc,char **argv)
 
   for (n = 0; n < NUM_SUIT_COMBOS_COLLAPSED; n++) {
     pct = (double)breakouts[n] / (double)POKER_52_2_PERMUTATIONS;
-    printf("%4d (%6.3lf) %s\n",breakouts[n],pct,suit_crosstab2[n]);
+    printf("%10d (%6.3lf) %s\n",breakouts[n],pct,suit_crosstab2[n]);
   }
+
+  printf("\n%10d\n",POKER_52_2_PERMUTATIONS);
 
   return 0;
 }
