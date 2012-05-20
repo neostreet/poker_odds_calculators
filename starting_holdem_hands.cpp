@@ -19,6 +19,12 @@ int main(int argc,char **argv)
   int n;
   int o;
   char card_string[3];
+  bool bIndexes;
+
+  bIndexes = false;
+
+  if ((argc == 2) && !strcmp(argv[1],"-indexes"))
+    bIndexes = true;
 
   card_string[2] = 0;
 
@@ -26,10 +32,15 @@ int main(int argc,char **argv)
     get_permutation_instance(
       NUM_CARDS_IN_DECK,NUM_HOLE_CARDS_IN_HOLDEM_HAND,
       &m,&n,o);
-    card_string_from_card_value(m,card_string);
-    printf("%s ",card_string);
-    card_string_from_card_value(n,card_string);
-    printf("%s\n",card_string);
+
+    if (!bIndexes) {
+      card_string_from_card_value(m,card_string);
+      printf("%s ",card_string);
+      card_string_from_card_value(n,card_string);
+      printf("%s\n",card_string);
+    }
+    else
+      printf("%02d %02d\n",m,n);
   }
 
   return 0;
