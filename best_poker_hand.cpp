@@ -3,9 +3,6 @@
 #include <string.h>
 using namespace std;
 
-#define FALSE 0
-#define TRUE  1
-
 #define MAIN_MODULE
 #include "poker_hand.h"
 

@@ -3,9 +3,6 @@
 #include <string.h>
 using namespace std;
 
-#define FALSE 0
-#define TRUE  1
-
 #define MAIN_MODULE
 #include "poker_hand.h"
 
@@ -25,7 +22,7 @@ int main(int argc,char **argv)
   int p;
   int retval;
   int curr_arg;
-  int bDebug;
+  bool bDebug;
   FILE *fptr;
   int line_len;
   int cards[NUM_CARDS_IN_FLOP];
@@ -40,11 +37,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bDebug = FALSE;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
-      bDebug = TRUE;
+      bDebug = true;
     else
       break;
   }

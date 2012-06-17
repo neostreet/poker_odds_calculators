@@ -3,9 +3,6 @@
 #include <string.h>
 using namespace std;
 
-#define FALSE 0
-#define TRUE  1
-
 #define MAIN_MODULE
 #include "poker_hand.h"
 
@@ -29,7 +26,7 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  int bDebug;
+  bool bDebug;
   int m;
   int n;
   int o;
@@ -58,11 +55,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bDebug = FALSE;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
-      bDebug = TRUE;
+      bDebug = true;
     else
       break;
   }
