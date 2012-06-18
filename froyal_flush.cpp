@@ -16,7 +16,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: fboard (-debug) player_name filename\n";
+static char usage[] = "usage: fboard (-debug) (-fullpath) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char dealt_to[] = "Dealt to ";
@@ -36,6 +36,7 @@ int main(int argc,char **argv)
   int q;
   int curr_arg;
   bool bDebug;
+  bool bFullPath;
   int player_name_ix;
   int player_name_len;
   FILE *fptr0;
@@ -54,21 +55,25 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   PokerHand hand;
 
-  if ((argc < 3) || (argc > 4)) {
+  if ((argc < 3) || (argc > 5)) {
     printf(usage);
     return 1;
   }
 
   bDebug = false;
+  bFullPath = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug")) {
+    if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
-      getcwd(save_dir,_MAX_PATH);
-    }
+    else if (!strcmp(argv[curr_arg],"-fullpath"))
+      bFullPath = true;
     else
       break;
   }
+
+  if (bDebug && !bFullPath)
+    getcwd(save_dir,_MAX_PATH);
 
   if (argc - curr_arg != 2) {
     printf(usage);
@@ -194,8 +199,10 @@ int main(int argc,char **argv)
           if (hand.RoyalFlush()) {
             if (!bDebug)
               printf("%s %s\n",hole_cards,&line[ix]);
-            else
+            else if (!bFullPath)
               printf("%s %s %s\\%s\n",hole_cards,&line[ix],save_dir,filename);
+            else
+              printf("%s %s %s\n",hole_cards,&line[ix],filename);
           }
         }
 
