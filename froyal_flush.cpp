@@ -197,7 +197,7 @@ int main(int argc,char **argv)
 
           hand = holdem_hand.BestPokerHand();
 
-          if (hand.RoyalFlush()) {
+          if (hand.GetHandType() == ROYAL_FLUSH) {
             if (!bDebug)
               printf("%s %s\n",hole_cards,&line[ix]);
             else if (!bFullPath)
