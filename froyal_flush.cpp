@@ -16,7 +16,8 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: fboard (-debug) (-fullpath) player_name filename\n";
+static char usage[] =
+"usage: froyal_flush (-debug) (-fullpath) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char dealt_to[] = "Dealt to ";
