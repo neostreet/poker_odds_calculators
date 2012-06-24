@@ -514,6 +514,19 @@ struct hand_type_info {
   int var_info_vars[MAX_VAR_INFO_VARS];
 };
 
+char *plain_hand_types[] = {
+  "high card      ",
+  "one pair       ",
+  "two pairs      ",
+  "three of a kind",
+  "straight       ",
+  "flush          ",
+  "full house     ",
+  "four of a kind ",
+  "straight flush ",
+  "royal flush    "
+};
+
 static struct hand_type_info hand_types[] = {
   "high card %s", 1, { 0, 0 },
   "a pair of %ss", 1, { 0, 0 },
