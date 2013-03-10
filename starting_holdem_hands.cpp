@@ -11,13 +11,13 @@ static char usage[] = "usage: starting_holdem_hands (-indexes) (-reverse)\n";
 static char fmt[] = "%s %s\n";
 
 static void get_permutation_instance(
-  int set_size,int subset_size,
+  int set_size,
   int *m,int *n,
   int instance_ix
 );
 
 static void get_permutation_instance_reverse(
-  int set_size,int subset_size,
+  int set_size,
   int *m,int *n,
   int instance_ix
 );
@@ -55,12 +55,12 @@ int main(int argc,char **argv)
   for (o = 0; o < POKER_52_2_PERMUTATIONS; o++) {
     if (!bReverse) {
       get_permutation_instance(
-        NUM_CARDS_IN_DECK,NUM_HOLE_CARDS_IN_HOLDEM_HAND,
+        NUM_CARDS_IN_DECK,
         &m,&n,o);
     }
     else {
       get_permutation_instance_reverse(
-        NUM_CARDS_IN_DECK,NUM_HOLE_CARDS_IN_HOLDEM_HAND,
+        NUM_CARDS_IN_DECK,
         &m,&n,o);
     }
 
@@ -81,7 +81,7 @@ int main(int argc,char **argv)
 }
 
 static void get_permutation_instance(
-  int set_size,int subset_size,
+  int set_size,
   int *m,int *n,
   int instance_ix
 )
@@ -100,7 +100,7 @@ static void get_permutation_instance(
 }
 
 static void get_permutation_instance_reverse(
-  int set_size,int subset_size,
+  int set_size,
   int *m,int *n,
   int instance_ix
 )
