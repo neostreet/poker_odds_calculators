@@ -15,10 +15,10 @@ static void get_permutation_instance(
 
 PokerHand::PokerHand()
 {
-  _have_cards = 0;
-  _hand_sorted = 0;
-  _hand_evaluated = 0;
-  _verbose = 0;
+  _have_cards = false;
+  _hand_sorted = false;
+  _hand_evaluated = false;
+  _verbose = false;
 }
 
 // copy constructor
@@ -88,10 +88,10 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
     _rank[n] = rank_of(_card[n]);
   }
 
-  _have_cards = 1;
-  _hand_sorted = 0;
-  _hand_evaluated = 0;
-  _verbose = 0;
+  _have_cards = true;
+  _hand_sorted = false;
+  _hand_evaluated = false;
+  _verbose = false;
 }
 
 void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
@@ -109,10 +109,10 @@ void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
     _rank[n] = rank_of(_card[n]);
   }
 
-  _have_cards = 1;
-  _hand_sorted = 0;
-  _hand_evaluated = 0;
-  _verbose = 0;
+  _have_cards = true;
+  _hand_sorted = false;
+  _hand_evaluated = false;
+  _verbose = false;
 }
 
 int PokerHand::GetRank(int card_ix)
@@ -220,10 +220,16 @@ HandType PokerHand::Evaluate()
   else
     _hand_type = HIGH_CARD;
 
-  _hand_evaluated = 1;
+  _hand_evaluated = true;
 
   return _hand_type;
 }
+
+void PokerHand::UnEvaluate()
+{
+  _hand_evaluated = false;
+}
+
 
 int PokerHand::Evaluated()
 {
@@ -650,7 +656,7 @@ void PokerHand::Terse()
 
 HoldemPokerHand::HoldemPokerHand()
 {
-  _have_cards = 0;
+  _have_cards = false;
 }
 
 // copy constructor
@@ -763,6 +769,127 @@ void HoldemPokerHand::print(ostream& out) const
 }
 
 ostream& operator<<(ostream& out,const HoldemPokerHand& holdem_hand)
+{
+  holdem_hand.print(out);
+
+  return out;
+}
+
+// default constructor
+
+HoldemTurnHand::HoldemTurnHand()
+{
+  _have_cards = 0;
+}
+
+// copy constructor
+
+HoldemTurnHand::HoldemTurnHand(const HoldemTurnHand& hand)
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_AT_TURN; n++)
+    _card[n] = hand._card[n];
+
+  _have_cards = hand._have_cards;
+}
+
+// assignment operator
+
+HoldemTurnHand& HoldemTurnHand::operator=(const HoldemTurnHand& hand)
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_AT_TURN; n++)
+    _card[n] = hand._card[n];
+
+  _have_cards = hand._have_cards;
+
+  return *this;
+}
+
+// destructor
+
+HoldemTurnHand::~HoldemTurnHand()
+{
+}
+
+HoldemTurnHand::HoldemTurnHand(int card1,int card2,int card3,int card4,int card5,int card6)
+{
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card[3] = card4 % NUM_CARDS_IN_DECK;
+  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card[5] = card6 % NUM_CARDS_IN_DECK;
+
+  _have_cards = 1;
+}
+
+void HoldemTurnHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6)
+{
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card[3] = card4 % NUM_CARDS_IN_DECK;
+  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card[5] = card6 % NUM_CARDS_IN_DECK;
+
+  _have_cards = 1;
+}
+
+PokerHand& HoldemTurnHand::BestPokerHand()
+{
+  int m;
+  int n;
+  int o;
+  int p;
+  int q;
+  int r;
+  PokerHand hand;
+  int ret_compare;
+
+  for (r = 0; r < POKER_6_5_PERMUTATIONS; r++) {
+    get_permutation_instance(
+      NUM_CARDS_AT_TURN,NUM_CARDS_IN_HAND,
+      &m,&n,&o,&p,&q,r);
+
+    hand.NewCards(_card[m],_card[n],_card[o],_card[p],_card[q]);
+
+    if (!r)
+      _best_poker_hand = hand;
+    else {
+      ret_compare = hand.Compare(_best_poker_hand,1);
+
+      if (ret_compare == 1)
+        _best_poker_hand = hand;
+    }
+  }
+
+  return _best_poker_hand;
+}
+
+void HoldemTurnHand::print(ostream& out) const
+{
+  int n;
+  char card_string[3];
+
+  if (!_have_cards)
+    return;
+
+  card_string[2] = 0;
+
+  for (n = 0; n < NUM_CARDS_AT_TURN; n++) {
+    card_string_from_card_value(_card[n],card_string);
+
+    out << card_string;
+
+    if (n < NUM_CARDS_IN_HOLDEM_POOL - 1)
+      out << " ";
+  }
+}
+
+ostream& operator<<(ostream& out,const HoldemTurnHand& holdem_hand)
 {
   holdem_hand.print(out);
 

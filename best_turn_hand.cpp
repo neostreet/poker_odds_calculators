@@ -9,7 +9,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: best_poker_hand (-unevaluate) filename\n";
+static char usage[] = "usage: best_turn_hand (-unevaluate) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -25,9 +25,9 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_no;
   int line_len;
-  int cards[NUM_CARDS_IN_HOLDEM_POOL];
-  HoldemPokerHand board_poker_hand;
-  PokerHand best_poker_hand;
+  int cards[NUM_CARDS_AT_TURN];
+  HoldemTurnHand board_turn_hand;
+  PokerHand best_turn_hand;
 
   if ((argc < 2) || (argc > 3)) {
     cout << usage << endl;
@@ -77,7 +77,7 @@ int main(int argc,char **argv)
       return 4;
     }
 
-    for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++) {
+    for (n = 0; n < NUM_CARDS_AT_TURN; n++) {
       retval = card_value_from_card_string(&line[m],&cards[n]);
 
       if (retval) {
@@ -87,7 +87,7 @@ int main(int argc,char **argv)
 
       m += 2;
 
-      if (n < NUM_CARDS_IN_HOLDEM_POOL - 1) {
+      if (n < NUM_CARDS_AT_TURN - 1) {
         // skip whitespace
 
         for ( ; m < line_len; m++) {
@@ -102,19 +102,18 @@ int main(int argc,char **argv)
       }
     }
 
-    board_poker_hand.NewCards(cards[0],cards[1],cards[2],
-      cards[3],cards[4],cards[5],cards[6]);
+    board_turn_hand.NewCards(cards[0],cards[1],cards[2],
+      cards[3],cards[4],cards[5]);
 
-    cout << board_poker_hand << endl;
+    cout << board_turn_hand << endl;
 
-    best_poker_hand = board_poker_hand.BestPokerHand();
-
-    cout << "best hand: " << endl << endl;
+    best_turn_hand = board_turn_hand.BestPokerHand();
 
     if (bUnEvaluate)
-      best_poker_hand.UnEvaluate();
+      best_turn_hand.UnEvaluate();
 
-    cout << best_poker_hand << endl;
+    cout << "best hand: " << endl << endl;
+    cout << best_turn_hand << endl;
   }
 
   fclose(fptr);

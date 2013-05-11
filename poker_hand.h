@@ -38,6 +38,7 @@ extern char rank_chars[];
 
 #define NUM_CARDS_IN_HAND 5
 
+#define POKER_6_5_PERMUTATIONS          6
 #define POKER_7_5_PERMUTATIONS         21
 #define POKER_40_1_PERMUTATIONS        40
 #define POKER_42_1_PERMUTATIONS        42
@@ -59,6 +60,7 @@ extern char rank_chars[];
 #define NUM_CARDS_IN_FLOP 3
 #define NUM_CARDS_AFTER_FLOP 2
 #define NUM_CARDS_IN_HOLDEM_POOL (NUM_HOLE_CARDS_IN_HOLDEM_HAND + NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
+#define NUM_CARDS_AT_TURN (NUM_HOLE_CARDS_IN_HOLDEM_HAND + NUM_CARDS_IN_FLOP + 1)
 #define NUM_HOLE_CARDS_IN_OMAHA_HAND 4
 #define NUM_CARDS_AFTER_TURN 2
 #define NUM_CARDS_AFTER_DEAL (NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
@@ -131,6 +133,7 @@ class PokerHand {
   int GetRank(int card_ix);
   void Sort();
   HandType Evaluate();
+  void UnEvaluate();
   int Evaluated();
   int RoyalFlush();
   int StraightFlush();
@@ -158,10 +161,10 @@ class PokerHand {
   int _num_cards_with_same_rank[NUM_CARDS_IN_HAND];
   int _order[NUM_CARDS_IN_HAND];
 
-  int _have_cards;
-  int _hand_sorted;
-  int _hand_evaluated;
-  int _verbose;
+  bool _have_cards;
+  bool _hand_sorted;
+  bool _hand_evaluated;
+  bool _verbose;
 
   HandType _hand_type;
 };
@@ -196,6 +199,35 @@ class HoldemPokerHand {
 };
 
 ostream& operator<<(ostream& out,const HoldemPokerHand& board_hand);
+
+class HoldemTurnHand {
+  public:
+
+  // default constructor
+  HoldemTurnHand();
+  // copy constructor
+  HoldemTurnHand(const HoldemTurnHand&);
+  // assignment operator
+  HoldemTurnHand& operator=(const HoldemTurnHand&);
+  // destructor
+  ~HoldemTurnHand();
+
+  HoldemTurnHand(int card1,int card2,int card3,int card4,int card5,int card6);
+  void NewCards(int card1,int card2,int card3,int card4,int card5,int card6);
+
+  PokerHand& BestPokerHand();
+
+  void print(ostream& out) const;
+
+  private:
+
+  int _card[NUM_CARDS_AT_TURN];
+  PokerHand _best_poker_hand;
+
+  int _have_cards;
+};
+
+ostream& operator<<(ostream& out,const HoldemTurnHand& board_hand);
 
 class Flop {
   public:
