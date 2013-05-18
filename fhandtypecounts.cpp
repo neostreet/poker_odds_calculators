@@ -64,6 +64,7 @@ int main(int argc,char **argv)
   int holdem_cards[NUM_CARDS_IN_HOLDEM_POOL];
   HoldemPokerHand holdem_hand;
   PokerHand hand;
+  int total;
 
   if ((argc < 3) || (argc > 5)) {
     printf(usage);
@@ -218,8 +219,14 @@ int main(int argc,char **argv)
 
   fclose(fptr0);
 
-  for (n = 0; n < NUM_HAND_TYPES; n++)
+  total = 0;
+
+  for (n = 0; n < NUM_HAND_TYPES; n++) {
     printf("%5d %s\n",hand_type_counts[n],plain_hand_types[n]);
+    total += hand_type_counts[n];
+  }
+
+  printf("\n%5d\n",total);
 
   return 0;
 }
