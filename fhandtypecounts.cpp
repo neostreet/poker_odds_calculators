@@ -2,7 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WIN32
 #include <direct.h>
+#else
+#define _MAX_PATH 4096
+#include <unistd.h>
+#endif
 using namespace std;
 
 #define MAIN_MODULE
@@ -60,7 +65,7 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   PokerHand hand;
 
-  if ((argc < 4) || (argc > 5)) {
+  if ((argc < 3) || (argc > 5)) {
     printf(usage);
     return 1;
   }
