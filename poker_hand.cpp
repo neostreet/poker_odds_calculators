@@ -521,16 +521,16 @@ struct hand_type_info {
 };
 
 char *plain_hand_types[] = {
-  "high card      ",
-  "one pair       ",
-  "two pairs      ",
+  "high card",
+  "one pair",
+  "two pair",
   "three of a kind",
-  "straight       ",
-  "flush          ",
-  "full house     ",
-  "four of a kind ",
-  "straight flush ",
-  "royal flush    "
+  "straight",
+  "flush",
+  "full house",
+  "four of a kind",
+  "straight flush",
+  "royal flush"
 };
 
 static struct hand_type_info hand_types[] = {

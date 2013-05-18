@@ -219,7 +219,7 @@ int main(int argc,char **argv)
   fclose(fptr0);
 
   for (n = 0; n < NUM_HAND_TYPES; n++)
-    printf("%s %5d\n",plain_hand_types[n],hand_type_counts[n]);
+    printf("%5d %s\n",hand_type_counts[n],plain_hand_types[n]);
 
   return 0;
 }
