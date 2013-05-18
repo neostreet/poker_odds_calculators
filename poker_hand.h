@@ -152,6 +152,8 @@ class PokerHand {
   void print(ostream& out) const;
   void Verbose();
   void Terse();
+  void Plain();
+  void Fancy();
 
   private:
 
@@ -165,6 +167,7 @@ class PokerHand {
   bool _hand_sorted;
   bool _hand_evaluated;
   bool _verbose;
+  bool _plain;
 
   HandType _hand_type;
 };
@@ -258,6 +261,8 @@ class Flop {
   void print(ostream& out) const;
   void Verbose();
   void Terse();
+  void Plain();
+  void Fancy();
 
   private:
 
@@ -267,10 +272,11 @@ class Flop {
   int _num_cards_with_same_rank[NUM_CARDS_IN_FLOP];
   int _order[NUM_CARDS_IN_FLOP];
 
-  int _have_cards;
-  int _flop_sorted;
-  int _flop_evaluated;
-  int _verbose;
+  bool _have_cards;
+  bool _flop_sorted;
+  bool _flop_evaluated;
+  bool _verbose;
+  bool _plain;
 
   FlopType _flop_type;
 };

@@ -9,7 +9,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: best_poker_hand (-unevaluate) (-verbose) filename\n";
+static char usage[] =
+"usage: best_poker_hand (-unevaluate) (-verbose) (-plain) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -20,6 +21,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bUnEvaluate;
   bool bVerbose;
+  bool bPlain;
   int m;
   int n;
   int retval;
@@ -30,19 +32,22 @@ int main(int argc,char **argv)
   HoldemPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     cout << usage << endl;
     return 1;
   }
 
   bUnEvaluate = false;
   bVerbose = false;
+  bPlain = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-unevaluate"))
       bUnEvaluate = true;
     else if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
+    else if (!strcmp(argv[curr_arg],"-plain"))
+      bPlain = true;
     else
       break;
   }
@@ -117,8 +122,13 @@ int main(int argc,char **argv)
 
     if (bUnEvaluate)
       best_poker_hand.UnEvaluate();
-    else if (bVerbose)
-      best_poker_hand.Verbose();
+    else {
+      if (bVerbose)
+        best_poker_hand.Verbose();
+
+      if (bPlain)
+        best_poker_hand.Plain();
+    }
 
     cout << best_poker_hand << endl;
   }

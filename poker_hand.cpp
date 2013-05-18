@@ -19,6 +19,7 @@ PokerHand::PokerHand()
   _hand_sorted = false;
   _hand_evaluated = false;
   _verbose = false;
+  _plain = false;
 }
 
 // copy constructor
@@ -39,6 +40,7 @@ PokerHand::PokerHand(const PokerHand& hand)
   _hand_sorted = hand._hand_sorted;
   _hand_evaluated = hand._hand_evaluated;
   _verbose = hand._verbose;
+  _plain = hand._plain;
 
   _hand_type = hand._hand_type;
 }
@@ -61,6 +63,7 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _hand_sorted = hand._hand_sorted;
   _hand_evaluated = hand._hand_evaluated;
   _verbose = hand._verbose;
+  _plain = hand._plain;
 
   _hand_type = hand._hand_type;
 
@@ -92,6 +95,7 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
   _hand_sorted = false;
   _hand_evaluated = false;
   _verbose = false;
+  _plain = false;
 }
 
 void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
@@ -113,6 +117,7 @@ void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
   _hand_sorted = false;
   _hand_evaluated = false;
   _verbose = false;
+  _plain = false;
 }
 
 int PokerHand::GetRank(int card_ix)
@@ -122,7 +127,7 @@ int PokerHand::GetRank(int card_ix)
 
   if (!_hand_sorted) {
     Sort();
-    _hand_evaluated = 0;
+    _hand_evaluated = false;
   }
 
   return _rank[_order[card_ix]];
@@ -175,7 +180,7 @@ void PokerHand::Sort()
     }
   }
 
-  _hand_sorted = 1;
+  _hand_sorted = true;
 }
 
 HandType PokerHand::Evaluate()
@@ -191,7 +196,7 @@ HandType PokerHand::Evaluate()
     if (!_hand_sorted)
       return HIGH_CARD;
 
-    _hand_evaluated = 0;
+    _hand_evaluated = false;
   }
 
   if (_hand_evaluated)
@@ -606,30 +611,34 @@ void PokerHand::print(ostream& out) const
     }
   }
 
-  switch (hand_types[_hand_type].num_var_info_vars) {
-    case 0:
-      sprintf(print_buf,hand_types[_hand_type].hand_type_fmt);
+  if (_plain)
+    out << plain_hand_types[_hand_type];
+  else {
+    switch (hand_types[_hand_type].num_var_info_vars) {
+      case 0:
+        sprintf(print_buf,hand_types[_hand_type].hand_type_fmt);
 
-      break;
-    case 1:
-      sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-        rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[0]]]]);
-
-      break;
-    case 2:
-      // first, handle the special case of a wheel (A, 2, 3, 4, 5)
-      if (((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
-           (_hand_type == ROYAL_FLUSH)) &&
-           (_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE))
+        break;
+      case 1:
         sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-          rank_strings[ACE],
-          rank_strings[FIVE]);
-      else
-        sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-          rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[0]]]],
-          rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[1]]]]);
+          rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[0]]]]);
 
-      break;
+        break;
+      case 2:
+        // first, handle the special case of a wheel (A, 2, 3, 4, 5)
+        if (((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
+             (_hand_type == ROYAL_FLUSH)) &&
+             (_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE))
+          sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
+            rank_strings[ACE],
+            rank_strings[FIVE]);
+        else
+          sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
+            rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[0]]]],
+            rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[1]]]]);
+
+        break;
+    }
   }
 
   out << print_buf;
@@ -644,12 +653,22 @@ ostream& operator<<(ostream& out,const PokerHand& hand)
 
 void PokerHand::Verbose()
 {
-  _verbose = 1;
+  _verbose = true;
 }
 
 void PokerHand::Terse()
 {
-  _verbose = 0;
+  _verbose = false;
+}
+
+void PokerHand::Plain()
+{
+  _plain = true;
+}
+
+void PokerHand::Fancy()
+{
+  _plain = false;
 }
 
 // default constructor
@@ -701,7 +720,7 @@ HoldemPokerHand::HoldemPokerHand(int card1,int card2,int card3,int card4,int car
   _card[5] = card6 % NUM_CARDS_IN_DECK;
   _card[6] = card7 % NUM_CARDS_IN_DECK;
 
-  _have_cards = 1;
+  _have_cards = true;
 }
 
 void HoldemPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
@@ -714,7 +733,7 @@ void HoldemPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5
   _card[5] = card6 % NUM_CARDS_IN_DECK;
   _card[6] = card7 % NUM_CARDS_IN_DECK;
 
-  _have_cards = 1;
+  _have_cards = true;
 }
 
 PokerHand& HoldemPokerHand::BestPokerHand()
@@ -779,7 +798,7 @@ ostream& operator<<(ostream& out,const HoldemPokerHand& holdem_hand)
 
 HoldemTurnHand::HoldemTurnHand()
 {
-  _have_cards = 0;
+  _have_cards = false;
 }
 
 // copy constructor
@@ -823,7 +842,7 @@ HoldemTurnHand::HoldemTurnHand(int card1,int card2,int card3,int card4,int card5
   _card[4] = card5 % NUM_CARDS_IN_DECK;
   _card[5] = card6 % NUM_CARDS_IN_DECK;
 
-  _have_cards = 1;
+  _have_cards = true;
 }
 
 void HoldemTurnHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6)
@@ -835,7 +854,7 @@ void HoldemTurnHand::NewCards(int card1,int card2,int card3,int card4,int card5,
   _card[4] = card5 % NUM_CARDS_IN_DECK;
   _card[5] = card6 % NUM_CARDS_IN_DECK;
 
-  _have_cards = 1;
+  _have_cards = true;
 }
 
 PokerHand& HoldemTurnHand::BestPokerHand()
@@ -900,10 +919,11 @@ ostream& operator<<(ostream& out,const HoldemTurnHand& holdem_hand)
 
 Flop::Flop()
 {
-  _have_cards = 0;
-  _flop_sorted = 0;
-  _flop_evaluated = 0;
-  _verbose = 0;
+  _have_cards = false;
+  _flop_sorted = false;
+  _flop_evaluated = false;
+  _verbose = false;
+  _plain = false;
 }
 
 // copy constructor
@@ -924,6 +944,7 @@ Flop::Flop(const Flop& flop)
   _flop_sorted = flop._flop_sorted;
   _flop_evaluated = flop._flop_evaluated;
   _verbose = flop._verbose;
+  _plain = flop._plain;
 
   _flop_type = flop._flop_type;
 }
@@ -946,6 +967,7 @@ Flop& Flop::operator=(const Flop& flop)
   _flop_sorted = flop._flop_sorted;
   _flop_evaluated = flop._flop_evaluated;
   _verbose = flop._verbose;
+  _plain = flop._plain;
 
   _flop_type = flop._flop_type;
 
@@ -971,10 +993,11 @@ Flop::Flop(int card1,int card2,int card3)
     _rank[n] = rank_of(_card[n]);
   }
 
-  _have_cards = 1;
-  _flop_sorted = 0;
-  _flop_evaluated = 0;
-  _verbose = 0;
+  _have_cards = true;
+  _flop_sorted = false;
+  _flop_evaluated = false;
+  _verbose = false;
+  _plain = false;
 }
 
 void Flop::NewCards(int card1,int card2,int card3)
@@ -990,10 +1013,11 @@ void Flop::NewCards(int card1,int card2,int card3)
     _rank[n] = rank_of(_card[n]);
   }
 
-  _have_cards = 1;
-  _flop_sorted = 0;
-  _flop_evaluated = 0;
-  _verbose = 0;
+  _have_cards = true;
+  _flop_sorted = false;
+  _flop_evaluated = false;
+  _verbose = false;
+  _plain = false;
 }
 
 int Flop::GetCard(int card_ix)
@@ -1008,7 +1032,7 @@ int Flop::GetRank(int card_ix)
 
   if (!_flop_sorted) {
     Sort();
-    _flop_evaluated = 0;
+    _flop_evaluated = false;
   }
 
   return _rank[_order[card_ix]];
@@ -1061,7 +1085,7 @@ void Flop::Sort()
     }
   }
 
-  _flop_sorted = 1;
+  _flop_sorted = true;
 }
 
 FlopType Flop::Evaluate()
@@ -1077,7 +1101,7 @@ FlopType Flop::Evaluate()
     if (!_flop_sorted)
       return DRY;
 
-    _flop_evaluated = 0;
+    _flop_evaluated = false;
   }
 
   if (_flop_evaluated)
@@ -1090,7 +1114,7 @@ FlopType Flop::Evaluate()
   else
     _flop_type = DRY;
 
-  _flop_evaluated = 1;
+  _flop_evaluated = true;
 
   return _flop_type;
 }
@@ -1184,12 +1208,22 @@ ostream& operator<<(ostream& out,const Flop& flop)
 
 void Flop::Verbose()
 {
-  _verbose = 1;
+  _verbose = true;
 }
 
 void Flop::Terse()
 {
-  _verbose = 0;
+  _verbose = false;
+}
+
+void Flop::Plain()
+{
+  _plain = true;
+}
+
+void Flop::Fancy()
+{
+  _plain = false;
 }
 
 static void get_permutation_instance(
