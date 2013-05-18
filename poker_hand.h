@@ -31,9 +31,23 @@ enum Rank {
 #ifdef MAIN_MODULE
 char suit_chars[] = "cdhs";
 char rank_chars[] = "23456789TJQKA";
+
+char *plain_hand_types[] = {
+  "high card",
+  "one pair",
+  "two pair",
+  "three of a kind",
+  "straight",
+  "flush",
+  "full house",
+  "four of a kind",
+  "straight flush",
+  "royal flush"
+};
 #else
 extern char suit_chars[];
 extern char rank_chars[];
+extern char *plain_hand_types[];
 #endif
 
 #define NUM_CARDS_IN_HAND 5
