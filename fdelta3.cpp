@@ -157,10 +157,8 @@ int main(int argc,char **argv)
       bShowBoard = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
       bShowHandType = true;
-    else if (!strcmp(argv[curr_arg],"-saw_river")) {
-      bSkipFolded = true;
+    else if (!strcmp(argv[curr_arg],"-saw_river"))
       bSawRiver = true;
-    }
     else
       break;
   }
@@ -485,42 +483,8 @@ int main(int argc,char **argv)
           }
         }
       }
-      else if (bSkipping) {
-        if (!strncmp(line,river,RIVER_LEN)) {
-          for (n = 0; n < 11; n++)
-            board_cards[n] = line[RIVER_LEN+n];
-
-          board_cards[n++] = ' ';
-
-          for (m = 0; m < 2; m++,n++)
-            board_cards[n] = line[RIVER_LEN+14+m];
-
-          board_cards[n] = 0;
-
-          for (q = 0; q < NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP; q++) {
-            card_string[0] = board_cards[q*3 + 0];
-            card_string[1] = board_cards[q*3 + 1];
-
-            retval = card_value_from_card_string(
-              card_string,&holdem_cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND+q]);
-
-            if (retval) {
-              printf("invalid card string %s on line %d\n",
-                card_string,line_no);
-              return 7;
-            }
-          }
-
-          holdem_hand.NewCards(holdem_cards[0],holdem_cards[1],holdem_cards[2],
-            holdem_cards[3],holdem_cards[4],holdem_cards[5],holdem_cards[6]);
-
-          poker_hand = holdem_hand.BestPokerHand();
-
-          bHaveRiver = true;
-        }
-
+      else if (bSkipping)
         continue;
-      }
       else {
         if (!strncmp(line,river,RIVER_LEN)) {
           for (n = 0; n < 11; n++)
