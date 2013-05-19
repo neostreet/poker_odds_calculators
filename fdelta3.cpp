@@ -22,7 +22,7 @@ static char line[MAX_LINE_LEN];
 static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
-"  (-show_hand_type) (-saw_river) player_name filename\n";
+"  (-show_hand_type) (-saw_river) (-only_folded) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -103,6 +103,7 @@ int main(int argc,char **argv)
   bool bShowBoard;
   bool bShowHandType;
   bool bSawRiver;
+  bool bOnlyFolded;
   bool bSuited;
   bool bHaveRiver;
   char *hand;
@@ -115,7 +116,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 13)) {
+  if ((argc < 3) || (argc > 14)) {
     printf(usage);
     return 1;
   }
@@ -130,6 +131,7 @@ int main(int argc,char **argv)
   bShowBoard = false;
   bShowHandType = false;
   bSawRiver = false;
+  bOnlyFolded = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -159,6 +161,8 @@ int main(int argc,char **argv)
       bShowHandType = true;
     else if (!strcmp(argv[curr_arg],"-saw_river"))
       bSawRiver = true;
+    else if (!strcmp(argv[curr_arg],"-only_folded"))
+      bOnlyFolded = true;
     else
       break;
   }
@@ -178,12 +182,17 @@ int main(int argc,char **argv)
     return 4;
   }
 
+  if (bSkipFolded && bOnlyFolded) {
+    printf("can't specify both -skip_folded and -only_folded\n");
+    return 5;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 5;
+    return 6;
   }
 
   ending_balance = -1;
@@ -310,7 +319,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 6;
+                    return 7;
                   }
                 }
               }
@@ -423,7 +432,7 @@ int main(int argc,char **argv)
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
 
-          if ((!bSkipZero || (delta != 0)) && !bSkipFolded) {
+          if ((!bSkipZero || (delta != 0)) && (!bSkipFolded || bOnlyFolded)) {
             if (!bSawRiver || bHaveRiver) {
               if (bTerse)
                 printf("%d\n",delta);
@@ -507,7 +516,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 7;
+              return 8;
             }
           }
 
@@ -527,7 +536,7 @@ int main(int argc,char **argv)
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
 
-          if (!bSkipZero || (delta != 0)) {
+          if ((!bSkipZero || (delta != 0)) && (!bOnlyFolded)) {
             if (!bSawRiver || bHaveRiver) {
               if (bTerse)
                 printf("%d\n",delta);
