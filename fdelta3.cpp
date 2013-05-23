@@ -22,7 +22,7 @@ static char line[MAX_LINE_LEN];
 static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
-"  (-show_hand_type) (-saw_river) (-only_folded)\n"
+"  (-show_hand) (-show_hand_type) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -102,6 +102,7 @@ int main(int argc,char **argv)
   bool bAbbrev;
   bool bSkipZero;
   bool bShowBoard;
+  bool bShowHand;
   bool bShowHandType;
   bool bSawRiver;
   bool bOnlyFolded;
@@ -119,7 +120,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 15)) {
+  if ((argc < 3) || (argc > 16)) {
     printf(usage);
     return 1;
   }
@@ -132,6 +133,7 @@ int main(int argc,char **argv)
   bAbbrev = false;
   bSkipZero = false;
   bShowBoard = false;
+  bShowHand = false;
   bShowHandType = false;
   bSawRiver = false;
   bOnlyFolded = false;
@@ -161,6 +163,8 @@ int main(int argc,char **argv)
       bSkipZero = true;
     else if (!strcmp(argv[curr_arg],"-show_board"))
       bShowBoard = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand"))
+      bShowHand = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
       bShowHandType = true;
     else if (!strcmp(argv[curr_arg],"-saw_river"))
@@ -183,19 +187,24 @@ int main(int argc,char **argv)
     return 3;
   }
 
+  if (bAbbrev && bShowHand) {
+    printf("can't specify both -abbrev and -show_hand\n");
+    return 4;
+  }
+
   if (bAbbrev && bShowHandType) {
     printf("can't specify both -abbrev and -show_hand_type\n");
-    return 4;
+    return 5;
   }
 
   if (bSkipFolded && bOnlyFolded) {
     printf("can't specify both -skip_folded and -only_folded\n");
-    return 5;
+    return 6;
   }
 
   if (!bSawRiver && bSpentMoneyOnTheRiver) {
     printf("can't specify -spent_money_on_the_river if didn't specify -saw_river\n");
-    return 6;
+    return 7;
   }
 
   player_name_ix = curr_arg++;
@@ -203,7 +212,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 7;
+    return 8;
   }
 
   ending_balance = -1;
@@ -332,7 +341,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 8;
+                    return 9;
                   }
                 }
               }
@@ -456,6 +465,9 @@ int main(int argc,char **argv)
                   if (bShowBoard && bHaveRiver)
                     printf(" %s",board_cards);
 
+                  if (bShowHand && bHaveRiver)
+                    printf(" %s",poker_hand.GetHand());
+
                   if (bShowHandType && bHaveRiver)
                     printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
@@ -540,7 +552,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 9;
+              return 10;
             }
           }
 
@@ -570,6 +582,9 @@ int main(int argc,char **argv)
 
                   if (bShowBoard && bHaveRiver)
                     printf(" %s",board_cards);
+
+                  if (bShowHand && bHaveRiver)
+                    printf(" %s",poker_hand.GetHand());
 
                   if (bShowHandType && bHaveRiver)
                     printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
