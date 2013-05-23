@@ -10,7 +10,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: best_poker_hand (-unevaluate) (-verbose) (-plain) filename";
+"usage: best_poker_hand (-unevaluate) (-verbose) (-plain) (-no_stream) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -22,6 +22,7 @@ int main(int argc,char **argv)
   bool bUnEvaluate;
   bool bVerbose;
   bool bPlain;
+  bool bNoStream;
   int m;
   int n;
   int retval;
@@ -32,7 +33,7 @@ int main(int argc,char **argv)
   HoldemPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 6)) {
     cout << usage << endl;
     return 1;
   }
@@ -40,6 +41,7 @@ int main(int argc,char **argv)
   bUnEvaluate = false;
   bVerbose = false;
   bPlain = false;
+  bNoStream = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-unevaluate"))
@@ -48,6 +50,8 @@ int main(int argc,char **argv)
       bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-plain"))
       bPlain = true;
+    else if (!strcmp(argv[curr_arg],"-no_stream"))
+      bNoStream = true;
     else
       break;
   }
@@ -130,7 +134,10 @@ int main(int argc,char **argv)
         best_poker_hand.Plain();
     }
 
-    cout << best_poker_hand << endl;
+    if (!bNoStream)
+      cout << best_poker_hand << endl;
+    else
+      cout << best_poker_hand.GetHand() << endl;
   }
 
   fclose(fptr);

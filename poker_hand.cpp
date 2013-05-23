@@ -344,6 +344,52 @@ int PokerHand::OnePair()
   return 0;
 }
 
+char *PokerHand::GetHand()
+{
+  int m;
+  int n;
+  char card_string[3];
+  static char hand_string[15];
+
+  if (!_hand_evaluated)
+    Evaluate();
+
+  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+    if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
+        (_hand_type == ROYAL_FLUSH)) {
+      if ((_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE)) {
+        if (!n) {
+          card_string_from_card_value(
+            _card[_order[0]],
+            card_string);
+        }
+        else {
+          card_string_from_card_value(
+            _card[_order[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
+            card_string);
+        }
+      }
+      else {
+        card_string_from_card_value(
+          _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
+          card_string);
+      }
+    }
+    else
+      card_string_from_card_value(_card[_order[n]],card_string);
+
+    for (m = 0; m < 2; m++)
+      hand_string[n * 3 + m] = card_string[m];
+
+    if (n < NUM_CARDS_IN_HAND - 1)
+      hand_string[n * 3 + 2] = ' ';
+    else
+      hand_string[n * 3 + 2] = 0;
+  }
+
+  return hand_string;
+}
+
 HandType PokerHand::GetHandType()
 {
   if (!_hand_evaluated)

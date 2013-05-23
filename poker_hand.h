@@ -159,6 +159,7 @@ class PokerHand {
   int TwoPairs();
   int OnePair();
 
+  char *GetHand();
   HandType GetHandType();
 
   int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
