@@ -10,7 +10,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: best_poker_hand (-unevaluate) (-verbose) (-plain) filename\n";
+"usage: best_poker_hand (-unevaluate) (-verbose) (-plain) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
