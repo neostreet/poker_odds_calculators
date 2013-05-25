@@ -23,14 +23,14 @@ static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
 "  (-show_hand) (-show_hand_type) (-saw_flop) (-saw_river) (-only_folded)\n"
-"  (-spent_money_on_the_river) player_name filename\n";
+"  (-spent_money_on_the_river) (-stealth_two_pair) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
 #define IN_CHIPS_LEN (sizeof (in_chips) - 1)
 static char summary[] = "*** SUMMARY ***";
 #define SUMMARY_LEN (sizeof (summary) - 1)
-static char flop[] = "*** FLOP ***";
+static char flop[] = "*** FLOP *** [";
 #define FLOP_LEN (sizeof (flop) - 1)
 static char river[] = "*** RIVER *** [";
 #define RIVER_LEN (sizeof (river) - 1)
@@ -110,9 +110,11 @@ int main(int argc,char **argv)
   bool bSawRiver;
   bool bOnlyFolded;
   bool bSpentMoneyOnTheRiver;
+  bool bStealthTwoPair;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
+  bool bHaveStealthTwoPair;
   bool bSpentRiverMoney;
   char *hand;
   bool bSkipping;
@@ -124,7 +126,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 17)) {
+  if ((argc < 3) || (argc > 18)) {
     printf(usage);
     return 1;
   }
@@ -143,6 +145,7 @@ int main(int argc,char **argv)
   bSawRiver = false;
   bOnlyFolded = false;
   bSpentMoneyOnTheRiver = false;
+  bStealthTwoPair = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -180,6 +183,8 @@ int main(int argc,char **argv)
       bOnlyFolded = true;
     else if (!strcmp(argv[curr_arg],"-spent_money_on_the_river"))
       bSpentMoneyOnTheRiver = true;
+    else if (!strcmp(argv[curr_arg],"-stealth_two_pair"))
+      bStealthTwoPair = true;
     else
       break;
   }
@@ -209,14 +214,29 @@ int main(int argc,char **argv)
     return 6;
   }
 
+  if (bAbbrev && bStealthTwoPair) {
+    printf("can't specify both -abbrev and -stealth_two_pair\n");
+    return 7;
+  }
+
   if (bSkipFolded && bOnlyFolded) {
     printf("can't specify both -skip_folded and -only_folded\n");
-    return 7;
+    return 8;
   }
 
   if (!bSawRiver && bSpentMoneyOnTheRiver) {
     printf("can't specify -spent_money_on_the_river if didn't specify -saw_river\n");
-    return 8;
+    return 9;
+  }
+
+  if (bStealthTwoPair && bHandSpecified) {
+    printf("can't specify both -stealth_two_pair and -hand\n");
+    return 10;
+  }
+
+  if (bStealthTwoPair && !bSawFlop && !bSawRiver) {
+    printf("can't specify -stealth_two_pair if didn't specify -saw_flop or -saw_river\n");
+    return 11;
   }
 
   player_name_ix = curr_arg++;
@@ -224,7 +244,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 9;
+    return 12;
   }
 
   ending_balance = -1;
@@ -259,6 +279,7 @@ int main(int argc,char **argv)
     bHaveFlop = false;
     bHaveRiver = false;
     bSpentRiverMoney = false;
+    bHaveStealthTwoPair = false;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -289,6 +310,7 @@ int main(int argc,char **argv)
           bHaveFlop = false;
           bHaveRiver = false;
           bSpentRiverMoney = false;
+          bHaveStealthTwoPair = false;
 
           street = 0;
           num_street_markers = 0;
@@ -355,7 +377,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 10;
+                    return 13;
                   }
                 }
               }
@@ -470,26 +492,28 @@ int main(int argc,char **argv)
 
           if ((!bSkipZero || (delta != 0)) && (!bSkipFolded || bOnlyFolded)) {
             if (!bSawFlop || bHaveFlop) {
-              if (!bSawRiver || bHaveRiver) {
-                if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                  if (bTerse)
-                    printf("%d\n",delta);
-                  else {
-                    printf("%s %10d",hole_cards,delta);
+              if (!bStealthTwoPair || bHaveStealthTwoPair) {
+                if (!bSawRiver || bHaveRiver) {
+                  if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
+                    if (bTerse)
+                      printf("%d\n",delta);
+                    else {
+                      printf("%s %10d",hole_cards,delta);
 
-                    if (bShowBoard && bHaveRiver)
-                      printf(" %s",board_cards);
+                      if (bShowBoard && bHaveRiver)
+                        printf(" %s",board_cards);
 
-                    if (bShowHand && bHaveRiver)
-                      printf(" %s",poker_hand.GetHand());
+                      if (bShowHand && bHaveRiver)
+                        printf(" %s",poker_hand.GetHand());
 
-                    if (bShowHandType && bHaveRiver)
-                      printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                      if (bShowHandType && bHaveRiver)
+                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                    if (bVerbose)
-                      printf(" %s %3d\n",filename,num_hands);
-                    else
-                      putchar(0x0a);
+                      if (bVerbose)
+                        printf(" %s %3d\n",filename,num_hands);
+                      else
+                        putchar(0x0a);
+                    }
                   }
                 }
               }
@@ -547,8 +571,20 @@ int main(int argc,char **argv)
       else if (bSkipping)
         continue;
       else {
-        if (!strncmp(line,flop,FLOP_LEN))
+        if (!strncmp(line,flop,FLOP_LEN)) {
+          if (bStealthTwoPair) {
+            if (((hole_cards[0] == line[FLOP_LEN]) ||
+                 (hole_cards[0] == line[FLOP_LEN+3]) ||
+                 (hole_cards[0] == line[FLOP_LEN+6])) &&
+                ((hole_cards[3] == line[FLOP_LEN]) ||
+                 (hole_cards[3] == line[FLOP_LEN+3]) ||
+                 (hole_cards[3] == line[FLOP_LEN+6]))) {
+              bHaveStealthTwoPair = true;
+            }
+          }
+
           bHaveFlop = true;
+        }
         else if (!strncmp(line,river,RIVER_LEN)) {
           for (n = 0; n < 11; n++)
             board_cards[n] = line[RIVER_LEN+n];
@@ -570,7 +606,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 11;
+              return 14;
             }
           }
 
@@ -592,26 +628,28 @@ int main(int argc,char **argv)
 
           if ((!bSkipZero || (delta != 0)) && (!bOnlyFolded)) {
             if (!bSawFlop || bHaveFlop) {
-              if (!bSawRiver || bHaveRiver) {
-                if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                  if (bTerse)
-                    printf("%d\n",delta);
-                  else {
-                    printf("%s %10d",hole_cards,delta);
+              if (!bStealthTwoPair || bHaveStealthTwoPair) {
+                if (!bSawRiver || bHaveRiver) {
+                  if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
+                    if (bTerse)
+                      printf("%d\n",delta);
+                    else {
+                      printf("%s %10d",hole_cards,delta);
 
-                    if (bShowBoard && bHaveRiver)
-                      printf(" %s",board_cards);
+                      if (bShowBoard && bHaveRiver)
+                        printf(" %s",board_cards);
 
-                    if (bShowHand && bHaveRiver)
-                      printf(" %s",poker_hand.GetHand());
+                      if (bShowHand && bHaveRiver)
+                        printf(" %s",poker_hand.GetHand());
 
-                    if (bShowHandType && bHaveRiver)
-                      printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                      if (bShowHandType && bHaveRiver)
+                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                    if (bVerbose)
-                      printf(" %s %3d\n",filename,num_hands);
-                    else
-                      putchar(0x0a);
+                      if (bVerbose)
+                        printf(" %s %3d\n",filename,num_hands);
+                      else
+                        putchar(0x0a);
+                    }
                   }
                 }
               }
