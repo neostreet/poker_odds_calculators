@@ -573,13 +573,15 @@ int main(int argc,char **argv)
       else {
         if (!strncmp(line,flop,FLOP_LEN)) {
           if (bStealthTwoPair) {
-            if (((hole_cards[0] == line[FLOP_LEN]) ||
-                 (hole_cards[0] == line[FLOP_LEN+3]) ||
-                 (hole_cards[0] == line[FLOP_LEN+6])) &&
-                ((hole_cards[3] == line[FLOP_LEN]) ||
-                 (hole_cards[3] == line[FLOP_LEN+3]) ||
-                 (hole_cards[3] == line[FLOP_LEN+6]))) {
-              bHaveStealthTwoPair = true;
+            if (hole_cards[0] != hole_cards[3]) {
+              if (((hole_cards[0] == line[FLOP_LEN]) ||
+                   (hole_cards[0] == line[FLOP_LEN+3]) ||
+                   (hole_cards[0] == line[FLOP_LEN+6])) &&
+                  ((hole_cards[3] == line[FLOP_LEN]) ||
+                   (hole_cards[3] == line[FLOP_LEN+3]) ||
+                   (hole_cards[3] == line[FLOP_LEN+6]))) {
+                bHaveStealthTwoPair = true;
+              }
             }
           }
 
