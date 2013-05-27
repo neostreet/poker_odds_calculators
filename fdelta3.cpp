@@ -120,6 +120,7 @@ int main(int argc,char **argv)
   bool bSkipping;
   int rank_ix1;
   int rank_ix2;
+  int cards[NUM_CARDS_IN_HAND];
   int holdem_cards[NUM_CARDS_IN_HOLDEM_POOL];
   HoldemPokerHand holdem_hand;
   PokerHand poker_hand;
@@ -379,6 +380,8 @@ int main(int argc,char **argv)
                       card_string,line_no);
                     return 13;
                   }
+
+                  cards[q] = holdem_cards[q];
                 }
               }
               else {
@@ -503,10 +506,10 @@ int main(int argc,char **argv)
                       if (bShowBoard && bHaveRiver)
                         printf(" %s",board_cards);
 
-                      if (bShowHand && bHaveRiver)
+                      if (bShowHand && bHaveFlop)
                         printf(" %s",poker_hand.GetHand());
 
-                      if (bShowHandType && bHaveRiver)
+                      if (bShowHandType && bHaveFlop)
                         printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
                       if (bVerbose)
@@ -585,10 +588,32 @@ int main(int argc,char **argv)
             }
           }
 
+          for (n = 0; n < 8; n++)
+            board_cards[n] = line[FLOP_LEN+n];
+
+          board_cards[n] = ' ';
+
+          for (q = 0; q < NUM_CARDS_IN_FLOP; q++) {
+            card_string[0] = board_cards[q*3 + 0];
+            card_string[1] = board_cards[q*3 + 1];
+
+            retval = card_value_from_card_string(
+              card_string,&cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND+q]);
+
+            if (retval) {
+              printf("invalid card string %s on line %d\n",
+                card_string,line_no);
+              return 14;
+            }
+          }
+
+          poker_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
+          poker_hand.Evaluate();
+
           bHaveFlop = true;
         }
         else if (!strncmp(line,river,RIVER_LEN)) {
-          for (n = 0; n < 11; n++)
+          for (n = 9; n < 11; n++)
             board_cards[n] = line[RIVER_LEN+n];
 
           board_cards[n++] = ' ';
@@ -608,7 +633,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 14;
+              return 15;
             }
           }
 
@@ -641,10 +666,10 @@ int main(int argc,char **argv)
                       if (bShowBoard && bHaveRiver)
                         printf(" %s",board_cards);
 
-                      if (bShowHand && bHaveRiver)
+                      if (bShowHand && bHaveFlop)
                         printf(" %s",poker_hand.GetHand());
 
-                      if (bShowHandType && bHaveRiver)
+                      if (bShowHandType && bHaveFlop)
                         printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
                       if (bVerbose)
