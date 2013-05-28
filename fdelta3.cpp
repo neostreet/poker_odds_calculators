@@ -32,6 +32,8 @@ static char summary[] = "*** SUMMARY ***";
 #define SUMMARY_LEN (sizeof (summary) - 1)
 static char flop[] = "*** FLOP *** [";
 #define FLOP_LEN (sizeof (flop) - 1)
+static char turn[] = "*** TURN *** [";
+#define TURN_LEN (sizeof (turn) - 1)
 static char river[] = "*** RIVER *** [";
 #define RIVER_LEN (sizeof (river) - 1)
 static char street_marker[] = "*** ";
@@ -120,10 +122,10 @@ int main(int argc,char **argv)
   bool bSkipping;
   int rank_ix1;
   int rank_ix2;
-  int cards[NUM_CARDS_IN_HAND];
-  int holdem_cards[NUM_CARDS_IN_HOLDEM_POOL];
-  HoldemPokerHand holdem_hand;
+  int cards[NUM_CARDS_IN_HOLDEM_POOL];
   PokerHand poker_hand;
+  HoldemTurnHand turn_hand;
+  HoldemPokerHand holdem_hand;
   char card_string[3];
   int retval;
 
@@ -373,15 +375,13 @@ int main(int argc,char **argv)
                   card_string[1] = hole_cards[q*3 + 1];
 
                   retval = card_value_from_card_string(
-                    card_string,&holdem_cards[q]);
+                    card_string,&cards[q]);
 
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
                     return 13;
                   }
-
-                  cards[q] = holdem_cards[q];
                 }
               }
               else {
@@ -612,33 +612,53 @@ int main(int argc,char **argv)
 
           bHaveFlop = true;
         }
-        else if (!strncmp(line,river,RIVER_LEN)) {
-          for (n = 9; n < 11; n++)
-            board_cards[n] = line[RIVER_LEN+n];
+        else if (!strncmp(line,turn,TURN_LEN)) {
+          n = 9;
+
+          for (m = 0; m < 2; m++,n++)
+            board_cards[n] = line[TURN_LEN+11+m];
 
           board_cards[n++] = ' ';
+
+          card_string[0] = board_cards[9];
+          card_string[1] = board_cards[10];
+
+          retval = card_value_from_card_string(
+            card_string,&cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND+NUM_CARDS_IN_FLOP]);
+
+          if (retval) {
+            printf("invalid card string %s on line %d\n",
+              card_string,line_no);
+            return 15;
+          }
+
+          turn_hand.NewCards(cards[0],cards[1],cards[2],
+            cards[3],cards[4],cards[5]);
+
+          poker_hand = turn_hand.BestPokerHand();
+        }
+        else if (!strncmp(line,river,RIVER_LEN)) {
+          n = 12;
 
           for (m = 0; m < 2; m++,n++)
             board_cards[n] = line[RIVER_LEN+14+m];
 
           board_cards[n] = 0;
 
-          for (q = 0; q < NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP; q++) {
-            card_string[0] = board_cards[q*3 + 0];
-            card_string[1] = board_cards[q*3 + 1];
+          card_string[0] = board_cards[12];
+          card_string[1] = board_cards[13];
 
-            retval = card_value_from_card_string(
-              card_string,&holdem_cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND+q]);
+          retval = card_value_from_card_string(
+            card_string,&cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND+NUM_CARDS_IN_FLOP+1]);
 
-            if (retval) {
-              printf("invalid card string %s on line %d\n",
-                card_string,line_no);
-              return 15;
-            }
+          if (retval) {
+            printf("invalid card string %s on line %d\n",
+              card_string,line_no);
+            return 16;
           }
 
-          holdem_hand.NewCards(holdem_cards[0],holdem_cards[1],holdem_cards[2],
-            holdem_cards[3],holdem_cards[4],holdem_cards[5],holdem_cards[6]);
+          holdem_hand.NewCards(cards[0],cards[1],cards[2],
+            cards[3],cards[4],cards[5],cards[6]);
 
           poker_hand = holdem_hand.BestPokerHand();
 
