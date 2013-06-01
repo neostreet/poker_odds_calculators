@@ -218,7 +218,7 @@ HandType PokerHand::Evaluate()
     _hand_type = STRAIGHT;
   else if (ThreeOfAKind())
     _hand_type = THREE_OF_A_KIND;
-  else if (TwoPairs())
+  else if (TwoPair())
     _hand_type = TWO_PAIRS;
   else if (OnePair())
     _hand_type = ONE_PAIR;
@@ -236,12 +236,12 @@ void PokerHand::UnEvaluate()
 }
 
 
-int PokerHand::Evaluated()
+bool PokerHand::Evaluated()
 {
   return _hand_evaluated;
 }
 
-int PokerHand::RoyalFlush()
+bool PokerHand::RoyalFlush()
 {
   if (!StraightFlush())
     return 0;
@@ -252,7 +252,7 @@ int PokerHand::RoyalFlush()
   return 1;
 }
 
-int PokerHand::StraightFlush()
+bool PokerHand::StraightFlush()
 {
   if (!Straight())
     return 0;
@@ -263,7 +263,7 @@ int PokerHand::StraightFlush()
   return 1;
 }
 
-int PokerHand::FourOfAKind()
+bool PokerHand::FourOfAKind()
 {
   if (_num_cards_with_same_rank[_order[0]] == 4)
     return 1;
@@ -271,7 +271,7 @@ int PokerHand::FourOfAKind()
   return 0;
 }
 
-int PokerHand::FullHouse()
+bool PokerHand::FullHouse()
 {
   if ((_num_cards_with_same_rank[_order[0]] == 3) &&
       (_num_cards_with_same_rank[_order[3]] == 2))
@@ -280,7 +280,7 @@ int PokerHand::FullHouse()
   return 0;
 }
 
-int PokerHand::Flush()
+bool PokerHand::Flush()
 {
   int n;
 
@@ -295,7 +295,7 @@ int PokerHand::Flush()
   return 1;
 }
 
-int PokerHand::Straight()
+bool PokerHand::Straight()
 {
   int n;
 
@@ -319,7 +319,7 @@ int PokerHand::Straight()
   return 1;
 }
 
-int PokerHand::ThreeOfAKind()
+bool PokerHand::ThreeOfAKind()
 {
   if (_num_cards_with_same_rank[_order[0]] == 3)
     return 1;
@@ -327,7 +327,7 @@ int PokerHand::ThreeOfAKind()
   return 0;
 }
 
-int PokerHand::TwoPairs()
+bool PokerHand::TwoPair()
 {
   if ((_num_cards_with_same_rank[_order[0]] == 2) &&
       (_num_cards_with_same_rank[_order[2]] == 2))
@@ -336,7 +336,7 @@ int PokerHand::TwoPairs()
   return 0;
 }
 
-int PokerHand::OnePair()
+bool PokerHand::OnePair()
 {
   if (_num_cards_with_same_rank[_order[0]] == 2)
     return 1;

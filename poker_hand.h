@@ -148,16 +148,16 @@ class PokerHand {
   void Sort();
   HandType Evaluate();
   void UnEvaluate();
-  int Evaluated();
-  int RoyalFlush();
-  int StraightFlush();
-  int FourOfAKind();
-  int FullHouse();
-  int Flush();
-  int Straight();
-  int ThreeOfAKind();
-  int TwoPairs();
-  int OnePair();
+  bool Evaluated();
+  bool RoyalFlush();
+  bool StraightFlush();
+  bool FourOfAKind();
+  bool FullHouse();
+  bool Flush();
+  bool Straight();
+  bool ThreeOfAKind();
+  bool TwoPair();
+  bool OnePair();
 
   char *GetHand();
   HandType GetHandType();
