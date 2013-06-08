@@ -29,6 +29,7 @@ int main(int argc,char **argv)
   int num_wet_flops;
   int retval;
   FlopType flop_type;
+  double dwork;
 
   if (argc != 2) {
     printf(usage);
@@ -70,9 +71,12 @@ int main(int argc,char **argv)
     num_quizzes++;
   }
 
+  dwork = (double)num_wet_flops / (double)num_quizzes * (double)100;
+
   printf("num_quizzes   = %5d\n",num_quizzes);
   printf("num_dry_flops = %5d\n",num_dry_flops);
   printf("num_wet_flops = %5d\n",num_wet_flops);
+  printf("wet_pct       = %5.2lf\n",dwork);
 
   return 0;
 }
