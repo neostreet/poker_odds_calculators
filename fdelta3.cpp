@@ -20,7 +20,7 @@ static char filename[MAX_FILENAME_LEN];
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: fdelta3 (-terse) (-verbose) (-debug) (-handhand)\n"
+"usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
 "  (-show_hand) (-show_hand_type) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) player_name filename\n";
@@ -101,6 +101,7 @@ int main(int argc,char **argv)
   double dwork2;
   char hole_cards[6];
   char board_cards[15];
+  bool bHandTypeSpecified;
   bool bHandSpecified;
   bool bSkipFolded;
   bool bAbbrev;
@@ -118,6 +119,7 @@ int main(int argc,char **argv)
   bool bHaveRiver;
   bool bHaveStealthTwoPair;
   bool bSpentRiverMoney;
+  char *hand_type;
   char *hand;
   bool bSkipping;
   int rank_ix1;
@@ -137,6 +139,7 @@ int main(int argc,char **argv)
   bTerse = false;
   bVerbose = false;
   bDebug = false;
+  bHandTypeSpecified = false;
   bHandSpecified = false;
   bSkipFolded = false;
   bAbbrev = false;
@@ -157,6 +160,10 @@ int main(int argc,char **argv)
       bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strncmp(argv[curr_arg],"-hand_type",10)) {
+      hand_type = &argv[curr_arg][10];
+      bHandTypeSpecified = true;
+    }
     else if (!strncmp(argv[curr_arg],"-hand",5)) {
       hand = &argv[curr_arg][5];
       bHandSpecified = true;
@@ -232,14 +239,24 @@ int main(int argc,char **argv)
     return 9;
   }
 
+  if (bStealthTwoPair && bHandTypeSpecified) {
+    printf("can't specify both -stealth_two_pair and -hand_type\n");
+    return 10;
+  }
+
   if (bStealthTwoPair && bHandSpecified) {
     printf("can't specify both -stealth_two_pair and -hand\n");
-    return 10;
+    return 11;
   }
 
   if (bStealthTwoPair && !bSawFlop && !bSawRiver) {
     printf("can't specify -stealth_two_pair if didn't specify -saw_flop or -saw_river\n");
-    return 11;
+    return 12;
+  }
+
+  if (bHandTypeSpecified && !bSawFlop && !bSawRiver) {
+    printf("can't specify -hand_type if didn't specify -saw_flop or -saw_river\n");
+    return 13;
   }
 
   player_name_ix = curr_arg++;
@@ -247,7 +264,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 12;
+    return 14;
   }
 
   ending_balance = -1;
@@ -380,7 +397,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 13;
+                    return 15;
                   }
                 }
               }
@@ -498,24 +515,26 @@ int main(int argc,char **argv)
               if (!bStealthTwoPair || bHaveStealthTwoPair) {
                 if (!bSawRiver || bHaveRiver) {
                   if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                    if (bTerse)
-                      printf("%d\n",delta);
-                    else {
-                      printf("%s %10d",hole_cards,delta);
+                    if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
+                      if (bTerse)
+                        printf("%d\n",delta);
+                      else {
+                        printf("%s %10d",hole_cards,delta);
 
-                      if (bShowBoard && bHaveRiver)
-                        printf(" %s",board_cards);
+                        if (bShowBoard && bHaveRiver)
+                          printf(" %s",board_cards);
 
-                      if (bShowHand && bHaveFlop)
-                        printf(" %s",poker_hand.GetHand());
+                        if (bShowHand && bHaveFlop)
+                          printf(" %s",poker_hand.GetHand());
 
-                      if (bShowHandType && bHaveFlop)
-                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                        if (bShowHandType && bHaveFlop)
+                          printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                      if (bVerbose)
-                        printf(" %s %3d\n",filename,num_hands);
-                      else
-                        putchar(0x0a);
+                        if (bVerbose)
+                          printf(" %s %3d\n",filename,num_hands);
+                        else
+                          putchar(0x0a);
+                      }
                     }
                   }
                 }
@@ -603,7 +622,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 14;
+              return 16;
             }
           }
 
@@ -629,7 +648,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 15;
+            return 17;
           }
 
           turn_hand.NewCards(cards[0],cards[1],cards[2],
@@ -654,7 +673,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 16;
+            return 18;
           }
 
           holdem_hand.NewCards(cards[0],cards[1],cards[2],
@@ -678,24 +697,26 @@ int main(int argc,char **argv)
               if (!bStealthTwoPair || bHaveStealthTwoPair) {
                 if (!bSawRiver || bHaveRiver) {
                   if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                    if (bTerse)
-                      printf("%d\n",delta);
-                    else {
-                      printf("%s %10d",hole_cards,delta);
+                    if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
+                      if (bTerse)
+                        printf("%d\n",delta);
+                      else {
+                        printf("%s %10d",hole_cards,delta);
 
-                      if (bShowBoard && bHaveRiver)
-                        printf(" %s",board_cards);
+                        if (bShowBoard && bHaveRiver)
+                          printf(" %s",board_cards);
 
-                      if (bShowHand && bHaveFlop)
-                        printf(" %s",poker_hand.GetHand());
+                        if (bShowHand && bHaveFlop)
+                          printf(" %s",poker_hand.GetHand());
 
-                      if (bShowHandType && bHaveFlop)
-                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                        if (bShowHandType && bHaveFlop)
+                          printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                      if (bVerbose)
-                        printf(" %s %3d\n",filename,num_hands);
-                      else
-                        putchar(0x0a);
+                        if (bVerbose)
+                          printf(" %s %3d\n",filename,num_hands);
+                        else
+                          putchar(0x0a);
+                      }
                     }
                   }
                 }
