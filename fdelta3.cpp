@@ -131,7 +131,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 18)) {
+  if ((argc < 3) || (argc > 19)) {
     printf(usage);
     return 1;
   }
