@@ -440,6 +440,12 @@ int main(int argc,char **argv)
 
           bSkipping = true;
 
+          work = spent_this_street[0] + spent_this_street[1] +
+            spent_this_street[2] + spent_this_street[3];
+
+          if (work != spent_this_hand)
+            printf("oops! %d != %d\n",work,spent_this_hand);
+
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
 
@@ -595,6 +601,12 @@ int main(int argc,char **argv)
             printf("line %d SUMMARY line detected; skipping\n",line_no);
 
           bSkipping = true;
+
+          work = spent_this_street[0] + spent_this_street[1] +
+            spent_this_street[2] + spent_this_street[3];
+
+          if (work != spent_this_hand)
+            printf("oops! %d != %d\n",work,spent_this_hand);
 
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
