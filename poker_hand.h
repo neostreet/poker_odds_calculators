@@ -79,6 +79,8 @@ extern char *plain_hand_types[];
 #define NUM_CARDS_AFTER_TURN 2
 #define NUM_CARDS_AFTER_DEAL (NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
 
+#define MAX_STREET_MARKERS 6
+
 enum HandType {
   HIGH_CARD,
   ONE_PAIR,
