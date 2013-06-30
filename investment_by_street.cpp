@@ -86,6 +86,7 @@ int main(int argc,char **argv)
   int starting_balance;
   int spent_this_street[MAX_STREET_MARKERS];
   int spent_this_street_totals[MAX_STREET_MARKERS];
+  int total_total;
   int spent_this_hand;
   int end_ix;
   int uncalled_bet_amount;
@@ -682,11 +683,23 @@ int main(int argc,char **argv)
   fclose(fptr0);
 
   if (bTotals) {
-    printf("      %10d %10d %10d %10d\n",
+    total_total = 0;
+
+    for (n = 0; n < MAX_STREET_MARKERS; n++)
+      total_total += spent_this_street_totals[n];
+
+    printf("      %10d %10d %10d %10d %10ld\n",
       spent_this_street_totals[0],
       spent_this_street_totals[1],
       spent_this_street_totals[2],
-      spent_this_street_totals[3]);
+      spent_this_street_totals[3],
+      total_total);
+
+    printf("      %10.3lf %10.3lf %10.3lf %10.3lf\n",
+      (double)spent_this_street_totals[0] / (double)total_total * (double)100,
+      (double)spent_this_street_totals[1] / (double)total_total * (double)100,
+      (double)spent_this_street_totals[2] / (double)total_total * (double)100,
+      (double)spent_this_street_totals[3] / (double)total_total * (double)100);
   }
 
   return 0;
