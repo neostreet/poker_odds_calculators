@@ -131,6 +131,9 @@ extern int num_comparisons;
 extern int num_holdem_best_poker_hand_comparisons;
 #endif
 
+int get_rank_index(char rank_char,int *rank_index_ptr);
+int get_suit_index(char suit_char,int *suit_index_ptr);
+
 class PokerHand {
   public:
 

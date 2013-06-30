@@ -1292,24 +1292,10 @@ int card_value_from_card_string(char *card_string,int *card_value)
   if (strlen(card_string) < 2)
     return 1;
 
-  // get the rank index
-
-  for (rank = 0; rank < NUM_CARDS_IN_SUIT; rank++) {
-    if (card_string[0] == rank_chars[rank])
-      break;
-  }
-
-  if (rank == NUM_CARDS_IN_SUIT)
+  if (get_rank_index(card_string[0],&rank))
     return 2;
 
-  // get the suit index
-
-  for (suit = 0; suit < NUM_SUITS; suit++) {
-    if (card_string[1] == suit_chars[suit])
-      break;
-  }
-
-  if (suit == NUM_SUITS)
+  if (get_suit_index(card_string[1],&suit))
     return 3;
 
   *card_value = suit * NUM_CARDS_IN_SUIT + rank;
@@ -1330,6 +1316,40 @@ int card_string_from_card_value(int card_value,char *card_string)
 
   card_string[0] = rank_chars[rank_ix];
   card_string[1] = suit_chars[suit_ix];
+
+  return 0;
+}
+
+int get_rank_index(char rank_char,int *rank_index_ptr)
+{
+  int rank;
+
+  for (rank = 0; rank < NUM_CARDS_IN_SUIT; rank++) {
+    if (rank_char == rank_chars[rank])
+      break;
+  }
+
+  if (rank == NUM_CARDS_IN_SUIT)
+    return 1;
+
+  *rank_index_ptr = rank;
+
+  return 0;
+}
+
+int get_suit_index(char suit_char,int *suit_index_ptr)
+{
+  int suit;
+
+  for (suit = 0; suit < NUM_SUITS; suit++) {
+    if (suit_char == suit_chars[suit])
+      break;
+  }
+
+  if (suit == NUM_SUITS)
+    return 1;
+
+  *suit_index_ptr = suit;
 
   return 0;
 }

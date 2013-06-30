@@ -23,7 +23,8 @@ static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
 "  (-show_hand) (-show_hand_type) (-saw_flop) (-saw_river) (-only_folded)\n"
-"  (-spent_money_on_the_river) (-stealth_two_pair) player_name filename\n";
+"  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -60,7 +61,8 @@ static char collected[] = " collected ";
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
-int get_work_amount(char *line,int line_len);
+static int get_work_amount(char *line,int line_len);
+static void normalize_hole_cards(char *hole_cards);
 
 int main(int argc,char **argv)
 {
@@ -114,6 +116,7 @@ int main(int argc,char **argv)
   bool bOnlyFolded;
   bool bSpentMoneyOnTheRiver;
   bool bStealthTwoPair;
+  bool bNormalize;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -131,7 +134,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 19)) {
+  if ((argc < 3) || (argc > 20)) {
     printf(usage);
     return 1;
   }
@@ -152,6 +155,7 @@ int main(int argc,char **argv)
   bOnlyFolded = false;
   bSpentMoneyOnTheRiver = false;
   bStealthTwoPair = false;
+  bNormalize = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -195,6 +199,8 @@ int main(int argc,char **argv)
       bSpentMoneyOnTheRiver = true;
     else if (!strcmp(argv[curr_arg],"-stealth_two_pair"))
       bStealthTwoPair = true;
+    else if (!strcmp(argv[curr_arg],"-normalize"))
+      bNormalize = true;
     else
       break;
   }
@@ -386,6 +392,9 @@ int main(int argc,char **argv)
               if (!bAbbrev) {
                 for (p = 0; p < 5; p++)
                   hole_cards[p] = line[n+p];
+
+                if (bNormalize)
+                  normalize_hole_cards(hole_cards);
 
                 for (q = 0; q < NUM_HOLE_CARDS_IN_HOLDEM_HAND; q++) {
                   card_string[0] = hole_cards[q*3 + 0];
@@ -808,7 +817,7 @@ static int Contains(bool bCaseSens,char *line,int line_len,
   return false;
 }
 
-int get_work_amount(char *line,int line_len)
+static int get_work_amount(char *line,int line_len)
 {
   int ix;
   int chara;
@@ -836,4 +845,44 @@ int get_work_amount(char *line,int line_len)
   sscanf(&line[ix+1],"%d",&work_amount);
 
   return work_amount;
+}
+
+static void normalize_hole_cards(char *hole_cards)
+{
+  int suit1;
+  int suit2;
+  char temp;
+  int rank1;
+  int rank2;
+
+  if (hole_cards[0] == hole_cards[3]) {
+    // pair
+
+    if (get_suit_index(hole_cards[1],&suit1))
+      return;
+
+    if (get_suit_index(hole_cards[4],&suit2))
+      return;
+
+    if (suit1 < suit2) {
+      temp = hole_cards[1];
+      hole_cards[1] = hole_cards[4];
+      hole_cards[4] = temp;
+    }
+  }
+  else {
+    // non-pair
+
+    if (get_rank_index(hole_cards[0],&rank1))
+      return;
+
+    if (get_rank_index(hole_cards[3],&rank2))
+      return;
+
+    if (rank1 < rank2) {
+      temp = hole_cards[0];
+      hole_cards[0] = hole_cards[3];
+      hole_cards[3] = temp;
+    }
+  }
 }
