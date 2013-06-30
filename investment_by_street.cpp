@@ -22,7 +22,7 @@ static char line[MAX_LINE_LEN];
 static char usage[] =
 "usage: investment_by_street (-terse) (-verbose) (-debug) (-hand_typehand_type)\n"
 "  (-handhand) (-abbrev) (-skip_zero) (-show_board)\n"
-"  (-show_hand) (-show_hand_type)\n"
+"  (-show_hand) (-show_hand_type) (-totals)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -85,6 +85,7 @@ int main(int argc,char **argv)
   int num_street_markers;
   int starting_balance;
   int spent_this_street[MAX_STREET_MARKERS];
+  int spent_this_street_totals[MAX_STREET_MARKERS];
   int spent_this_hand;
   int end_ix;
   int uncalled_bet_amount;
@@ -111,6 +112,7 @@ int main(int argc,char **argv)
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
+  bool bTotals;
   char *hand_type;
   char *hand;
   bool bSkipping;
@@ -123,7 +125,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 13)) {
+  if ((argc < 3) || (argc > 14)) {
     printf(usage);
     return 1;
   }
@@ -138,6 +140,7 @@ int main(int argc,char **argv)
   bShowBoard = false;
   bShowHand = false;
   bShowHandType = false;
+  bTotals = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -169,6 +172,8 @@ int main(int argc,char **argv)
       bShowHand = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
       bShowHandType = true;
+    else if (!strcmp(argv[curr_arg],"-totals"))
+      bTotals = true;
     else
       break;
   }
@@ -199,6 +204,11 @@ int main(int argc,char **argv)
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
     return 6;
+  }
+
+  if (bTotals) {
+    for (n = 0; n < MAX_STREET_MARKERS; n++)
+      spent_this_street_totals[n] = 0;
   }
 
   ending_balance = -1;
@@ -446,6 +456,11 @@ int main(int argc,char **argv)
           if (work != spent_this_hand)
             printf("oops! %d != %d\n",work,spent_this_hand);
 
+          if (bTotals) {
+            for (n = 0; n < MAX_STREET_MARKERS; n++)
+              spent_this_street_totals[n] += spent_this_street[n];
+          }
+
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
 
@@ -608,6 +623,11 @@ int main(int argc,char **argv)
           if (work != spent_this_hand)
             printf("oops! %d != %d\n",work,spent_this_hand);
 
+          if (bTotals) {
+            for (n = 0; n < MAX_STREET_MARKERS; n++)
+              spent_this_street_totals[n] += spent_this_street[n];
+          }
+
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
 
@@ -660,6 +680,14 @@ int main(int argc,char **argv)
   }
 
   fclose(fptr0);
+
+  if (bTotals) {
+    printf("      %10d %10d %10d %10d\n",
+      spent_this_street_totals[0],
+      spent_this_street_totals[1],
+      spent_this_street_totals[2],
+      spent_this_street_totals[3]);
+  }
 
   return 0;
 }
