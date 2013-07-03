@@ -71,9 +71,11 @@ extern char *plain_hand_types[];
 #define POKER_52_7_PERMUTATIONS 133784560
 
 #define NUM_HOLE_CARDS_IN_HOLDEM_HAND 2
+#define NUM_HOLE_CARDS_IN_OMAHA_HAND 4
 #define NUM_CARDS_IN_FLOP 3
 #define NUM_CARDS_AFTER_FLOP 2
 #define NUM_CARDS_IN_HOLDEM_POOL (NUM_HOLE_CARDS_IN_HOLDEM_HAND + NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
+#define NUM_CARDS_IN_OMAHA_POOL (NUM_HOLE_CARDS_IN_OMAHA_HAND + NUM_CARDS_IN_FLOP + NUM_CARDS_AFTER_FLOP)
 #define NUM_CARDS_AT_TURN (NUM_HOLE_CARDS_IN_HOLDEM_HAND + NUM_CARDS_IN_FLOP + 1)
 #define NUM_HOLE_CARDS_IN_OMAHA_HAND 4
 #define NUM_CARDS_AFTER_TURN 2
@@ -302,6 +304,35 @@ class Flop {
 };
 
 ostream& operator<<(ostream& out,const Flop& hand);
+
+class OmahaPokerHand {
+  public:
+
+  // default constructor
+  OmahaPokerHand();
+  // copy constructor
+  OmahaPokerHand(const OmahaPokerHand&);
+  // assignment operator
+  OmahaPokerHand& operator=(const OmahaPokerHand&);
+  // destructor
+  ~OmahaPokerHand();
+
+  OmahaPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
+  void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
+
+  PokerHand& BestPokerHand();
+
+  void print(ostream& out) const;
+
+  private:
+
+  int _card[NUM_CARDS_IN_OMAHA_POOL];
+  PokerHand _best_poker_hand;
+
+  int _have_cards;
+};
+
+ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
 
 int card_value_from_card_string(char *card_string,int *card_value);
 int card_string_from_card_value(int card_value,char *card_string);

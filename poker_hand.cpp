@@ -1259,6 +1259,113 @@ void Flop::Fancy()
   _plain = false;
 }
 
+// default constructor
+
+OmahaPokerHand::OmahaPokerHand()
+{
+  _have_cards = false;
+}
+
+// copy constructor
+
+OmahaPokerHand::OmahaPokerHand(const OmahaPokerHand& hand)
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_IN_OMAHA_POOL; n++)
+    _card[n] = hand._card[n];
+
+  _have_cards = hand._have_cards;
+}
+
+// assignment operator
+
+OmahaPokerHand& OmahaPokerHand::operator=(const OmahaPokerHand& hand)
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_IN_OMAHA_POOL; n++)
+    _card[n] = hand._card[n];
+
+  _have_cards = hand._have_cards;
+
+  return *this;
+}
+
+// destructor
+
+OmahaPokerHand::~OmahaPokerHand()
+{
+}
+
+OmahaPokerHand::OmahaPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9)
+{
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card[3] = card4 % NUM_CARDS_IN_DECK;
+  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card[5] = card6 % NUM_CARDS_IN_DECK;
+  _card[6] = card7 % NUM_CARDS_IN_DECK;
+  _card[7] = card8 % NUM_CARDS_IN_DECK;
+  _card[8] = card9 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+}
+
+void OmahaPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9)
+{
+  _card[0] = card1 % NUM_CARDS_IN_DECK;
+  _card[1] = card2 % NUM_CARDS_IN_DECK;
+  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card[3] = card4 % NUM_CARDS_IN_DECK;
+  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card[5] = card6 % NUM_CARDS_IN_DECK;
+  _card[6] = card7 % NUM_CARDS_IN_DECK;
+  _card[7] = card8 % NUM_CARDS_IN_DECK;
+  _card[8] = card9 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+}
+
+PokerHand& OmahaPokerHand::BestPokerHand()
+{
+  PokerHand hand;
+
+  hand.NewCards(_card[0],_card[1],_card[2],_card[3],_card[4]);
+
+  _best_poker_hand = hand;
+
+  return _best_poker_hand;
+}
+
+void OmahaPokerHand::print(ostream& out) const
+{
+  int n;
+  char card_string[3];
+
+  if (!_have_cards)
+    return;
+
+  card_string[2] = 0;
+
+  for (n = 0; n < NUM_CARDS_IN_OMAHA_POOL; n++) {
+    card_string_from_card_value(_card[n],card_string);
+
+    out << card_string;
+
+    if (n < NUM_CARDS_IN_OMAHA_POOL - 1)
+      out << " ";
+  }
+}
+
+ostream& operator<<(ostream& out,const OmahaPokerHand& holdem_hand)
+{
+  holdem_hand.print(out);
+
+  return out;
+}
+
 static void get_permutation_instance(
   int set_size,int subset_size,
   int *m,int *n,int *o,int *p,int *q,
