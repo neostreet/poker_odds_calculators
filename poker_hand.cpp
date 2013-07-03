@@ -11,6 +11,18 @@ static void get_permutation_instance(
   int instance_ix
 );
 
+static void get_permutation_instance2(
+  int set_size,int subset_size,
+  int *m,int *n,
+  int instance_ix
+);
+
+static void get_permutation_instance3(
+  int set_size,int subset_size,
+  int *m,int *n,int *o,
+  int instance_ix
+);
+
 // default constructor
 
 PokerHand::PokerHand()
@@ -1330,11 +1342,41 @@ void OmahaPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,
 
 PokerHand& OmahaPokerHand::BestPokerHand()
 {
+  int m;
+  int n;
+  int o;
+  int p;
+  int q;
+  int r;
+  int s;
   PokerHand hand;
+  int ret_compare;
 
-  hand.NewCards(_card[0],_card[1],_card[2],_card[3],_card[4]);
+  for (o = 0; o < POKER_4_2_PERMUTATIONS; o++) {
+    get_permutation_instance2(
+      NUM_HOLE_CARDS_IN_OMAHA_HAND,NUM_SELECTED_HOLE_CARDS_IN_OMAHA_HAND,
+      &m,&n,o);
 
-  _best_poker_hand = hand;
+    for (s = 0; s < POKER_5_3_PERMUTATIONS; s++) {
+      get_permutation_instance3(
+        NUM_COMMUNITY_CARDS,NUM_SELECTED_COMMUNITY_CARDS_IN_OMAHA_HAND,
+        &p,&q,&r,s);
+
+      hand.NewCards(_card[m],_card[n],
+        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
+
+      if (!o)
+        _best_poker_hand = hand;
+      else {
+        ret_compare = hand.Compare(_best_poker_hand,1);
+
+        if (ret_compare == 1)
+          _best_poker_hand = hand;
+      }
+    }
+  }
 
   return _best_poker_hand;
 }
@@ -1386,6 +1428,46 @@ static void get_permutation_instance(
             ;
           }
         }
+      }
+    }
+  }
+}
+
+static void get_permutation_instance2(
+  int set_size,int subset_size,
+  int *m,int *n,
+  int instance_ix
+)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
+      return;
+
+      after_return_point:
+      ;
+    }
+  }
+}
+
+static void get_permutation_instance3(
+  int set_size,int subset_size,
+  int *m,int *n,int *o,
+  int instance_ix
+)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
+      for (*o = *n + 1; *o < set_size - subset_size + 3; (*o)++) {
+        return;
+
+        after_return_point:
+        ;
       }
     }
   }
