@@ -59,6 +59,7 @@ extern char *plain_hand_types[];
 #define POKER_40_1_PERMUTATIONS        40
 #define POKER_42_1_PERMUTATIONS        42
 #define POKER_44_1_PERMUTATIONS        44
+#define POKER_37_2_PERMUTATIONS       666
 #define POKER_41_2_PERMUTATIONS       820
 #define POKER_43_2_PERMUTATIONS       903
 #define POKER_45_2_PERMUTATIONS       990
