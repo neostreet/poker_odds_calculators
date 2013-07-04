@@ -10,7 +10,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: best_omaha_hand (-unevaluate) (-verbose) (-plain) (-no_stream) filename";
+"usage: best_omaha_hand (-debug) (-unevaluate) (-verbose) (-plain) (-no_stream) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -19,6 +19,7 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
+  bool bDebug;
   bool bUnEvaluate;
   bool bVerbose;
   bool bPlain;
@@ -33,18 +34,21 @@ int main(int argc,char **argv)
   OmahaPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 2) || (argc > 6)) {
+  if ((argc < 2) || (argc > 7)) {
     cout << usage << endl;
     return 1;
   }
 
+  bDebug = false;
   bUnEvaluate = false;
   bVerbose = false;
   bPlain = false;
   bNoStream = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-unevaluate"))
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-unevaluate"))
       bUnEvaluate = true;
     else if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
@@ -120,7 +124,7 @@ int main(int argc,char **argv)
 
     cout << board_poker_hand << endl;
 
-    best_poker_hand = board_poker_hand.BestPokerHand();
+    best_poker_hand = board_poker_hand.BestPokerHand(bDebug);
 
     cout << "best hand: " << endl << endl;
 

@@ -325,7 +325,7 @@ class OmahaPokerHand {
   OmahaPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
 
-  PokerHand& BestPokerHand();
+  PokerHand& BestPokerHand(bool bDebug);
 
   void print(ostream& out) const;
 

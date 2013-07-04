@@ -1340,7 +1340,7 @@ void OmahaPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,
   _have_cards = true;
 }
 
-PokerHand& OmahaPokerHand::BestPokerHand()
+PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
 {
   int m;
   int n;
@@ -1351,6 +1351,7 @@ PokerHand& OmahaPokerHand::BestPokerHand()
   int s;
   PokerHand hand;
   int ret_compare;
+  char card_string[3];
 
   for (o = 0; o < POKER_4_2_PERMUTATIONS; o++) {
     get_permutation_instance2(
@@ -1362,18 +1363,44 @@ PokerHand& OmahaPokerHand::BestPokerHand()
         NUM_COMMUNITY_CARDS,NUM_SELECTED_COMMUNITY_CARDS_IN_OMAHA_HAND,
         &p,&q,&r,s);
 
+      if (bDebug) {
+        card_string_from_card_value(_card[m],card_string);
+        cout << card_string << " ";
+        card_string_from_card_value(_card[n],card_string);
+        cout << card_string << " ";
+
+        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+          card_string);
+        cout << card_string << " ";
+        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+          card_string);
+        cout << card_string << " ";
+        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r],
+          card_string);
+        cout << card_string << " ";
+      }
+
       hand.NewCards(_card[m],_card[n],
         _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
         _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
         _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
 
-      if (!o)
+      hand.Evaluate();
+
+      if (bDebug)
+        cout << hand << endl;
+
+      if (!o && !s)
         _best_poker_hand = hand;
       else {
         ret_compare = hand.Compare(_best_poker_hand,1);
 
-        if (ret_compare == 1)
+        if (ret_compare == 1) {
           _best_poker_hand = hand;
+
+          if (bDebug)
+            cout << "new best poker hand" << endl;
+        }
       }
     }
   }
