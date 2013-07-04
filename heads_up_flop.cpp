@@ -11,7 +11,7 @@ static void get_permutation_instance(
   int set_size,int subset_size,int *m,int *n,int instance_ix
 );
 
-#define TWO 2
+#define NUM_PLAYERS 2
 #define NUM_HEADS_UP_FLOP_CARDS 7
 #define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_FLOP_CARDS)
 
@@ -38,8 +38,8 @@ int main(int argc,char **argv)
   int line_len;
   int cards[NUM_HEADS_UP_FLOP_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
-  HoldemPokerHand holdem_hand[TWO];
-  PokerHand hand[TWO];
+  HoldemPokerHand holdem_hand[NUM_PLAYERS];
+  PokerHand hand[NUM_PLAYERS];
   int ret_compare;
   int wins;
   int losses;
@@ -169,7 +169,7 @@ int main(int argc,char **argv)
         cards[4],cards[5],cards[6],
         remaining_cards[m],remaining_cards[n]);
 
-      for (p = 0; p < TWO; p++)
+      for (p = 0; p < NUM_PLAYERS; p++)
         hand[p] = holdem_hand[p].BestPokerHand();
 
       ret_compare = hand[0].Compare(hand[1],0);
