@@ -101,7 +101,7 @@ int main(int argc,char **argv)
   int work;
   double dwork1;
   double dwork2;
-  char hole_cards[6];
+  char hole_cards[12];
   char board_cards[15];
   bool bHandTypeSpecified;
   bool bHandSpecified;
@@ -279,7 +279,7 @@ int main(int argc,char **argv)
   dbg_file_no = -1;
 
   if (!bAbbrev)
-    hole_cards[5] = 0;
+    hole_cards[11] = 0;
   else
     hole_cards[3] = 0;
 
@@ -390,8 +390,16 @@ int main(int argc,char **argv)
 
             if (m < line_len) {
               if (!bAbbrev) {
-                for (p = 0; p < 5; p++)
-                  hole_cards[p] = line[n+p];
+                for (p = 0; p < 11; p++) {
+                  if (line[n+p] == ']') {
+                    if (p == 5)
+                      hole_cards[p] = 0;
+
+                    break;
+                  }
+                  else
+                    hole_cards[p] = line[n+p];
+                }
 
                 if (bNormalize)
                   normalize_hole_cards(hole_cards);
@@ -528,7 +536,7 @@ int main(int argc,char **argv)
                       if (bTerse)
                         printf("%d\n",delta);
                       else {
-                        printf("%s %10d",hole_cards,delta);
+                        printf("%10d %s",delta,hole_cards);
 
                         if (bShowBoard && bHaveRiver)
                           printf(" %s",board_cards);
@@ -710,7 +718,7 @@ int main(int argc,char **argv)
                       if (bTerse)
                         printf("%d\n",delta);
                       else {
-                        printf("%s %10d",hole_cards,delta);
+                        printf("%10d %s",delta,hole_cards);
 
                         if (bShowBoard && bHaveRiver)
                           printf(" %s",board_cards);
