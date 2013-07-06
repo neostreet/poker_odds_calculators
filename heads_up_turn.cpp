@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 using namespace std;
 
 #define MAIN_MODULE
@@ -49,6 +50,8 @@ int main(int argc,char **argv)
   int hand2_winning_hand_counts[NUM_HAND_TYPES];
   int tie_hand_counts[NUM_HAND_TYPES];
   int total_hand_counts[NUM_HAND_TYPES];
+  time_t start_time;
+  time_t end_time;
 
   if ((argc < 2) || (argc > 3)) {
     cout << usage << endl;
@@ -73,6 +76,8 @@ int main(int argc,char **argv)
     printf(couldnt_open,argv[curr_arg]);
     return 3;
   }
+
+  time(&start_time);
 
   line_no = 0;
 
@@ -256,6 +261,10 @@ int main(int argc,char **argv)
   }
 
   fclose(fptr);
+
+  time(&end_time);
+
+  printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
   return 0;
 }
