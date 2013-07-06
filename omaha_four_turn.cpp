@@ -7,10 +7,6 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-static void get_permutation_instance(
-  int set_size,int subset_size,int *m,int instance_ix
-);
-
 #define NUM_PLAYERS 4
 #define NUM_OMAHA_FOUR_TURN_CARDS 20
 #define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_OMAHA_FOUR_TURN_CARDS)
@@ -150,11 +146,7 @@ int main(int argc,char **argv)
     ties = 0;
     total = 0;
 
-    for (o = 0; o < POKER_32_1_PERMUTATIONS; o++) {
-      get_permutation_instance(
-        NUM_REMAINING_CARDS,NUM_CARDS_AFTER_TURN,
-        &m,o);
-
+    for (m = 0; m < NUM_REMAINING_CARDS; m++) {
       if (bVerbose) {
         card_string_from_card_value(remaining_cards[m],card_string);
         cout << card_string << " ";
@@ -259,19 +251,4 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 
   line[local_line_len] = 0;
   *line_len = local_line_len;
-}
-
-static void get_permutation_instance(
-  int set_size,int subset_size,int *m,int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    return;
-
-    after_return_point:
-    ;
-  }
 }

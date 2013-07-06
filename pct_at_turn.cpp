@@ -10,9 +10,6 @@ using namespace std;
 static void get_permutation_instance1(
   int set_size,int subset_size,int *m,int *n,int instance_ix
 );
-static void get_permutation_instance2(
-  int set_size,int subset_size,int *m,int instance_ix
-);
 
 #define NUM_PCT_AT_TURN_CARDS 6
 #define NUM_REMAINING_CARDS1 (NUM_CARDS_IN_DECK - NUM_PCT_AT_TURN_CARDS)
@@ -187,11 +184,7 @@ int main(int argc,char **argv)
         remaining_cards2[q++] = remaining_cards1[p];
       }
 
-      for (o = 0; o < POKER_44_1_PERMUTATIONS; o++, deep_debug_counter++) {
-        get_permutation_instance2(
-          NUM_REMAINING_CARDS2,NUM_CARDS_AFTER_TURN,
-          &m,o);
-
+      for (m = 0; m < NUM_REMAINING_CARDS2; m++, deep_debug_counter++) {
         if (deep_debug > 1) {
           if (deep_debug_counter != deep_debug)
             continue;
@@ -354,20 +347,5 @@ static void get_permutation_instance1(
       after_return_point:
       ;
     }
-  }
-}
-
-static void get_permutation_instance2(
-  int set_size,int subset_size,int *m,int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    return;
-
-    after_return_point:
-    ;
   }
 }
