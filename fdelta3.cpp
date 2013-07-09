@@ -56,8 +56,6 @@ static char uncalled_bet[] = "Uncalled bet (";
 static char collected[] = " collected ";
 #define COLLECTED_LEN (sizeof (collected) - 1)
 
-#define NUM_CARDS_IN_SUIT 13
-
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
