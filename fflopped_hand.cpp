@@ -36,7 +36,6 @@ static char folds[] = " folds ";
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
-static int get_work_amount(char *line,int line_len);
 
 int main(int argc,char **argv)
 {
@@ -329,35 +328,4 @@ static int Contains(bool bCaseSens,char *line,int line_len,
   }
 
   return false;
-}
-
-static int get_work_amount(char *line,int line_len)
-{
-  int ix;
-  int chara;
-  int work_amount;
-
-  work_amount = 0;
-
-  for (ix = line_len - 1; (ix >= 0); ix--) {
-    chara = line[ix];
-
-    if ((chara >= '0') && (chara <= '9'))
-      break;
-  }
-
-  if (ix + 1 != line_len);
-    line[ix + 1] = 0;
-
-  for ( ; (ix >= 0); ix--) {
-    chara = line[ix];
-
-    if ((chara < '0') || (chara > '9'))
-      break;
-  }
-
-  sscanf(&line[ix+1],"%d",&work_amount);
-
-
-  return work_amount;
 }
