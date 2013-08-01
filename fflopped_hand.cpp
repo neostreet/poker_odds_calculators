@@ -252,13 +252,16 @@ int main(int argc,char **argv)
 
           poker_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
           poker_hand.Evaluate();
-          printf("%s",hole_cards);
-          printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-          if (bVerbose)
-            printf(" %s %3d\n",filename,num_hands);
-          else
-            putchar(0x0a);
+          if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
+            printf("%s",hole_cards);
+            printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+            if (bVerbose)
+              printf(" %s %3d\n",filename,num_hands);
+            else
+              putchar(0x0a);
+          }
         }
       }
     }
