@@ -65,6 +65,7 @@ extern char *plain_hand_types[];
 #define POKER_47_2_PERMUTATIONS      1081
 #define POKER_52_2_PERMUTATIONS      1326
 #define POKER_52_3_PERMUTATIONS     22100
+#define POKER_45_4_PERMUTATIONS    148995
 #define POKER_36_5_PERMUTATIONS    376992
 #define POKER_40_5_PERMUTATIONS    658008
 #define POKER_44_5_PERMUTATIONS   1086008
@@ -338,6 +339,12 @@ class OmahaPokerHand {
 };
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
+
+void get_permutation_instance_five(
+  int set_size,
+  int *m,int *n,int *o,int *p,int *q,
+  int instance_ix
+);
 
 int card_value_from_card_string(char *card_string,int *card_value);
 int card_string_from_card_value(int card_value,char *card_string);

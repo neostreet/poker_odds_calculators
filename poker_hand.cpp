@@ -5,12 +5,6 @@ using namespace std;
 
 #include "poker_hand.h"
 
-static void get_permutation_instance(
-  int set_size,int subset_size,
-  int *m,int *n,int *o,int *p,int *q,
-  int instance_ix
-);
-
 static void get_permutation_instance2(
   int set_size,int subset_size,
   int *m,int *n,
@@ -793,8 +787,8 @@ PokerHand& HoldemPokerHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    get_permutation_instance(
-      NUM_CARDS_IN_HOLDEM_POOL,NUM_CARDS_IN_HAND,
+    get_permutation_instance_five(
+      NUM_CARDS_IN_HOLDEM_POOL,
       &m,&n,&o,&p,&q,r);
 
     hand.NewCards(_card[m],_card[n],_card[o],_card[p],_card[q]);
@@ -914,8 +908,8 @@ PokerHand& HoldemTurnHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_6_5_PERMUTATIONS; r++) {
-    get_permutation_instance(
-      NUM_CARDS_AT_TURN,NUM_CARDS_IN_HAND,
+    get_permutation_instance_five(
+      NUM_CARDS_AT_TURN,
       &m,&n,&o,&p,&q,r);
 
     hand.NewCards(_card[m],_card[n],_card[o],_card[p],_card[q]);
@@ -1435,8 +1429,8 @@ ostream& operator<<(ostream& out,const OmahaPokerHand& holdem_hand)
   return out;
 }
 
-static void get_permutation_instance(
-  int set_size,int subset_size,
+void get_permutation_instance_five(
+  int set_size,
   int *m,int *n,int *o,int *p,int *q,
   int instance_ix
 )
@@ -1444,11 +1438,11 @@ static void get_permutation_instance(
   if (instance_ix)
     goto after_return_point;
 
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      for (*o = *n + 1; *o < set_size - subset_size + 3; (*o)++) {
-        for (*p = *o + 1; *p < set_size - subset_size + 4; (*p)++) {
-          for (*q = *p + 1; *q < set_size - subset_size + 5; (*q)++) {
+  for (*m = 0; *m < set_size - 5 + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - 5 + 2; (*n)++) {
+      for (*o = *n + 1; *o < set_size - 5 + 3; (*o)++) {
+        for (*p = *o + 1; *p < set_size - 5 + 4; (*p)++) {
+          for (*q = *p + 1; *q < set_size - 5 + 5; (*q)++) {
             return;
 
             after_return_point:
