@@ -78,7 +78,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 66)) {
+  if ((argc < 3) || (argc > 7)) {
     printf(usage);
     return 1;
   }
