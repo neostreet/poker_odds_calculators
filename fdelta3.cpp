@@ -22,7 +22,7 @@ static char line[MAX_LINE_LEN];
 static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
-"  (-show_hand) (-show_hand_type) (-saw_flop) (-saw_river) (-only_folded)\n"
+"  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
 "  (-only_lost) (-only_won)\n"
 "  player_name filename\n";
@@ -108,8 +108,8 @@ int main(int argc,char **argv)
   bool bAbbrev;
   bool bSkipZero;
   bool bShowBoard;
-  bool bShowHand;
   bool bShowHandType;
+  bool bShowHand;
   bool bSawFlop;
   bool bSawRiver;
   bool bOnlyFolded;
@@ -149,8 +149,8 @@ int main(int argc,char **argv)
   bAbbrev = false;
   bSkipZero = false;
   bShowBoard = false;
-  bShowHand = false;
   bShowHandType = false;
+  bShowHand = false;
   bSawFlop = false;
   bSawRiver = false;
   bOnlyFolded = false;
@@ -188,10 +188,10 @@ int main(int argc,char **argv)
       bSkipZero = true;
     else if (!strcmp(argv[curr_arg],"-show_board"))
       bShowBoard = true;
-    else if (!strcmp(argv[curr_arg],"-show_hand"))
-      bShowHand = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
       bShowHandType = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand"))
+      bShowHand = true;
     else if (!strcmp(argv[curr_arg],"-saw_flop"))
       bSawFlop = true;
     else if (!strcmp(argv[curr_arg],"-saw_river"))
@@ -555,11 +555,11 @@ int main(int argc,char **argv)
                             if (bShowBoard && bHaveRiver)
                               printf(" %s",board_cards);
 
-                            if (bShowHand && bHaveFlop)
-                              printf(" %s",poker_hand.GetHand());
-
                             if (bShowHandType && bHaveFlop)
                               printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+                            if (bShowHand && bHaveFlop)
+                              printf(" %s",poker_hand.GetHand());
 
                             if (bVerbose)
                               printf(" %s %3d\n",filename,num_hands);
@@ -741,11 +741,11 @@ int main(int argc,char **argv)
                             if (bShowBoard && bHaveRiver)
                               printf(" %s",board_cards);
 
-                            if (bShowHand && bHaveFlop)
-                              printf(" %s",poker_hand.GetHand());
-
                             if (bShowHandType && bHaveFlop)
                               printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+                            if (bShowHand && bHaveFlop)
+                              printf(" %s",poker_hand.GetHand());
 
                             if (bVerbose)
                               printf(" %s %3d\n",filename,num_hands);
