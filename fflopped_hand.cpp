@@ -20,7 +20,7 @@ static char filename[MAX_FILENAME_LEN];
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: fflopped_hand (-terse) (-verbose) (-debug) (-show_hand)\n"
+"usage: fflopped_hand (-terse) (-verbose) (-debug) (-show_hand_type) (-show_hand)\n"
 "  (-hand_typehand_type)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
@@ -48,6 +48,7 @@ int main(int argc,char **argv)
   bool bTerse;
   bool bVerbose;
   bool bDebug;
+  bool bShowHandType;
   bool bShowHand;
   int player_name_ix;
   int player_name_len;
@@ -80,7 +81,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 7)) {
+  if ((argc < 3) || (argc > 9)) {
     printf(usage);
     return 1;
   }
@@ -88,6 +89,7 @@ int main(int argc,char **argv)
   bTerse = false;
   bVerbose = false;
   bDebug = false;
+  bShowHandType = false;
   bShowHand = false;
   bHandTypeSpecified = false;
 
@@ -98,6 +100,8 @@ int main(int argc,char **argv)
       bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand_type"))
+      bShowHandType = true;
     else if (!strcmp(argv[curr_arg],"-show_hand"))
       bShowHand = true;
     else if (!strncmp(argv[curr_arg],"-hand_type",10)) {
@@ -260,7 +264,9 @@ int main(int argc,char **argv)
 
           if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
             printf("%s",hole_cards);
-            printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+            if (bShowHandType)
+              printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
             if (bShowHand)
               printf(" %s",poker_hand.GetHand());
