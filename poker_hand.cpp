@@ -5,18 +5,6 @@ using namespace std;
 
 #include "poker_hand.h"
 
-static void get_permutation_instance2(
-  int set_size,int subset_size,
-  int *m,int *n,
-  int instance_ix
-);
-
-static void get_permutation_instance3(
-  int set_size,int subset_size,
-  int *m,int *n,int *o,
-  int instance_ix
-);
-
 // default constructor
 
 PokerHand::PokerHand()
@@ -1348,13 +1336,13 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
   char card_string[3];
 
   for (o = 0; o < POKER_4_2_PERMUTATIONS; o++) {
-    get_permutation_instance2(
-      NUM_HOLE_CARDS_IN_OMAHA_HAND,NUM_SELECTED_HOLE_CARDS_IN_OMAHA_HAND,
+    get_permutation_instance_two(
+      NUM_HOLE_CARDS_IN_OMAHA_HAND,
       &m,&n,o);
 
     for (s = 0; s < POKER_5_3_PERMUTATIONS; s++) {
-      get_permutation_instance3(
-        NUM_COMMUNITY_CARDS,NUM_SELECTED_COMMUNITY_CARDS_IN_OMAHA_HAND,
+      get_permutation_instance_three(
+        NUM_COMMUNITY_CARDS,
         &p,&q,&r,s);
 
       if (bDebug) {
@@ -1429,6 +1417,46 @@ ostream& operator<<(ostream& out,const OmahaPokerHand& holdem_hand)
   return out;
 }
 
+void get_permutation_instance_two(
+  int set_size,
+  int *m,int *n,
+  int instance_ix
+)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (*m = 0; *m < set_size - 2 + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - 2 + 2; (*n)++) {
+      return;
+
+      after_return_point:
+      ;
+    }
+  }
+}
+
+void get_permutation_instance_three(
+  int set_size,
+  int *m,int *n,int *o,
+  int instance_ix
+)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (*m = 0; *m < set_size - 3 + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - 3 + 2; (*n)++) {
+      for (*o = *n + 1; *o < set_size - 3 + 3; (*o)++) {
+        return;
+
+        after_return_point:
+        ;
+      }
+    }
+  }
+}
+
 void get_permutation_instance_five(
   int set_size,
   int *m,int *n,int *o,int *p,int *q,
@@ -1454,41 +1482,30 @@ void get_permutation_instance_five(
   }
 }
 
-static void get_permutation_instance2(
-  int set_size,int subset_size,
-  int *m,int *n,
+void get_permutation_instance_seven(
+  int set_size,
+  int *m,int *n,int *o,int *p,int *q,int *r,int *s,
   int instance_ix
 )
 {
   if (instance_ix)
     goto after_return_point;
 
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      return;
+  for (*m = 0; *m < set_size - 7 + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - 7 + 2; (*n)++) {
+      for (*o = *n + 1; *o < set_size - 7 + 3; (*o)++) {
+        for (*p = *o + 1; *p < set_size - 7 + 4; (*p)++) {
+          for (*q = *p + 1; *q < set_size - 7 + 5; (*q)++) {
+            for (*r = *q + 1; *r < set_size - 7 + 6; (*r)++) {
+              for (*s = *r + 1; *s < set_size - 7 + 7; (*s)++) {
+                return;
 
-      after_return_point:
-      ;
-    }
-  }
-}
-
-static void get_permutation_instance3(
-  int set_size,int subset_size,
-  int *m,int *n,int *o,
-  int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      for (*o = *n + 1; *o < set_size - subset_size + 3; (*o)++) {
-        return;
-
-        after_return_point:
-        ;
+                after_return_point:
+                ;
+              }
+            }
+          }
+        }
       }
     }
   }

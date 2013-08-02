@@ -7,12 +7,6 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-static void get_permutation_instance(
-  int set_size,int subset_size,
-  int *m,int *n,int *o,
-  int instance_ix
-);
-
 int main(int argc,char **argv)
 {
   int m;
@@ -31,8 +25,8 @@ int main(int argc,char **argv)
     flop_counts[n] = 0;
 
   for (p = 0; p < POKER_52_3_PERMUTATIONS; p++) {
-    get_permutation_instance(
-      NUM_CARDS_IN_DECK,NUM_CARDS_IN_FLOP,
+    get_permutation_instance_three(
+      NUM_CARDS_IN_DECK,
       &m,&n,&o,p);
 
     flop.NewCards(m,n,o);
@@ -53,25 +47,4 @@ int main(int argc,char **argv)
   printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
   return 0;
-}
-
-static void get_permutation_instance(
-  int set_size,int subset_size,
-  int *m,int *n,int *o,
-  int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      for (*o = *n + 1; *o < set_size - subset_size + 3; (*o)++) {
-        return;
-
-        after_return_point:
-        ;
-      }
-    }
-  }
 }

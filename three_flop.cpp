@@ -7,10 +7,6 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-static void get_permutation_instance(
-  int set_size,int subset_size,int *m,int *n,int instance_ix
-);
-
 #define NUM_PLAYERS 3
 #define NUM_THREE_FLOP_CARDS 9
 #define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_THREE_FLOP_CARDS)
@@ -146,8 +142,8 @@ int main(int argc,char **argv)
     total = 0;
 
     for (o = 0; o < POKER_43_2_PERMUTATIONS; o++) {
-      get_permutation_instance(
-        NUM_REMAINING_CARDS,NUM_CARDS_AFTER_FLOP,
+      get_permutation_instance_two(
+        NUM_REMAINING_CARDS,
         &m,&n,o);
 
       holdem_hand[0].NewCards(cards[0],cards[1],
@@ -238,21 +234,4 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 
   line[local_line_len] = 0;
   *line_len = local_line_len;
-}
-
-static void get_permutation_instance(
-  int set_size,int subset_size,int *m,int *n,int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      return;
-
-      after_return_point:
-      ;
-    }
-  }
 }

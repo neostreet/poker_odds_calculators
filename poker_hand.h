@@ -340,9 +340,27 @@ class OmahaPokerHand {
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
 
+void get_permutation_instance_two(
+  int set_size,
+  int *m,int *n,
+  int instance_ix
+);
+
+void get_permutation_instance_three(
+  int set_size,
+  int *m,int *n,int *o,
+  int instance_ix
+);
+
 void get_permutation_instance_five(
   int set_size,
   int *m,int *n,int *o,int *p,int *q,
+  int instance_ix
+);
+
+void get_permutation_instance_seven(
+  int set_size,
+  int *m,int *n,int *o,int *p,int *q,int *r,int *s,
   int instance_ix
 );
 

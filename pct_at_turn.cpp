@@ -7,10 +7,6 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-static void get_permutation_instance1(
-  int set_size,int subset_size,int *m,int *n,int instance_ix
-);
-
 #define NUM_PCT_AT_TURN_CARDS 6
 #define NUM_REMAINING_CARDS1 (NUM_CARDS_IN_DECK - NUM_PCT_AT_TURN_CARDS)
 #define NUM_REMAINING_CARDS2 (NUM_CARDS_IN_DECK - NUM_PCT_AT_TURN_CARDS - 2)
@@ -171,8 +167,8 @@ int main(int argc,char **argv)
     deep_debug_counter = 0;
 
     for (outer_o = 0; outer_o < POKER_46_2_PERMUTATIONS; outer_o++) {
-      get_permutation_instance1(
-        NUM_REMAINING_CARDS1,NUM_HOLE_CARDS_IN_HOLDEM_HAND,
+      get_permutation_instance_two(
+        NUM_REMAINING_CARDS1,
         &outer_m,&outer_n,outer_o);
 
       q = 0;
@@ -331,21 +327,4 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 
   line[local_line_len] = 0;
   *line_len = local_line_len;
-}
-
-static void get_permutation_instance1(
-  int set_size,int subset_size,int *m,int *n,int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      return;
-
-      after_return_point:
-      ;
-    }
-  }
 }

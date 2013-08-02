@@ -7,12 +7,6 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-static void get_permutation_instance(
-  int set_size,int subset_size,
-  int *m,int *n,
-  int instance_ix
-);
-
 #define NUM_SUIT_COMBOS (NUM_SUITS * NUM_SUITS)
 #define NUM_SUIT_COMBOS_COLLAPSED ((NUM_SUIT_COMBOS - NUM_SUITS) / 2 + NUM_SUITS)
 
@@ -85,8 +79,8 @@ int main(int argc,char **argv)
     breakouts[n] = 0;
 
   for (o = 0; o < POKER_52_2_PERMUTATIONS; o++) {
-    get_permutation_instance(
-      NUM_CARDS_IN_DECK,NUM_HOLE_CARDS_IN_HOLDEM_HAND,
+    get_permutation_instance_two(
+      NUM_CARDS_IN_DECK,
       &m,&n,o);
 
     suit_ix1 = m / NUM_CARDS_IN_SUIT;
@@ -105,23 +99,4 @@ int main(int argc,char **argv)
   printf("\n%10d\n",POKER_52_2_PERMUTATIONS);
 
   return 0;
-}
-
-static void get_permutation_instance(
-  int set_size,int subset_size,
-  int *m,int *n,
-  int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - subset_size + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - subset_size + 2; (*n)++) {
-      return;
-
-      after_return_point:
-      ;
-    }
-  }
 }
