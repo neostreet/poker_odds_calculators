@@ -39,7 +39,7 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
   int ret_compare;
-  struct outcomes outcomes[NUM_PLAYERS-1];
+  struct outcomes outcomes[NUM_PLAYERS];
   int total;
   double pct;
   time_t start_time;
@@ -134,7 +134,7 @@ int main(int argc,char **argv)
         remaining_cards[m++] = n;
     }
 
-    for (n = 0; n < NUM_PLAYERS - 1; n++) {
+    for (n = 0; n < NUM_PLAYERS; n++) {
       outcomes[n].wins = 0;
       outcomes[n].losses = 0;
       outcomes[n].ties = 0;
@@ -168,27 +168,36 @@ int main(int argc,char **argv)
 
       if (ret_compare == 1) {
         outcomes[0].wins++;
+        outcomes[1].losses++;
 
-        if (bDebug)
+        if (bDebug) {
           outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
+          outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+        }
       }
       else if (ret_compare == -1) {
         outcomes[0].losses++;
+        outcomes[1].wins++;
 
-        if (bDebug)
+        if (bDebug) {
           outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+          outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
+        }
       }
       else {
         outcomes[0].ties++;
+        outcomes[1].ties++;
 
-        if (bDebug)
+        if (bDebug) {
           outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
+          outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
+        }
       }
     }
 
     putchar(0x0a);
 
-    for (n = 0; n < NUM_PLAYERS - 1; n++) {
+    for (n = 0; n < NUM_PLAYERS; n++) {
       printf("player %d\n",n+1);
       total = outcomes[n].wins + outcomes[n].losses + outcomes[n].ties;
 
