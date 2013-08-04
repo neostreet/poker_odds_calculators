@@ -143,6 +143,15 @@ extern int num_holdem_best_poker_hand_comparisons;
 int get_rank_index(char rank_char,int *rank_index_ptr);
 int get_suit_index(char suit_char,int *suit_index_ptr);
 
+struct outcomes {
+  int wins;
+  int wins_hand_counts[NUM_HAND_TYPES];
+  int losses;
+  int losses_hand_counts[NUM_HAND_TYPES];
+  int ties;
+  int ties_hand_counts[NUM_HAND_TYPES];
+};
+
 class PokerHand {
   public:
 

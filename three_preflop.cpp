@@ -41,9 +41,7 @@ int main(int argc,char **argv)
   int remaining_cards[NUM_REMAINING_CARDS];
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
-  int wins[NUM_PLAYERS];
-  int losses[NUM_PLAYERS];
-  int ties[NUM_PLAYERS];
+  struct outcomes outcomes[NUM_PLAYERS];
   int total;
   int comparisons[POKER_3_2_PERMUTATIONS];
   double pct;
@@ -140,9 +138,15 @@ int main(int argc,char **argv)
     }
 
     for (n = 0; n < NUM_PLAYERS; n++) {
-      wins[n] = 0;
-      losses[n] = 0;
-      ties[n] = 0;
+      outcomes[n].wins = 0;
+      outcomes[n].losses = 0;
+      outcomes[n].ties = 0;
+
+      for (m = 0; m < NUM_HAND_TYPES; m++) {
+        outcomes[n].wins_hand_counts[m] = 0;
+        outcomes[n].losses_hand_counts[m] = 0;
+        outcomes[n].ties_hand_counts[m] = 0;
+      }
     }
 
     for (r = 0; r < POKER_46_5_PERMUTATIONS; r++) {
@@ -176,52 +180,103 @@ int main(int argc,char **argv)
 
       // player 1
 
-      if ((comparisons[0] == 1) && (comparisons[1] == 1))
-        wins[0]++;
-      else if ((comparisons[0] == -1) || (comparisons[1] == -1))
-        losses[0]++;
-      else
-        ties[0]++;
+      if ((comparisons[0] == 1) && (comparisons[1] == 1)) {
+        outcomes[0].wins++;
+        outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
+      }
+      else if ((comparisons[0] == -1) || (comparisons[1] == -1)) {
+        outcomes[0].losses++;
+        outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+      }
+      else {
+        outcomes[0].ties++;
+        outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
+      }
 
       // player 2
 
-      if ((comparisons[0] == -1) && (comparisons[2] == 1))
-        wins[1]++;
-      else if ((comparisons[0] == 1) || (comparisons[2] == -1))
-        losses[1]++;
-      else
-        ties[1]++;
+      if ((comparisons[0] == -1) && (comparisons[2] == 1)) {
+        outcomes[1].wins++;
+        outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
+      }
+      else if ((comparisons[0] == 1) || (comparisons[2] == -1)) {
+        outcomes[1].losses++;
+        outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+      }
+      else {
+        outcomes[1].ties++;
+        outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
+      }
 
       // player 3
 
-      if ((comparisons[1] == -1) && (comparisons[2] == -1))
-        wins[2]++;
-      else if ((comparisons[1] == 1) || (comparisons[2] == 1))
-        losses[2]++;
-      else
-        ties[2]++;
+      if ((comparisons[1] == -1) && (comparisons[2] == -1)) {
+        outcomes[2].wins++;
+        outcomes[2].wins_hand_counts[hand[2].GetHandType()]++;
+      }
+      else if ((comparisons[1] == 1) || (comparisons[2] == 1)) {
+        outcomes[2].losses++;
+        outcomes[2].losses_hand_counts[hand[2].GetHandType()]++;
+      }
+      else {
+        outcomes[2].ties++;
+        outcomes[2].ties_hand_counts[hand[2].GetHandType()]++;
+      }
     }
+
+    putchar(0x0a);
 
     for (n = 0; n < NUM_PLAYERS; n++) {
       printf("player %d\n",n+1);
-      total = wins[n] + losses[n] + ties[n];
+      total = outcomes[n].wins + outcomes[n].losses + outcomes[n].ties;
 
-      pct = (double)wins[n] * (double)100 / (double)total;
-      printf("  wins      %7d (%5.2lf)\n",wins[n],pct);
+      pct = (double)outcomes[n].wins * (double)100 / (double)total;
+      printf("  wins      %7d (%5.2lf)\n",outcomes[n].wins,pct);
 
-      pct = (double)losses[n] * (double)100 / (double)total;
-      printf("  losses    %7d (%5.2lf)\n",losses[n],pct);
+      if (bDebug) {
+        for (m = 0; m < NUM_HAND_TYPES; m++) {
+          if (outcomes[n].wins_hand_counts[m]) {
+            printf("    %s      %7d\n",
+              hand_type_abbrevs[m],
+              outcomes[n].wins_hand_counts[m]);
+          }
+        }
+      }
 
-      pct = (double)ties[n] * (double)100 / (double)total;
-      printf("  ties      %7d (%5.2lf)\n",ties[n],pct);
+      pct = (double)outcomes[n].losses * (double)100 / (double)total;
+      printf("  losses    %7d (%5.2lf)\n",outcomes[n].losses,pct);
+
+      if (bDebug) {
+        for (m = 0; m < NUM_HAND_TYPES; m++) {
+          if (outcomes[n].losses_hand_counts[m]) {
+            printf("    %s      %7d\n",
+              hand_type_abbrevs[m],
+              outcomes[n].losses_hand_counts[m]);
+          }
+        }
+      }
+
+      pct = (double)outcomes[n].ties * (double)100 / (double)total;
+      printf("  ties      %7d (%5.2lf)\n",outcomes[n].ties,pct);
+
+      if (bDebug) {
+        for (m = 0; m < NUM_HAND_TYPES; m++) {
+          if (outcomes[n].ties_hand_counts[m]) {
+            printf("    %s      %7d\n",
+              hand_type_abbrevs[m],
+              outcomes[n].ties_hand_counts[m]);
+          }
+        }
+      }
 
       printf("  total     %7d\n",total);
     }
 
     if (bDebug) {
-      printf("  num_evaluations        %10d\n",num_evaluations);
-      printf("  num_unique_evaluations %10d\n",num_unique_evaluations);
-      printf("  num_comparisons        %10d\n",num_comparisons);
+      putchar(0x0a);
+      printf("num_evaluations        %10d\n",num_evaluations);
+      printf("num_unique_evaluations %10d\n",num_unique_evaluations);
+      printf("num_comparisons        %10d\n",num_comparisons);
     }
   }
 
