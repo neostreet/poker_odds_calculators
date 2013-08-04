@@ -31,6 +31,8 @@ int main(int argc,char **argv)
   int q;
   int r;
   int s;
+  int t;
+  int u;
   int retval;
   FILE *fptr;
   int line_no;
@@ -39,14 +41,12 @@ int main(int argc,char **argv)
   int remaining_cards[NUM_REMAINING_CARDS];
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
-  int ret_compare;
-  int wins;
-  int losses;
-  int ties;
+  int wins[NUM_PLAYERS];
+  int losses[NUM_PLAYERS];
+  int ties[NUM_PLAYERS];
   int total;
+  int comparisons[POKER_3_2_PERMUTATIONS];
   double pct;
-  int work_wins;
-  int work_losses;
   time_t start_time;
   time_t end_time;
 
@@ -139,10 +139,11 @@ int main(int argc,char **argv)
         remaining_cards[m++] = n;
     }
 
-    wins = 0;
-    losses = 0;
-    ties = 0;
-    total = 0;
+    for (n = 0; n < NUM_PLAYERS; n++) {
+      wins[n] = 0;
+      losses[n] = 0;
+      ties[n] = 0;
+    }
 
     for (r = 0; r < POKER_46_5_PERMUTATIONS; r++) {
       get_permutation_instance_five(NUM_REMAINING_CARDS,&m,&n,&o,&p,&q,r);
@@ -165,40 +166,57 @@ int main(int argc,char **argv)
       for (s = 0; s < NUM_PLAYERS; s++)
         hand[s] = holdem_hand[s].BestPokerHand();
 
-      work_wins = 0;
-      work_losses = 0;
+      for (u = 0; u < POKER_3_2_PERMUTATIONS; u++) {
+        get_permutation_instance_two(
+          NUM_PLAYERS,
+          &s,&t,u);
 
-      for (s = 0; s < NUM_PLAYERS - 1; s++) {
-        ret_compare = hand[0].Compare(hand[1+s],0);
-
-        if (ret_compare == 1)
-          work_wins++;
-        else if (ret_compare == -1) {
-          work_losses++;
-          break;
-        }
+        comparisons[u] = hand[s].Compare(hand[t],0);
       }
 
-      if (work_wins == NUM_PLAYERS - 1)
-        wins++;
-      else if (work_losses)
-        losses++;
-      else
-        ties++;
+      // player 1
 
-      total++;
+      if ((comparisons[0] == 1) && (comparisons[1] == 1))
+        wins[0]++;
+      else if ((comparisons[0] == -1) || (comparisons[1] == -1))
+        losses[0]++;
+      else
+        ties[0]++;
+
+      // player 2
+
+      if ((comparisons[0] == -1) && (comparisons[2] == 1))
+        wins[1]++;
+      else if ((comparisons[0] == 1) || (comparisons[2] == -1))
+        losses[1]++;
+      else
+        ties[1]++;
+
+      // player 3
+
+      if ((comparisons[1] == -1) && (comparisons[2] == -1))
+        wins[2]++;
+      else if ((comparisons[1] == 1) || (comparisons[2] == 1))
+        losses[2]++;
+      else
+        ties[2]++;
     }
 
-    pct = (double)wins * (double)100 / (double)total;
-    printf("  wins      %7d (%5.2lf)\n",wins,pct);
+    for (n = 0; n < NUM_PLAYERS; n++) {
+      printf("player %d\n",n+1);
+      total = wins[n] + losses[n] + ties[n];
 
-    pct = (double)losses * (double)100 / (double)total;
-    printf("  losses    %7d (%5.2lf)\n",losses,pct);
+      pct = (double)wins[n] * (double)100 / (double)total;
+      printf("  wins      %7d (%5.2lf)\n",wins[n],pct);
 
-    pct = (double)ties * (double)100 / (double)total;
-    printf("  ties      %7d (%5.2lf)\n",ties,pct);
+      pct = (double)losses[n] * (double)100 / (double)total;
+      printf("  losses    %7d (%5.2lf)\n",losses[n],pct);
 
-    printf("  total     %7d\n",total);
+      pct = (double)ties[n] * (double)100 / (double)total;
+      printf("  ties      %7d (%5.2lf)\n",ties[n],pct);
+
+      printf("  total     %7d\n",total);
+    }
 
     if (bDebug) {
       printf("  num_evaluations        %10d\n",num_evaluations);
