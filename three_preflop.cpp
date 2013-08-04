@@ -142,10 +142,12 @@ int main(int argc,char **argv)
       outcomes[n].losses = 0;
       outcomes[n].ties = 0;
 
-      for (m = 0; m < NUM_HAND_TYPES; m++) {
-        outcomes[n].wins_hand_counts[m] = 0;
-        outcomes[n].losses_hand_counts[m] = 0;
-        outcomes[n].ties_hand_counts[m] = 0;
+      if (bDebug) {
+        for (m = 0; m < NUM_HAND_TYPES; m++) {
+          outcomes[n].wins_hand_counts[m] = 0;
+          outcomes[n].losses_hand_counts[m] = 0;
+          outcomes[n].ties_hand_counts[m] = 0;
+        }
       }
     }
 
@@ -182,45 +184,63 @@ int main(int argc,char **argv)
 
       if ((comparisons[0] == 1) && (comparisons[1] == 1)) {
         outcomes[0].wins++;
-        outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
       }
       else if ((comparisons[0] == -1) || (comparisons[1] == -1)) {
         outcomes[0].losses++;
-        outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
       }
       else {
         outcomes[0].ties++;
-        outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
       }
 
       // player 2
 
       if ((comparisons[0] == -1) && (comparisons[2] == 1)) {
         outcomes[1].wins++;
-        outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
       }
       else if ((comparisons[0] == 1) || (comparisons[2] == -1)) {
         outcomes[1].losses++;
-        outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
       }
       else {
         outcomes[1].ties++;
-        outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
       }
 
       // player 3
 
       if ((comparisons[1] == -1) && (comparisons[2] == -1)) {
         outcomes[2].wins++;
-        outcomes[2].wins_hand_counts[hand[2].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[2].wins_hand_counts[hand[2].GetHandType()]++;
       }
       else if ((comparisons[1] == 1) || (comparisons[2] == 1)) {
         outcomes[2].losses++;
-        outcomes[2].losses_hand_counts[hand[2].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[2].losses_hand_counts[hand[2].GetHandType()]++;
       }
       else {
         outcomes[2].ties++;
-        outcomes[2].ties_hand_counts[hand[2].GetHandType()]++;
+
+        if (bDebug)
+          outcomes[2].ties_hand_counts[hand[2].GetHandType()]++;
       }
     }
 
