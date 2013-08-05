@@ -316,9 +316,9 @@ int main(int argc,char **argv)
 
     if (bDebug) {
       putchar(0x0a);
-      printf("  num_evaluations        %10d\n",num_evaluations);
-      printf("  num_unique_evaluations %10d\n",num_unique_evaluations);
-      printf("  num_comparisons        %10d\n",num_comparisons);
+      printf("num_evaluations        %10d\n",num_evaluations);
+      printf("num_unique_evaluations %10d\n",num_unique_evaluations);
+      printf("num_comparisons        %10d\n",num_comparisons);
     }
   }
 
