@@ -1457,6 +1457,29 @@ void get_permutation_instance_three(
   }
 }
 
+void get_permutation_instance_four(
+  int set_size,
+  int *m,int *n,int *o,int *p,
+  int instance_ix
+)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (*m = 0; *m < set_size - 4 + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - 4 + 2; (*n)++) {
+      for (*o = *n + 1; *o < set_size - 4 + 3; (*o)++) {
+        for (*p = *o + 1; *p < set_size - 4 + 4; (*p)++) {
+          return;
+
+          after_return_point:
+          ;
+        }
+      }
+    }
+  }
+}
+
 void get_permutation_instance_five(
   int set_size,
   int *m,int *n,int *o,int *p,int *q,
