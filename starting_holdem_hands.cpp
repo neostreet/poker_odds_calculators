@@ -64,22 +64,3 @@ int main(int argc,char **argv)
 
   return 0;
 }
-
-static void get_permutation_instance(
-  int set_size,
-  int *m,int *n,
-  int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size; (*n)++) {
-      return;
-
-      after_return_point:
-      ;
-    }
-  }
-}
