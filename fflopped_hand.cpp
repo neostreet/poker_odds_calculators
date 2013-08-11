@@ -21,7 +21,7 @@ static char line[MAX_LINE_LEN];
 
 static char usage[] =
 "usage: fflopped_hand (-terse) (-verbose) (-debug) (-show_hand_type) (-show_hand)\n"
-"  (-hand_typehand_type)\n"
+"  (-hand_type_gehand_type) (-hand_typehand_type)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -69,8 +69,9 @@ int main(int argc,char **argv)
   double dwork2;
   char hole_cards[12];
   char board_cards[15];
+  bool bHandTypeGESpecified;
   bool bHandTypeSpecified;
-  char *hand_type;
+  HandType hand_type;
   char *hand;
   bool bSkipping;
   int rank_ix1;
@@ -81,7 +82,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 9)) {
+  if ((argc < 3) || (argc > 10)) {
     printf(usage);
     return 1;
   }
@@ -91,6 +92,7 @@ int main(int argc,char **argv)
   bDebug = false;
   bShowHandType = false;
   bShowHand = false;
+  bHandTypeGESpecified = false;
   bHandTypeSpecified = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -104,8 +106,12 @@ int main(int argc,char **argv)
       bShowHandType = true;
     else if (!strcmp(argv[curr_arg],"-show_hand"))
       bShowHand = true;
+    else if (!strncmp(argv[curr_arg],"-hand_type_ge",13)) {
+      hand_type = get_hand_type(&argv[curr_arg][13]);
+      bHandTypeGESpecified = true;
+    }
     else if (!strncmp(argv[curr_arg],"-hand_type",10)) {
-      hand_type = &argv[curr_arg][10];
+      hand_type = get_hand_type(&argv[curr_arg][10]);
       bHandTypeSpecified = true;
     }
     else
@@ -122,12 +128,17 @@ int main(int argc,char **argv)
     return 3;
   }
 
+  if (bHandTypeGESpecified and bHandTypeSpecified) {
+    printf("can't specify both -hand_type and -hand_type_ge\n");
+    return 4;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 4;
+    return 5;
   }
 
   file_no = 0;
@@ -222,7 +233,7 @@ int main(int argc,char **argv)
                 if (retval) {
                   printf("invalid card string %s on line %d\n",
                     card_string,line_no);
-                  return 5;
+                  return 6;
                 }
               }
             }
@@ -255,26 +266,28 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 6;
+              return 7;
             }
           }
 
           poker_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
           poker_hand.Evaluate();
 
-          if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
-            printf("%s",hole_cards);
+          if (!bHandTypeGESpecified || (hand_type <= poker_hand.GetHandType())) {
+            if (!bHandTypeSpecified || (hand_type == poker_hand.GetHandType())) {
+              printf("%s",hole_cards);
 
-            if (bShowHandType)
-              printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+              if (bShowHandType)
+                printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-            if (bShowHand)
-              printf(" %s",poker_hand.GetHand());
+              if (bShowHand)
+                printf(" %s",poker_hand.GetHand());
 
-            if (bVerbose)
-              printf(" %s %3d\n",filename,num_hands);
-            else
-              putchar(0x0a);
+              if (bVerbose)
+                printf(" %s %3d\n",filename,num_hands);
+              else
+                putchar(0x0a);
+            }
           }
         }
       }
