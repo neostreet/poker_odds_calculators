@@ -24,7 +24,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
-"  (-only_lost) (-only_won)\n"
+"  (-only_lost) (-only_won) (-only_showdown)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -56,6 +56,8 @@ static char uncalled_bet[] = "Uncalled bet (";
 #define UNCALLED_BET_LEN (sizeof (uncalled_bet) - 1)
 static char collected[] = " collected ";
 #define COLLECTED_LEN (sizeof (collected) - 1)
+static char show_down[] = "*** SHOW DOWN ***";
+#define SHOW_DOWN_LEN (sizeof (show_down) - 1)
 
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
@@ -118,13 +120,16 @@ int main(int argc,char **argv)
   bool bNormalize;
   bool bOnlyLost;
   bool bOnlyWon;
+  bool bOnlyShowdown;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
   bool bHaveStealthTwoPair;
   bool bSpentRiverMoney;
+  bool bHaveShowdown;
   char *hand_type;
   char *hand;
+  bool bFolded;
   bool bSkipping;
   int rank_ix1;
   int rank_ix2;
@@ -135,7 +140,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 22)) {
+  if ((argc < 3) || (argc > 23)) {
     printf(usage);
     return 1;
   }
@@ -159,6 +164,7 @@ int main(int argc,char **argv)
   bNormalize = false;
   bOnlyLost = false;
   bOnlyWon = false;
+  bOnlyShowdown = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -208,6 +214,8 @@ int main(int argc,char **argv)
       bOnlyLost = true;
     else if (!strcmp(argv[curr_arg],"-only_won"))
       bOnlyWon = true;
+    else if (!strcmp(argv[curr_arg],"-only_showdown"))
+      bOnlyShowdown = true;
     else
       break;
   }
@@ -312,12 +320,14 @@ int main(int argc,char **argv)
     }
 
     line_no = 0;
+    bFolded = false;
     bSkipping = false;
     num_hands = 0;
     bHaveFlop = false;
     bHaveRiver = false;
     bSpentRiverMoney = false;
     bHaveStealthTwoPair = false;
+    bHaveShowdown = false;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -344,11 +354,13 @@ int main(int argc,char **argv)
           &ix)) {
 
           num_hands++;
+          bFolded = false;
           bSkipping = false;
           bHaveFlop = false;
           bHaveRiver = false;
           bSpentRiverMoney = false;
           bHaveStealthTwoPair = false;
+          bHaveShowdown = false;
 
           street = 0;
           num_street_markers = 0;
@@ -527,6 +539,7 @@ int main(int argc,char **argv)
           line,line_len,
           folds,FOLDS_LEN,
           &ix)) {
+
           spent_this_hand += spent_this_street;
 
           if (bDebug) {
@@ -534,46 +547,10 @@ int main(int argc,char **argv)
               line_no,street,spent_this_street,spent_this_hand);
           }
 
-          bSkipping = true;
+          bFolded = true;
 
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
-
-          if ((!bSkipZero || (delta != 0)) && (!bSkipFolded || bOnlyFolded)) {
-            if (!bSawFlop || bHaveFlop) {
-              if (!bStealthTwoPair || bHaveStealthTwoPair) {
-                if (!bSawRiver || bHaveRiver) {
-                  if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                    if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
-                      if (!bOnlyLost || (delta < 0)) {
-                        if (!bOnlyWon || (delta > 0)) {
-                          if (bTerse)
-                            printf("%d\n",delta);
-                          else {
-                            printf("%10d %s",delta,hole_cards);
-
-                            if (bShowBoard && bHaveRiver)
-                              printf(" %s",board_cards);
-
-                            if (bShowHandType && bHaveFlop)
-                              printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
-
-                            if (bShowHand && bHaveFlop)
-                              printf(" %s",poker_hand.GetHand());
-
-                            if (bVerbose)
-                              printf(" %s %3d\n",filename,num_hands);
-                            else
-                              putchar(0x0a);
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
 
           continue;
         }
@@ -716,41 +693,49 @@ int main(int argc,char **argv)
 
           bHaveRiver = true;
         }
+        else if (!strncmp(line,show_down,SHOW_DOWN_LEN))
+          bHaveShowdown = true;
         else if (!strncmp(line,summary,SUMMARY_LEN)) {
           if (bDebug)
             printf("line %d SUMMARY line detected; skipping\n",line_no);
 
           bSkipping = true;
 
-          ending_balance = starting_balance - spent_this_hand + collected_from_pot;
-          delta = ending_balance - starting_balance;
+          if (!bFolded) {
+            ending_balance = starting_balance - spent_this_hand + collected_from_pot;
+            delta = ending_balance - starting_balance;
+          }
 
-          if ((!bSkipZero || (delta != 0)) && (!bOnlyFolded)) {
-            if (!bSawFlop || bHaveFlop) {
-              if (!bStealthTwoPair || bHaveStealthTwoPair) {
-                if (!bSawRiver || bHaveRiver) {
-                  if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                    if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
-                      if (!bOnlyLost || (delta < 0)) {
-                        if (!bOnlyWon || (delta > 0)) {
-                          if (bTerse)
-                            printf("%d\n",delta);
-                          else {
-                            printf("%10d %s",delta,hole_cards);
+          if (!bSkipZero || (delta != 0)) {
+            if (!bOnlyFolded || bFolded) {
+              if (!bSawFlop || bHaveFlop) {
+                if (!bStealthTwoPair || bHaveStealthTwoPair) {
+                  if (!bSawRiver || bHaveRiver) {
+                    if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
+                      if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
+                        if (!bOnlyLost || (delta < 0)) {
+                          if (!bOnlyWon || (delta > 0)) {
+                            if (!bOnlyShowdown || bHaveShowdown) {
+                              if (bTerse)
+                                printf("%d\n",delta);
+                              else {
+                                printf("%10d %s",delta,hole_cards);
 
-                            if (bShowBoard && bHaveRiver)
-                              printf(" %s",board_cards);
+                                if (bShowBoard && bHaveRiver)
+                                  printf(" %s",board_cards);
 
-                            if (bShowHandType && bHaveFlop)
-                              printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                                if (bShowHandType && bHaveFlop)
+                                  printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                            if (bShowHand && bHaveFlop)
-                              printf(" %s",poker_hand.GetHand());
+                                if (bShowHand && bHaveFlop)
+                                  printf(" %s",poker_hand.GetHand());
 
-                            if (bVerbose)
-                              printf(" %s %3d\n",filename,num_hands);
-                            else
-                              putchar(0x0a);
+                                if (bVerbose)
+                                  printf(" %s %3d\n",filename,num_hands);
+                                else
+                                  putchar(0x0a);
+                              }
+                            }
                           }
                         }
                       }
