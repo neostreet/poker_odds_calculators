@@ -604,7 +604,7 @@ int main(int argc,char **argv)
         continue;
       else {
         if (!strncmp(line,flop,FLOP_LEN)) {
-          if (bStealthTwoPair) {
+          if (bStealthTwoPair && !bFolded) {
             if (hole_cards[0] != hole_cards[3]) {
               if (((hole_cards[0] == line[FLOP_LEN]) ||
                    (hole_cards[0] == line[FLOP_LEN+3]) ||
@@ -639,7 +639,8 @@ int main(int argc,char **argv)
           poker_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
           poker_hand.Evaluate();
 
-          bHaveFlop = true;
+          if (!bFolded)
+            bHaveFlop = true;
         }
         else if (!strncmp(line,turn,TURN_LEN)) {
           n = 9;
@@ -691,7 +692,8 @@ int main(int argc,char **argv)
 
           poker_hand = holdem_hand.BestPokerHand();
 
-          bHaveRiver = true;
+          if (!bFolded)
+            bHaveRiver = true;
         }
         else if (!strncmp(line,show_down,SHOW_DOWN_LEN))
           bHaveShowdown = true;
