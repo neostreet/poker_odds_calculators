@@ -662,10 +662,12 @@ int main(int argc,char **argv)
             return 18;
           }
 
-          turn_hand.NewCards(cards[0],cards[1],cards[2],
-            cards[3],cards[4],cards[5]);
+          if (!bFolded) {
+            turn_hand.NewCards(cards[0],cards[1],cards[2],
+              cards[3],cards[4],cards[5]);
 
-          poker_hand = turn_hand.BestPokerHand();
+            poker_hand = turn_hand.BestPokerHand();
+          }
         }
         else if (!strncmp(line,river,RIVER_LEN)) {
           n = 12;
@@ -687,13 +689,13 @@ int main(int argc,char **argv)
             return 19;
           }
 
-          holdem_hand.NewCards(cards[0],cards[1],cards[2],
-            cards[3],cards[4],cards[5],cards[6]);
+          if (!bFolded) {
+            holdem_hand.NewCards(cards[0],cards[1],cards[2],
+              cards[3],cards[4],cards[5],cards[6]);
 
-          poker_hand = holdem_hand.BestPokerHand();
-
-          if (!bFolded)
+            poker_hand = holdem_hand.BestPokerHand();
             bHaveRiver = true;
+          }
         }
         else if (!strncmp(line,show_down,SHOW_DOWN_LEN))
           bHaveShowdown = true;
