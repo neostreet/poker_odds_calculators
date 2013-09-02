@@ -707,33 +707,35 @@ int main(int argc,char **argv)
           }
 
           if (!bSkipZero || (delta != 0)) {
-            if (!bOnlyFolded || bFolded) {
-              if (!bSawFlop || bHaveFlop) {
-                if (!bStealthTwoPair || bHaveStealthTwoPair) {
-                  if (!bSawRiver || bHaveRiver) {
-                    if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                      if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
-                        if (!bOnlyLost || (delta < 0)) {
-                          if (!bOnlyWon || (delta > 0)) {
-                            if (!bOnlyShowdown || bHaveShowdown) {
-                              if (bTerse)
-                                printf("%d\n",delta);
-                              else {
-                                printf("%10d %s",delta,hole_cards);
+            if (!bSkipFolded || !bFolded) {
+              if (!bOnlyFolded || bFolded) {
+                if (!bSawFlop || bHaveFlop) {
+                  if (!bStealthTwoPair || bHaveStealthTwoPair) {
+                    if (!bSawRiver || bHaveRiver) {
+                      if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
+                        if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
+                          if (!bOnlyLost || (delta < 0)) {
+                            if (!bOnlyWon || (delta > 0)) {
+                              if (!bOnlyShowdown || bHaveShowdown) {
+                                if (bTerse)
+                                  printf("%d\n",delta);
+                                else {
+                                  printf("%10d %s",delta,hole_cards);
 
-                                if (bShowBoard && bHaveRiver)
-                                  printf(" %s",board_cards);
+                                  if (bShowBoard && bHaveRiver)
+                                    printf(" %s",board_cards);
 
-                                if (bShowHandType && bHaveFlop)
-                                  printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                                  if (bShowHandType && bHaveFlop)
+                                    printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                                if (bShowHand && bHaveFlop)
-                                  printf(" %s",poker_hand.GetHand());
+                                  if (bShowHand && bHaveFlop)
+                                    printf(" %s",poker_hand.GetHand());
 
-                                if (bVerbose)
-                                  printf(" %s %3d\n",filename,num_hands);
-                                else
-                                  putchar(0x0a);
+                                  if (bVerbose)
+                                    printf(" %s %3d\n",filename,num_hands);
+                                  else
+                                    putchar(0x0a);
+                                }
                               }
                             }
                           }
