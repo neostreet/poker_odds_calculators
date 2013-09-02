@@ -24,7 +24,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
-"  (-only_lost) (-only_won) (-only_showdown)\n"
+"  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -121,6 +121,7 @@ int main(int argc,char **argv)
   bool bOnlyLost;
   bool bOnlyWon;
   bool bOnlyShowdown;
+  bool bVeryBestHand;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -140,7 +141,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 23)) {
+  if ((argc < 3) || (argc > 24)) {
     printf(usage);
     return 1;
   }
@@ -165,6 +166,7 @@ int main(int argc,char **argv)
   bOnlyLost = false;
   bOnlyWon = false;
   bOnlyShowdown = false;
+  bVeryBestHand = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -216,6 +218,8 @@ int main(int argc,char **argv)
       bOnlyWon = true;
     else if (!strcmp(argv[curr_arg],"-only_showdown"))
       bOnlyShowdown = true;
+    else if (!strcmp(argv[curr_arg],"-very_best_hand"))
+      bVeryBestHand = true;
     else
       break;
   }
@@ -662,7 +666,7 @@ int main(int argc,char **argv)
             return 18;
           }
 
-          if (!bFolded) {
+          if (!bFolded || bVeryBestHand) {
             turn_hand.NewCards(cards[0],cards[1],cards[2],
               cards[3],cards[4],cards[5]);
 
@@ -689,12 +693,14 @@ int main(int argc,char **argv)
             return 19;
           }
 
-          if (!bFolded) {
+          if (!bFolded || bVeryBestHand) {
             holdem_hand.NewCards(cards[0],cards[1],cards[2],
               cards[3],cards[4],cards[5],cards[6]);
 
             poker_hand = holdem_hand.BestPokerHand();
-            bHaveRiver = true;
+
+            if (!bFolded)
+              bHaveRiver = true;
           }
         }
         else if (!strncmp(line,show_down,SHOW_DOWN_LEN))
