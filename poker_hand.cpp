@@ -1603,3 +1603,15 @@ int get_suit_index(char suit_char,int *suit_index_ptr)
 
   return 0;
 }
+
+HandType get_hand_type(char *hand_type_str)
+{
+  int hand_type;
+
+  for (hand_type = HIGH_CARD; hand_type < NUM_HAND_TYPES; hand_type++) {
+    if (!strcmp(plain_hand_types[hand_type],hand_type_str))
+      break;
+  }
+
+  return (HandType)hand_type;
+}
