@@ -486,7 +486,6 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
       return 0;
     case STRAIGHT:
     case STRAIGHT_FLUSH:
-    case ROYAL_FLUSH:
       rank = GetRank(1);
       compare_rank = compare_hand.GetRank(1);
 
@@ -495,6 +494,17 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
 
       if (rank < compare_rank)
         return -1;
+
+      // wheels must compare less than 6 highs, and 6 highs must compare
+      // greater than wheels
+      rank = GetRank(0);
+      compare_rank = compare_hand.GetRank(0);
+
+      if (rank > compare_rank)
+        return -1;
+
+      if (rank < compare_rank)
+        return 1;
 
       return 0;
     case FULL_HOUSE:
@@ -528,6 +538,8 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
           return -1;
       }
 
+      return 0;
+    case ROYAL_FLUSH:
       return 0;
   }
 
