@@ -259,34 +259,28 @@ int main(int argc,char **argv)
     return 8;
   }
 
-  if (!bSawRiver && bSpentMoneyOnTheRiver) {
-    printf("can't specify -spent_money_on_the_river if didn't specify -saw_river\n");
-    return 9;
-  }
+  if (!bSawRiver && bSpentMoneyOnTheRiver)
+    bSawRiver = true;
 
   if (bStealthTwoPair && bHandTypeSpecified) {
     printf("can't specify both -stealth_two_pair and -hand_type\n");
-    return 10;
+    return 9;
   }
 
   if (bStealthTwoPair && bHandSpecified) {
     printf("can't specify both -stealth_two_pair and -hand\n");
-    return 11;
+    return 10;
   }
 
-  if (bStealthTwoPair && !bSawFlop && !bSawRiver) {
-    printf("can't specify -stealth_two_pair if didn't specify -saw_flop or -saw_river\n");
-    return 12;
-  }
+  if (bStealthTwoPair && !bSawFlop && !bSawRiver)
+    bSawFlop = true;
 
-  if (bHandTypeSpecified && !bSawFlop && !bSawRiver) {
-    printf("can't specify -hand_type if didn't specify -saw_flop or -saw_river\n");
-    return 13;
-  }
+  if (bHandTypeSpecified && !bSawFlop && !bSawRiver)
+    bSawFlop = true;
 
   if (bOnlyLost && bOnlyWon) {
     printf("can't specify both -only_lost and -only_won\n");
-    return 14;
+    return 11;
   }
 
   player_name_ix = curr_arg++;
@@ -294,7 +288,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 15;
+    return 12;
   }
 
   ending_balance = -1;
@@ -442,7 +436,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 16;
+                    return 13;
                   }
                 }
               }
@@ -636,7 +630,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 17;
+              return 14;
             }
           }
 
@@ -663,7 +657,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 18;
+            return 15;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -690,7 +684,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 19;
+            return 16;
           }
 
           if (!bFolded || bVeryBestHand) {
