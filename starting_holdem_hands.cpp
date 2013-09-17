@@ -11,7 +11,7 @@ static char usage[] =
 "usage: starting_holdem_hands (-indexes) (-with_zero_deltas\n";
 static char *fmt[] = {
   "%s %s\n",
-  "%s %s          0\n",
+  "         0 %s %s\n",
 };
 
 int main(int argc,char **argv)
