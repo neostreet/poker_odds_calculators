@@ -21,7 +21,7 @@ static char line[MAX_LINE_LEN];
 
 static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
-"  (-skip_folded) (-abbrev) (-skip_zero) (-show_board)\n"
+"  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
 "  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand)\n"
@@ -109,6 +109,7 @@ int main(int argc,char **argv)
   bool bSkipFolded;
   bool bAbbrev;
   bool bSkipZero;
+  bool bOnlyZero;
   bool bShowBoard;
   bool bShowHandType;
   bool bShowHand;
@@ -141,7 +142,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 24)) {
+  if ((argc < 3) || (argc > 25)) {
     printf(usage);
     return 1;
   }
@@ -154,6 +155,7 @@ int main(int argc,char **argv)
   bSkipFolded = false;
   bAbbrev = false;
   bSkipZero = false;
+  bOnlyZero = false;
   bShowBoard = false;
   bShowHandType = false;
   bShowHand = false;
@@ -194,6 +196,8 @@ int main(int argc,char **argv)
       bAbbrev = true;
     else if (!strcmp(argv[curr_arg],"-skip_zero"))
       bSkipZero = true;
+    else if (!strcmp(argv[curr_arg],"-only_zero"))
+      bOnlyZero = true;
     else if (!strcmp(argv[curr_arg],"-show_board"))
       bShowBoard = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
@@ -283,12 +287,17 @@ int main(int argc,char **argv)
     return 11;
   }
 
+  if (bSkipZero && bOnlyZero) {
+    printf("can't specify both -skip_zero and -only_zero\n");
+    return 12;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 12;
+    return 13;
   }
 
   ending_balance = -1;
@@ -436,7 +445,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 13;
+                    return 14;
                   }
                 }
               }
@@ -630,7 +639,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 14;
+              return 15;
             }
           }
 
@@ -657,7 +666,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 15;
+            return 16;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -684,7 +693,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 16;
+            return 17;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -711,34 +720,36 @@ int main(int argc,char **argv)
           }
 
           if (!bSkipZero || (delta != 0)) {
-            if (!bSkipFolded || !bFolded) {
-              if (!bOnlyFolded || bFolded) {
-                if (!bSawFlop || bHaveFlop) {
-                  if (!bStealthTwoPair || bHaveStealthTwoPair) {
-                    if (!bSawRiver || bHaveRiver) {
-                      if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
-                        if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
-                          if (!bOnlyLost || (delta < 0)) {
-                            if (!bOnlyWon || (delta > 0)) {
-                              if (!bOnlyShowdown || bHaveShowdown) {
-                                if (bTerse)
-                                  printf("%d\n",delta);
-                                else {
-                                  printf("%10d %s",delta,hole_cards);
+            if (!bOnlyZero || (delta == 0)) {
+              if (!bSkipFolded || !bFolded) {
+                if (!bOnlyFolded || bFolded) {
+                  if (!bSawFlop || bHaveFlop) {
+                    if (!bStealthTwoPair || bHaveStealthTwoPair) {
+                      if (!bSawRiver || bHaveRiver) {
+                        if (!bSpentMoneyOnTheRiver || bSpentRiverMoney) {
+                          if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
+                            if (!bOnlyLost || (delta < 0)) {
+                              if (!bOnlyWon || (delta > 0)) {
+                                if (!bOnlyShowdown || bHaveShowdown) {
+                                  if (bTerse)
+                                    printf("%d\n",delta);
+                                  else {
+                                    printf("%10d %s",delta,hole_cards);
 
-                                  if (bShowBoard && bHaveRiver)
-                                    printf(" %s",board_cards);
+                                    if (bShowBoard && bHaveRiver)
+                                      printf(" %s",board_cards);
 
-                                  if (bShowHandType && bHaveFlop)
-                                    printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                                    if (bShowHandType && bHaveFlop)
+                                      printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                                  if (bShowHand && bHaveFlop)
-                                    printf(" %s",poker_hand.GetHand());
+                                    if (bShowHand && bHaveFlop)
+                                      printf(" %s",poker_hand.GetHand());
 
-                                  if (bVerbose)
-                                    printf(" %s %3d\n",filename,num_hands);
-                                  else
-                                    putchar(0x0a);
+                                    if (bVerbose)
+                                      printf(" %s %3d\n",filename,num_hands);
+                                    else
+                                      putchar(0x0a);
+                                  }
                                 }
                               }
                             }
