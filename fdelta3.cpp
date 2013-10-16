@@ -24,7 +24,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
-"  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand)\n"
+"  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand) (-heads_up)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -83,6 +83,7 @@ int main(int argc,char **argv)
   int line_len;
   int line_no;
   int dbg_line_no;
+  int table_count;
   int ix;
   int street;
   int num_street_markers;
@@ -123,6 +124,7 @@ int main(int argc,char **argv)
   bool bOnlyWon;
   bool bOnlyShowdown;
   bool bVeryBestHand;
+  bool bHeadsUp;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -142,7 +144,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 25)) {
+  if ((argc < 3) || (argc > 26)) {
     printf(usage);
     return 1;
   }
@@ -169,6 +171,7 @@ int main(int argc,char **argv)
   bOnlyWon = false;
   bOnlyShowdown = false;
   bVeryBestHand = false;
+  bHeadsUp = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -224,6 +227,8 @@ int main(int argc,char **argv)
       bOnlyShowdown = true;
     else if (!strcmp(argv[curr_arg],"-very_best_hand"))
       bVeryBestHand = true;
+    else if (!strcmp(argv[curr_arg],"-heads_up"))
+      bHeadsUp = true;
     else
       break;
   }
@@ -350,61 +355,91 @@ int main(int argc,char **argv)
       if (bDebug)
         printf("line %d %s\n",line_no,line);
 
-      if (Contains(true,
+      if (!strncmp(line,"Table '",7)) {
+        table_count = 0;
+
+        for ( ; ; ) {
+          GetLine(fptr,line,&line_len,MAX_LINE_LEN);
+
+          if (feof(fptr))
+            break;
+
+          if (!strncmp(line,"*** HOLE CARDS ***",18)) {
+            num_street_markers++;
+            break;
+          }
+
+          if (!strncmp(line,"Seat ",5)) {
+            table_count++;
+
+            if (Contains(true,
+              line,line_len,
+              argv[player_name_ix],player_name_len,
+              &ix)) {
+
+              if (Contains(true,
+                line,line_len,
+                in_chips,IN_CHIPS_LEN,
+                &ix)) {
+
+                num_hands++;
+                bFolded = false;
+                bSkipping = false;
+                bHaveFlop = false;
+                bHaveRiver = false;
+                bSpentRiverMoney = false;
+                bHaveStealthTwoPair = false;
+                bHaveShowdown = false;
+
+                street = 0;
+                num_street_markers = 0;
+                spent_this_street = 0;
+                spent_this_hand = 0;
+                uncalled_bet_amount = 0;
+                collected_from_pot = 0;
+                collected_from_pot_count = 0;
+
+                line[ix] = 0;
+
+                for (ix--; (ix >= 0) && (line[ix] != '('); ix--)
+                  ;
+
+                sscanf(&line[ix+1],"%d",&starting_balance);
+
+                if (bDebug)
+                  printf("line %d starting_balance = %d\n",line_no,starting_balance);
+              }
+            }
+          }
+          else if (Contains(true,
+            line,line_len,
+            argv[player_name_ix],player_name_len,
+            &ix)) {
+
+            if (Contains(true,
+              line,line_len,
+              posts,POSTS_LEN,
+              &ix)) {
+              work = get_work_amount(line,line_len);
+              spent_this_street += work;
+
+              if (bDebug) {
+                printf("line %d street %d POSTS work = %d, spent_this_street = %d\n",
+                  line_no,street,work,spent_this_street);
+              }
+            }
+          }
+        }
+
+        continue;
+      }
+      else if (Contains(true,
         line,line_len,
         argv[player_name_ix],player_name_len,
         &ix)) {
 
-        if (Contains(true,
-          line,line_len,
-          in_chips,IN_CHIPS_LEN,
-          &ix)) {
-
-          num_hands++;
-          bFolded = false;
-          bSkipping = false;
-          bHaveFlop = false;
-          bHaveRiver = false;
-          bSpentRiverMoney = false;
-          bHaveStealthTwoPair = false;
-          bHaveShowdown = false;
-
-          street = 0;
-          num_street_markers = 0;
-          spent_this_street = 0;
-          spent_this_hand = 0;
-          uncalled_bet_amount = 0;
-          collected_from_pot = 0;
-          collected_from_pot_count = 0;
-
-          line[ix] = 0;
-
-          for (ix--; (ix >= 0) && (line[ix] != '('); ix--)
-            ;
-
-          sscanf(&line[ix+1],"%d",&starting_balance);
-
-          if (bDebug)
-            printf("line %d starting_balance = %d\n",line_no,starting_balance);
-
+        if (bSkipping)
           continue;
-        }
-        else if (bSkipping)
-          continue;
-        else if (Contains(true,
-          line,line_len,
-          posts,POSTS_LEN,
-          &ix)) {
-          work = get_work_amount(line,line_len);
-          spent_this_street += work;
-
-          if (bDebug) {
-            printf("line %d street %d POSTS work = %d, spent_this_street = %d\n",
-              line_no,street,work,spent_this_street);
-          }
-
-          continue;
-        }
         else if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
           for (n = 0; n < line_len; n++) {
             if (line[n] == '[')
@@ -731,24 +766,26 @@ int main(int argc,char **argv)
                             if (!bOnlyLost || (delta < 0)) {
                               if (!bOnlyWon || (delta > 0)) {
                                 if (!bOnlyShowdown || bHaveShowdown) {
-                                  if (bTerse)
-                                    printf("%d\n",delta);
-                                  else {
-                                    printf("%10d %s",delta,hole_cards);
+                                  if (!bHeadsUp || (table_count == 2)) {
+                                    if (bTerse)
+                                      printf("%d\n",delta);
+                                    else {
+                                      printf("%10d %s",delta,hole_cards);
 
-                                    if (bShowBoard && bHaveRiver)
-                                      printf(" %s",board_cards);
+                                      if (bShowBoard && bHaveRiver)
+                                        printf(" %s",board_cards);
 
-                                    if (bShowHandType && bHaveFlop)
-                                      printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                                      if (bShowHandType && bHaveFlop)
+                                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                                    if (bShowHand && bHaveFlop)
-                                      printf(" %s",poker_hand.GetHand());
+                                      if (bShowHand && bHaveFlop)
+                                        printf(" %s",poker_hand.GetHand());
 
-                                    if (bVerbose)
-                                      printf(" %s %3d\n",filename,num_hands);
-                                    else
-                                      putchar(0x0a);
+                                      if (bVerbose)
+                                        printf(" %s %3d\n",filename,num_hands);
+                                      else
+                                        putchar(0x0a);
+                                    }
                                   }
                                 }
                               }
