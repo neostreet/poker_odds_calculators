@@ -25,7 +25,7 @@ static char usage[] =
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
 "  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand)\n"
-"  (-heads_up) (-three_handed) (-all_in)\n"
+"  (-heads_up) (-three_handed) (-all_in) (-hit_felt)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -130,6 +130,7 @@ int main(int argc,char **argv)
   bool bHeadsUp;
   bool bThreeHanded;
   bool bAllIn;
+  bool bHitFelt;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -150,7 +151,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 28)) {
+  if ((argc < 3) || (argc > 29)) {
     printf(usage);
     return 1;
   }
@@ -180,6 +181,7 @@ int main(int argc,char **argv)
   bHeadsUp = false;
   bThreeHanded = false;
   bAllIn = false;
+  bHitFelt = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -241,6 +243,8 @@ int main(int argc,char **argv)
       bThreeHanded = true;
     else if (!strcmp(argv[curr_arg],"-all_in"))
       bAllIn = true;
+    else if (!strcmp(argv[curr_arg],"-hit_felt"))
+      bHitFelt = true;
     else
       break;
   }
@@ -796,24 +800,26 @@ int main(int argc,char **argv)
                                   if (!bHeadsUp || (table_count == 2)) {
                                     if (!bThreeHanded || (table_count == 3)) {
                                       if (!bAllIn || bHaveAllIn) {
-                                        if (bTerse)
-                                          printf("%d\n",delta);
-                                        else {
-                                          printf("%10d %s",delta,hole_cards);
+                                        if (!bHitFelt || (ending_balance == 0)) {
+                                          if (bTerse)
+                                            printf("%d\n",delta);
+                                          else {
+                                            printf("%10d %s",delta,hole_cards);
 
-                                          if (bShowBoard && bHaveRiver)
-                                            printf(" %s",board_cards);
+                                            if (bShowBoard && bHaveRiver)
+                                              printf(" %s",board_cards);
 
-                                          if (bShowHandType && bHaveFlop)
-                                            printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                                            if (bShowHandType && bHaveFlop)
+                                              printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                                          if (bShowHand && bHaveFlop)
-                                            printf(" %s",poker_hand.GetHand());
+                                            if (bShowHand && bHaveFlop)
+                                              printf(" %s",poker_hand.GetHand());
 
-                                          if (bVerbose)
-                                            printf(" %s %3d\n",filename,num_hands);
-                                          else
-                                            putchar(0x0a);
+                                            if (bVerbose)
+                                              printf(" %s %3d\n",filename,num_hands);
+                                            else
+                                              putchar(0x0a);
+                                          }
                                         }
                                       }
                                     }
