@@ -26,6 +26,7 @@ static char usage[] =
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
 "  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand)\n"
 "  (-heads_up) (-three_handed) (-all_in) (-hit_felt)\n"
+"  (-no_uncalled) (-no_collected)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -131,6 +132,8 @@ int main(int argc,char **argv)
   bool bThreeHanded;
   bool bAllIn;
   bool bHitFelt;
+  bool bNoUncalled;
+  bool bNoCollected;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -151,7 +154,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
 
-  if ((argc < 3) || (argc > 29)) {
+  if ((argc < 3) || (argc > 31)) {
     printf(usage);
     return 1;
   }
@@ -182,6 +185,8 @@ int main(int argc,char **argv)
   bThreeHanded = false;
   bAllIn = false;
   bHitFelt = false;
+  bNoUncalled = false;
+  bNoCollected = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -245,6 +250,10 @@ int main(int argc,char **argv)
       bAllIn = true;
     else if (!strcmp(argv[curr_arg],"-hit_felt"))
       bHitFelt = true;
+    else if (!strcmp(argv[curr_arg],"-no_uncalled"))
+      bNoUncalled = true;
+    else if (!strcmp(argv[curr_arg],"-no_collected"))
+      bNoCollected = true;
     else
       break;
   }
@@ -801,24 +810,28 @@ int main(int argc,char **argv)
                                     if (!bThreeHanded || (table_count == 3)) {
                                       if (!bAllIn || bHaveAllIn) {
                                         if (!bHitFelt || (ending_balance == 0)) {
-                                          if (bTerse)
-                                            printf("%d\n",delta);
-                                          else {
-                                            printf("%10d %s",delta,hole_cards);
+                                          if (!bNoUncalled || (uncalled_bet_amount == 0)) {
+                                            if (!bNoCollected || (collected_from_pot == 0)) {
+                                              if (bTerse)
+                                                printf("%d\n",delta);
+                                              else {
+                                                printf("%10d %s",delta,hole_cards);
 
-                                            if (bShowBoard && bHaveRiver)
-                                              printf(" %s",board_cards);
+                                                if (bShowBoard && bHaveRiver)
+                                                  printf(" %s",board_cards);
 
-                                            if (bShowHandType && bHaveFlop)
-                                              printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+                                                if (bShowHandType && bHaveFlop)
+                                                  printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
 
-                                            if (bShowHand && bHaveFlop)
-                                              printf(" %s",poker_hand.GetHand());
+                                                if (bShowHand && bHaveFlop)
+                                                  printf(" %s",poker_hand.GetHand());
 
-                                            if (bVerbose)
-                                              printf(" %s %3d\n",filename,num_hands);
-                                            else
-                                              putchar(0x0a);
+                                                if (bVerbose)
+                                                  printf(" %s %3d\n",filename,num_hands);
+                                                else
+                                                  putchar(0x0a);
+                                              }
+                                            }
                                           }
                                         }
                                       }
