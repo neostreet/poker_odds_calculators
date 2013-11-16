@@ -24,8 +24,8 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
-"  (-only_lost) (-only_won) (-only_showdown) (-very_best_hand)\n"
-"  (-heads_up) (-three_handed) (-all_in) (-hit_felt)\n"
+"  (-only_lost) (-only_won_count) (-only_won) (-only_showdown)\n"
+"  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-hit_felt)\n"
 "  (-no_uncalled) (-no_collected)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
@@ -125,6 +125,7 @@ int main(int argc,char **argv)
   bool bStealthTwoPair;
   bool bNormalize;
   bool bOnlyLost;
+  bool bOnlyWonCount;
   bool bOnlyWon;
   bool bOnlyShowdown;
   bool bVeryBestHand;
@@ -153,8 +154,9 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   char card_string[3];
   int retval;
+  int won_count;
 
-  if ((argc < 3) || (argc > 31)) {
+  if ((argc < 3) || (argc > 32)) {
     printf(usage);
     return 1;
   }
@@ -178,6 +180,7 @@ int main(int argc,char **argv)
   bStealthTwoPair = false;
   bNormalize = false;
   bOnlyLost = false;
+  bOnlyWonCount = false;
   bOnlyWon = false;
   bOnlyShowdown = false;
   bVeryBestHand = false;
@@ -236,6 +239,8 @@ int main(int argc,char **argv)
       bNormalize = true;
     else if (!strcmp(argv[curr_arg],"-only_lost"))
       bOnlyLost = true;
+    else if (!strcmp(argv[curr_arg],"-only_won_count"))
+      bOnlyWonCount = true;
     else if (!strcmp(argv[curr_arg],"-only_won"))
       bOnlyWon = true;
     else if (!strcmp(argv[curr_arg],"-only_showdown"))
@@ -312,19 +317,34 @@ int main(int argc,char **argv)
   if (bHandTypeSpecified && !bSawFlop && !bSawRiver)
     bSawFlop = true;
 
+  if (bOnlyLost && bOnlyWonCount) {
+    printf("can't specify both -only_lost and -only_won_count\n");
+    return 11;
+  }
+
+  if (bOnlyWon  && bOnlyWonCount) {
+    printf("can't specify both -only_won and -only_won_count\n");
+    return 12;
+  }
+
   if (bOnlyLost && bOnlyWon) {
     printf("can't specify both -only_lost and -only_won\n");
-    return 11;
+    return 13;
   }
 
   if (bSkipZero && bOnlyZero) {
     printf("can't specify both -skip_zero and -only_zero\n");
-    return 12;
+    return 14;
   }
 
   if (bHeadsUp && bThreeHanded) {
     printf("can't specify both -heads_up and -three_handed\n");
-    return 13;
+    return 15;
+  }
+
+  if (bOnlyWonCount) {
+    bTerse = true;
+    bOnlyWon = true;
   }
 
   player_name_ix = curr_arg++;
@@ -332,7 +352,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 14;
+    return 16;
   }
 
   ending_balance = -1;
@@ -352,6 +372,9 @@ int main(int argc,char **argv)
       break;
 
     file_no++;
+
+    if (bOnlyWonCount)
+      won_count = 0;
 
     if (dbg_file_no == file_no)
       dbg = 1;
@@ -375,8 +398,12 @@ int main(int argc,char **argv)
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
-      if (feof(fptr))
+      if (feof(fptr)) {
+        if (bOnlyWonCount)
+          printf("%s %3d\n",filename,won_count);
+
         break;
+      }
 
       line_no++;
 
@@ -520,7 +547,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 15;
+                    return 17;
                   }
                 }
               }
@@ -714,7 +741,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 16;
+              return 18;
             }
           }
 
@@ -741,7 +768,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 17;
+            return 19;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -768,7 +795,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 18;
+            return 20;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -812,8 +839,12 @@ int main(int argc,char **argv)
                                         if (!bHitFelt || (ending_balance == 0)) {
                                           if (!bNoUncalled || (uncalled_bet_amount == 0)) {
                                             if (!bNoCollected || (collected_from_pot == 0)) {
-                                              if (bTerse)
-                                                printf("%d\n",delta);
+                                              if (bTerse) {
+                                                if (!bOnlyWonCount)
+                                                  printf("%d\n",delta);
+                                                else
+                                                  won_count++;
+                                              }
                                               else {
                                                 printf("%10d %s",delta,hole_cards);
 
