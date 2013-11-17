@@ -68,6 +68,7 @@ static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
 static int get_work_amount(char *line,int line_len);
 static void normalize_hole_cards(char *hole_cards);
+static int get_date_from_path(char *path,char slash_char,int num_slashes,char **date_string_ptr);
 
 int main(int argc,char **argv)
 {
@@ -155,6 +156,7 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
   int won_count;
+  char *date_string;
 
   if ((argc < 3) || (argc > 32)) {
     printf(usage);
@@ -399,8 +401,10 @@ int main(int argc,char **argv)
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
       if (feof(fptr)) {
-        if (bOnlyWonCount)
-          printf("%s %3d\n",filename,won_count);
+        if (bOnlyWonCount) {
+          retval = get_date_from_path(filename,'\\',3,&date_string);
+          printf("%3d %s\n",won_count,date_string);
+        }
 
         break;
       }
@@ -1033,4 +1037,42 @@ static void normalize_hole_cards(char *hole_cards)
       hole_cards[3] = temp;
     }
   }
+}
+
+static char sql_date_string[11];
+
+static int get_date_from_path(char *path,char slash_char,int num_slashes,char **date_string_ptr)
+{
+  int n;
+  int len;
+  int slash_count;
+
+  len = strlen(path);
+  slash_count = 0;
+
+  for (n = len - 1; (n >= 0); n--) {
+    if (path[n] == slash_char) {
+      slash_count++;
+
+      if (slash_count == num_slashes)
+        break;
+    }
+  }
+
+  if (slash_count != num_slashes)
+    return 1;
+
+  if (path[n+5] != slash_char)
+    return 2;
+
+  strncpy(sql_date_string,&path[n+1],4);
+  sql_date_string[4] = '-';
+  strncpy(&sql_date_string[5],&path[n+6],2);
+  sql_date_string[7] = '-';
+  strncpy(&sql_date_string[8],&path[n+8],2);
+  sql_date_string[10] = 0;
+
+  *date_string_ptr = sql_date_string;
+
+  return 0;
 }
