@@ -403,7 +403,7 @@ int main(int argc,char **argv)
       if (feof(fptr)) {
         if (bOnlyWonCount) {
           retval = get_date_from_path(filename,'\\',3,&date_string);
-          printf("%3d %s\n",won_count,date_string);
+          printf("%d\t%s\n",won_count,date_string);
         }
 
         break;
