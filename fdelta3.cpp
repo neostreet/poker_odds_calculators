@@ -825,8 +825,10 @@ int main(int argc,char **argv)
               bHaveRiver = true;
           }
         }
-        else if (!strncmp(line,show_down,SHOW_DOWN_LEN))
-          bHaveShowdown = true;
+        else if (!strncmp(line,show_down,SHOW_DOWN_LEN)) {
+          if (!bFolded)
+            bHaveShowdown = true;
+        }
         else if (!strncmp(line,summary,SUMMARY_LEN)) {
           if (bDebug)
             printf("line %d SUMMARY line detected; skipping\n",line_no);
