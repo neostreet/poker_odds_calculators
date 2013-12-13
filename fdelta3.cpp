@@ -26,7 +26,7 @@ static char usage[] =
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
 "  (-only_lost) (-only_won_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-hit_felt)\n"
-"  (-no_uncalled) (-no_collected)\n"
+"  (-no_uncalled) (-no_collected) (-show_collected)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -137,6 +137,7 @@ int main(int argc,char **argv)
   bool bHitFelt;
   bool bNoUncalled;
   bool bNoCollected;
+  bool bShowCollected;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -159,7 +160,7 @@ int main(int argc,char **argv)
   int won_count;
   char *date_string;
 
-  if ((argc < 3) || (argc > 33)) {
+  if ((argc < 3) || (argc > 34)) {
     printf(usage);
     return 1;
   }
@@ -194,6 +195,7 @@ int main(int argc,char **argv)
   bHitFelt = false;
   bNoUncalled = false;
   bNoCollected = false;
+  bShowCollected = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -265,6 +267,8 @@ int main(int argc,char **argv)
       bNoUncalled = true;
     else if (!strcmp(argv[curr_arg],"-no_collected"))
       bNoCollected = true;
+    else if (!strcmp(argv[curr_arg],"-show_collected"))
+      bShowCollected = true;
     else
       break;
   }
@@ -854,13 +858,20 @@ int main(int argc,char **argv)
                                             if (!bNoUncalled || (uncalled_bet_amount == 0)) {
                                               if (!bNoCollected || (collected_from_pot == 0)) {
                                                 if (bTerse) {
-                                                  if (!bOnlyWonCount)
-                                                    printf("%d\n",delta);
+                                                  if (!bOnlyWonCount) {
+                                                    if (!bShowCollected)
+                                                      printf("%d\n",delta);
+                                                    else
+                                                      printf("%d\n",collected_from_pot);
+                                                  }
                                                   else
                                                     won_count++;
                                                 }
                                                 else {
-                                                  printf("%10d %s",delta,hole_cards);
+                                                  if (!bShowCollected)
+                                                    printf("%10d %s",delta,hole_cards);
+                                                  else
+                                                    printf("%10d %s",collected_from_pot,hole_cards);
 
                                                   if (bShowBoard && bHaveRiver)
                                                     printf(" %s",board_cards);
