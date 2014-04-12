@@ -23,10 +23,11 @@ static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
-"  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize)\n"
-"  (-only_lost) (-only_won_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
+"  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize) (-only_lost)\n"
+"  (-only_won_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
-"  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected) (-show_collected)\n"
+"  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
+"  (-show_collected) (-show_opm)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -106,8 +107,7 @@ int main(int argc,char **argv)
   int num_hands;
   int dbg;
   int work;
-  double dwork1;
-  double dwork2;
+  double opm;
   char hole_cards[12];
   char board_cards[15];
   bool bHandTypeSpecified;
@@ -140,6 +140,7 @@ int main(int argc,char **argv)
   bool bNoUncalled;
   bool bNoCollected;
   bool bShowCollected;
+  bool bShowOpm;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -163,7 +164,7 @@ int main(int argc,char **argv)
   int won_count;
   char *date_string;
 
-  if ((argc < 3) || (argc > 36)) {
+  if ((argc < 3) || (argc > 37)) {
     printf(usage);
     return 1;
   }
@@ -201,6 +202,7 @@ int main(int argc,char **argv)
   bNoUncalled = false;
   bNoCollected = false;
   bShowCollected = false;
+  bShowOpm = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -278,6 +280,8 @@ int main(int argc,char **argv)
       bNoCollected = true;
     else if (!strcmp(argv[curr_arg],"-show_collected"))
       bShowCollected = true;
+    else if (!strcmp(argv[curr_arg],"-show_opm"))
+      bShowOpm = true;
     else
       break;
   }
@@ -381,6 +385,11 @@ int main(int argc,char **argv)
     return 19;
   }
 
+  if (bShowCollected && bShowOpm) {
+    printf("can't specify both -show_collected and -show_opm\n");
+    return 20;
+  }
+
   if (bOnlyWonCount) {
     bTerse = true;
     bOnlyWon = true;
@@ -391,7 +400,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 20;
+    return 21;
   }
 
   ending_balance = -1;
@@ -593,7 +602,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 21;
+                    return 22;
                   }
                 }
               }
@@ -707,6 +716,9 @@ int main(int argc,char **argv)
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
           delta = ending_balance - starting_balance;
 
+          if (bShowOpm)
+            opm = (double)0;
+
           continue;
         }
         else if (Contains(true,
@@ -787,7 +799,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 22;
+              return 23;
             }
           }
 
@@ -814,7 +826,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 23;
+            return 24;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -841,7 +853,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 24;
+            return 25;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -867,6 +879,13 @@ int main(int argc,char **argv)
           if (!bFolded) {
             ending_balance = starting_balance - spent_this_hand + collected_from_pot;
             delta = ending_balance - starting_balance;
+
+            if (bShowOpm) {
+              if (collected_from_pot && (delta > 0))
+                opm = (double)delta / (double)collected_from_pot;
+              else
+                opm = (double)0;
+            }
           }
 
           if (!bSkipZero || (delta != 0)) {
@@ -892,19 +911,25 @@ int main(int argc,char **argv)
                                                   if (!bNoCollected || (collected_from_pot == 0)) {
                                                     if (bTerse) {
                                                       if (!bOnlyWonCount) {
-                                                        if (!bShowCollected)
-                                                          printf("%d\n",delta);
-                                                        else
+                                                        if (bShowCollected)
                                                           printf("%d\n",collected_from_pot);
+                                                        else if (bShowOpm)
+                                                          printf("%lf\n",opm);
+                                                        else
+                                                          printf("%d\n",delta);
                                                       }
                                                       else
                                                         won_count++;
                                                     }
                                                     else {
-                                                      if (!bShowCollected)
-                                                        printf("%10d %s",delta,hole_cards);
-                                                      else
+                                                      if (bShowCollected)
                                                         printf("%10d %s",collected_from_pot,hole_cards);
+                                                      else if (bShowOpm) {
+                                                        printf("%6.4lf (%10d %10d) %s",opm,
+                                                          delta,collected_from_pot,hole_cards);
+                                                      }
+                                                      else
+                                                        printf("%10d %s",delta,hole_cards);
 
                                                       if (bShowBoard && bHaveRiver)
                                                         printf(" %s",board_cards);
