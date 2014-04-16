@@ -27,7 +27,7 @@ static char usage[] =
 "  (-only_won_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
-"  (-show_collected) (-show_opm)\n"
+"  (-show_collected) (-show_opm) (-only_wash)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -141,6 +141,7 @@ int main(int argc,char **argv)
   bool bNoCollected;
   bool bShowCollected;
   bool bShowOpm;
+  bool bOnlyWash;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -164,7 +165,7 @@ int main(int argc,char **argv)
   int won_count;
   char *date_string;
 
-  if ((argc < 3) || (argc > 37)) {
+  if ((argc < 3) || (argc > 38)) {
     printf(usage);
     return 1;
   }
@@ -203,6 +204,7 @@ int main(int argc,char **argv)
   bNoCollected = false;
   bShowCollected = false;
   bShowOpm = false;
+  bOnlyWash = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -282,6 +284,8 @@ int main(int argc,char **argv)
       bShowCollected = true;
     else if (!strcmp(argv[curr_arg],"-show_opm"))
       bShowOpm = true;
+    else if (!strcmp(argv[curr_arg],"-only_wash"))
+      bOnlyWash = true;
     else
       break;
   }
@@ -390,6 +394,16 @@ int main(int argc,char **argv)
     return 20;
   }
 
+  if (bOnlyLost && bOnlyWash) {
+    printf("can't specify both -only_lost and -only_wash\n");
+    return 21;
+  }
+
+  if (bOnlyWon && bOnlyWash) {
+    printf("can't specify both -only_won and -only_wash\n");
+    return 22;
+  }
+
   if (bOnlyWonCount) {
     bTerse = true;
     bOnlyWon = true;
@@ -400,7 +414,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 21;
+    return 23;
   }
 
   ending_balance = -1;
@@ -602,7 +616,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 22;
+                    return 24;
                   }
                 }
               }
@@ -799,7 +813,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 23;
+              return 25;
             }
           }
 
@@ -826,7 +840,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 24;
+            return 26;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -853,7 +867,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 25;
+            return 27;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -899,51 +913,53 @@ int main(int argc,char **argv)
                           if (!bHandTypeSpecified || !strcmp(hand_type,plain_hand_types[poker_hand.GetHandType()])) {
                             if (!bOnlyLost || (delta < 0)) {
                               if (!bOnlyWon || (delta > 0)) {
-                                if (!bOnlyShowdown || bHaveShowdown) {
-                                  if (!bOnlyNoShowdown || !bHaveShowdown) {
-                                    if (!bHeadsUp || (table_count == 2)) {
-                                      if (!bThreeHanded || (table_count == 3)) {
-                                        if (!bAllIn || bHaveAllIn) {
-                                          if (!bNotAllIn || !bHaveAllIn) {
-                                            if (!bAllInPreflop || bHaveAllInPreflop) {
-                                              if (!bHitFelt || (ending_balance == 0)) {
-                                                if (!bNoUncalled || (uncalled_bet_amount == 0)) {
-                                                  if (!bNoCollected || (collected_from_pot == 0)) {
-                                                    if (bTerse) {
-                                                      if (!bOnlyWonCount) {
-                                                        if (bShowCollected)
-                                                          printf("%d\n",collected_from_pot);
-                                                        else if (bShowOpm)
-                                                          printf("%lf\n",opm);
+                                if (!bOnlyWash || (delta == 0)) {
+                                  if (!bOnlyShowdown || bHaveShowdown) {
+                                    if (!bOnlyNoShowdown || !bHaveShowdown) {
+                                      if (!bHeadsUp || (table_count == 2)) {
+                                        if (!bThreeHanded || (table_count == 3)) {
+                                          if (!bAllIn || bHaveAllIn) {
+                                            if (!bNotAllIn || !bHaveAllIn) {
+                                              if (!bAllInPreflop || bHaveAllInPreflop) {
+                                                if (!bHitFelt || (ending_balance == 0)) {
+                                                  if (!bNoUncalled || (uncalled_bet_amount == 0)) {
+                                                    if (!bNoCollected || (collected_from_pot == 0)) {
+                                                      if (bTerse) {
+                                                        if (!bOnlyWonCount) {
+                                                          if (bShowCollected)
+                                                            printf("%d\n",collected_from_pot);
+                                                          else if (bShowOpm)
+                                                            printf("%lf\n",opm);
+                                                          else
+                                                            printf("%d\n",delta);
+                                                        }
                                                         else
-                                                          printf("%d\n",delta);
+                                                          won_count++;
                                                       }
-                                                      else
-                                                        won_count++;
-                                                    }
-                                                    else {
-                                                      if (bShowCollected)
-                                                        printf("%10d %s",collected_from_pot,hole_cards);
-                                                      else if (bShowOpm) {
-                                                        printf("%6.4lf (%10d %10d) %s",opm,
-                                                          delta,collected_from_pot,hole_cards);
+                                                      else {
+                                                        if (bShowCollected)
+                                                          printf("%10d %s",collected_from_pot,hole_cards);
+                                                        else if (bShowOpm) {
+                                                          printf("%6.4lf (%10d %10d) %s",opm,
+                                                            delta,collected_from_pot,hole_cards);
+                                                        }
+                                                        else
+                                                          printf("%10d %s",delta,hole_cards);
+
+                                                        if (bShowBoard && bHaveRiver)
+                                                          printf(" %s",board_cards);
+
+                                                        if (bShowHandType && bHaveFlop)
+                                                          printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+                                                        if (bShowHand && bHaveFlop)
+                                                          printf(" %s",poker_hand.GetHand());
+
+                                                        if (bVerbose)
+                                                          printf(" %s %3d\n",filename,num_hands);
+                                                        else
+                                                          putchar(0x0a);
                                                       }
-                                                      else
-                                                        printf("%10d %s",delta,hole_cards);
-
-                                                      if (bShowBoard && bHaveRiver)
-                                                        printf(" %s",board_cards);
-
-                                                      if (bShowHandType && bHaveFlop)
-                                                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
-
-                                                      if (bShowHand && bHaveFlop)
-                                                        printf(" %s",poker_hand.GetHand());
-
-                                                      if (bVerbose)
-                                                        printf(" %s %3d\n",filename,num_hands);
-                                                      else
-                                                        putchar(0x0a);
                                                     }
                                                   }
                                                 }
