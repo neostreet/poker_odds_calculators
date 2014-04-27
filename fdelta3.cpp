@@ -24,7 +24,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize) (-only_lost)\n"
-"  (-only_won_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
+"  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
@@ -126,7 +126,7 @@ int main(int argc,char **argv)
   bool bStealthTwoPair;
   bool bNormalize;
   bool bOnlyLost;
-  bool bOnlyWonCount;
+  bool bOnlyCount;
   bool bOnlyWon;
   bool bOnlyShowdown;
   bool bOnlyNoShowdown;
@@ -162,7 +162,7 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   char card_string[3];
   int retval;
-  int won_count;
+  int count;
   char *date_string;
 
   if ((argc < 3) || (argc > 38)) {
@@ -189,7 +189,7 @@ int main(int argc,char **argv)
   bStealthTwoPair = false;
   bNormalize = false;
   bOnlyLost = false;
-  bOnlyWonCount = false;
+  bOnlyCount = false;
   bOnlyWon = false;
   bOnlyShowdown = false;
   bOnlyNoShowdown = false;
@@ -254,8 +254,8 @@ int main(int argc,char **argv)
       bNormalize = true;
     else if (!strcmp(argv[curr_arg],"-only_lost"))
       bOnlyLost = true;
-    else if (!strcmp(argv[curr_arg],"-only_won_count"))
-      bOnlyWonCount = true;
+    else if (!strcmp(argv[curr_arg],"-only_count"))
+      bOnlyCount = true;
     else if (!strcmp(argv[curr_arg],"-only_won"))
       bOnlyWon = true;
     else if (!strcmp(argv[curr_arg],"-only_showdown"))
@@ -344,77 +344,65 @@ int main(int argc,char **argv)
   if (bHandTypeSpecified && !bSawFlop && !bSawRiver)
     bSawFlop = true;
 
-  if (bOnlyLost && bOnlyWonCount) {
-    printf("can't specify both -only_lost and -only_won_count\n");
-    return 11;
-  }
-
-  if (bOnlyWon  && bOnlyWonCount) {
-    printf("can't specify both -only_won and -only_won_count\n");
-    return 12;
-  }
-
   if (bOnlyLost && bOnlyWon) {
     printf("can't specify both -only_lost and -only_won\n");
-    return 13;
+    return 11;
   }
 
   if (bSkipZero && bOnlyZero) {
     printf("can't specify both -skip_zero and -only_zero\n");
-    return 14;
+    return 12;
   }
 
   if (bHeadsUp && bThreeHanded) {
     printf("can't specify both -heads_up and -three_handed\n");
-    return 15;
+    return 13;
   }
 
   if (bOnlyShowdown && bOnlyNoShowdown) {
     printf("can't specify both -only_showdown and -only_no_showdown\n");
-    return 16;
+    return 14;
   }
 
   if (bAllIn && bNotAllIn) {
     printf("can't specify both -all_in and -not_all_in\n");
-    return 17;
+    return 15;
   }
 
   if (bAllIn && bAllInPreflop) {
     printf("can't specify both -all_in and -all_in_preflop\n");
-    return 18;
+    return 16;
   }
 
   if (bNotAllIn && bAllInPreflop) {
     printf("can't specify both -not_all_in and -all_in_preflop\n");
-    return 19;
+    return 17;
   }
 
   if (bShowCollected && bShowOpm) {
     printf("can't specify both -show_collected and -show_opm\n");
-    return 20;
+    return 18;
   }
 
   if (bOnlyLost && bOnlyWash) {
     printf("can't specify both -only_lost and -only_wash\n");
-    return 21;
+    return 19;
   }
 
   if (bOnlyWon && bOnlyWash) {
     printf("can't specify both -only_won and -only_wash\n");
-    return 22;
+    return 20;
   }
 
-  if (bOnlyWonCount) {
+  if (bOnlyCount)
     bTerse = true;
-    bOnlyWon = true;
-  }
 
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 23;
+    return 21;
   }
 
   ending_balance = -1;
@@ -435,8 +423,8 @@ int main(int argc,char **argv)
 
     file_no++;
 
-    if (bOnlyWonCount)
-      won_count = 0;
+    if (bOnlyCount)
+      count = 0;
 
     if (dbg_file_no == file_no)
       dbg = 1;
@@ -462,9 +450,9 @@ int main(int argc,char **argv)
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
       if (feof(fptr)) {
-        if (bOnlyWonCount) {
+        if (bOnlyCount) {
           retval = get_date_from_path(filename,'\\',3,&date_string);
-          printf("%d\t%s\n",won_count,date_string);
+          printf("%d\t%s\n",count,date_string);
         }
 
         break;
@@ -616,7 +604,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 24;
+                    return 22;
                   }
                 }
               }
@@ -813,7 +801,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 25;
+              return 23;
             }
           }
 
@@ -840,7 +828,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 26;
+            return 24;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -867,7 +855,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 27;
+            return 25;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -925,7 +913,7 @@ int main(int argc,char **argv)
                                                   if (!bNoUncalled || (uncalled_bet_amount == 0)) {
                                                     if (!bNoCollected || (collected_from_pot == 0)) {
                                                       if (bTerse) {
-                                                        if (!bOnlyWonCount) {
+                                                        if (!bOnlyCount) {
                                                           if (bShowCollected)
                                                             printf("%d\n",collected_from_pot);
                                                           else if (bShowOpm)
@@ -934,7 +922,7 @@ int main(int argc,char **argv)
                                                             printf("%d\n",delta);
                                                         }
                                                         else
-                                                          won_count++;
+                                                          count++;
                                                       }
                                                       else {
                                                         if (bShowCollected)
