@@ -28,6 +28,7 @@ static char usage[] =
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
+"  (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -142,6 +143,9 @@ int main(int argc,char **argv)
   bool bShowCollected;
   bool bShowOpm;
   bool bOnlyWash;
+  bool bMaxDelta;
+  bool bMinDelta;
+  bool bMaxAbsDelta;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -150,6 +154,7 @@ int main(int argc,char **argv)
   bool bHaveShowdown;
   bool bHaveAllIn;
   bool bHaveAllInPreflop;
+  bool bSummarizing;
   char *hand_type;
   char *hand;
   bool bFolded;
@@ -162,10 +167,10 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   char card_string[3];
   int retval;
-  int count;
+  int summary_val;
   char *date_string;
 
-  if ((argc < 3) || (argc > 38)) {
+  if ((argc < 3) || (argc > 41)) {
     printf(usage);
     return 1;
   }
@@ -205,6 +210,9 @@ int main(int argc,char **argv)
   bShowCollected = false;
   bShowOpm = false;
   bOnlyWash = false;
+  bMaxDelta = false;
+  bMinDelta = false;
+  bMaxAbsDelta = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -286,6 +294,12 @@ int main(int argc,char **argv)
       bShowOpm = true;
     else if (!strcmp(argv[curr_arg],"-only_wash"))
       bOnlyWash = true;
+    else if (!strcmp(argv[curr_arg],"-max_delta"))
+      bMaxDelta = true;
+    else if (!strcmp(argv[curr_arg],"-min_delta"))
+      bMinDelta = true;
+    else if (!strcmp(argv[curr_arg],"-max_abs_delta"))
+      bMaxAbsDelta = true;
     else
       break;
   }
@@ -394,15 +408,32 @@ int main(int argc,char **argv)
     return 20;
   }
 
-  if (bOnlyCount)
+  if (bMaxDelta && bMinDelta) {
+    printf("can't specify both -max_delta and -min_delta\n");
+    return 21;
+  }
+
+  if (bMaxDelta && bMaxAbsDelta) {
+    printf("can't specify both -max_delta and -max_abs_delta\n");
+    return 22;
+  }
+
+  if (bMinDelta && bMaxAbsDelta) {
+    printf("can't specify both -min_delta and -max_abs_delta\n");
+    return 23;
+  }
+
+  if ((bOnlyCount) || (bMaxDelta) || (bMinDelta) || (bMaxAbsDelta)) {
     bTerse = true;
+    bSummarizing = true;
+  }
 
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 21;
+    return 24;
   }
 
   ending_balance = -1;
@@ -423,8 +454,8 @@ int main(int argc,char **argv)
 
     file_no++;
 
-    if (bOnlyCount)
-      count = 0;
+    if (bSummarizing)
+      summary_val = 0;
 
     if (dbg_file_no == file_no)
       dbg = 1;
@@ -450,9 +481,9 @@ int main(int argc,char **argv)
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
       if (feof(fptr)) {
-        if (bOnlyCount) {
+        if (bSummarizing) {
           retval = get_date_from_path(filename,'\\',3,&date_string);
-          printf("%d\t%s\n",count,date_string);
+          printf("%d\t%s\n",summary_val,date_string);
         }
 
         break;
@@ -604,7 +635,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 22;
+                    return 25;
                   }
                 }
               }
@@ -801,7 +832,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 23;
+              return 26;
             }
           }
 
@@ -828,7 +859,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 24;
+            return 27;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -855,7 +886,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 25;
+            return 28;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -913,7 +944,7 @@ int main(int argc,char **argv)
                                                   if (!bNoUncalled || (uncalled_bet_amount == 0)) {
                                                     if (!bNoCollected || (collected_from_pot == 0)) {
                                                       if (bTerse) {
-                                                        if (!bOnlyCount) {
+                                                        if (!bSummarizing) {
                                                           if (bShowCollected)
                                                             printf("%d\n",collected_from_pot);
                                                           else if (bShowOpm)
@@ -921,8 +952,30 @@ int main(int argc,char **argv)
                                                           else
                                                             printf("%d\n",delta);
                                                         }
-                                                        else
-                                                          count++;
+                                                        else {
+                                                          if (bOnlyCount)
+                                                            summary_val++;
+                                                          else if (bMaxDelta) {
+                                                            if (delta > summary_val)
+                                                              summary_val = delta;
+                                                          }
+                                                          else if (bMinDelta) {
+                                                            if (delta < summary_val)
+                                                              summary_val = delta;
+                                                          }
+                                                          else {
+                                                            if (delta < 0) {
+                                                              work = delta * -1;
+
+                                                              if (work > summary_val)
+                                                                summary_val = work;
+                                                            }
+                                                            else {
+                                                              if (delta > summary_val)
+                                                                summary_val = delta;
+                                                            }
+                                                          }
+                                                        }
                                                       }
                                                       else {
                                                         if (bShowCollected)
