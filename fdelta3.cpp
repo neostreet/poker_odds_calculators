@@ -28,7 +28,7 @@ static char usage[] =
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
-"  (-max_delta) (-min_delta) (-max_abs_delta)\n"
+"  (-max_delta) (-min_delta) (-max_abs_delta) (-skip_summary_zero)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -146,6 +146,7 @@ int main(int argc,char **argv)
   bool bMaxDelta;
   bool bMinDelta;
   bool bMaxAbsDelta;
+  bool bSkipSummaryZero;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -170,7 +171,7 @@ int main(int argc,char **argv)
   int summary_val;
   char *date_string;
 
-  if ((argc < 3) || (argc > 41)) {
+  if ((argc < 3) || (argc > 42)) {
     printf(usage);
     return 1;
   }
@@ -213,6 +214,7 @@ int main(int argc,char **argv)
   bMaxDelta = false;
   bMinDelta = false;
   bMaxAbsDelta = false;
+  bSkipSummaryZero = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -300,6 +302,8 @@ int main(int argc,char **argv)
       bMinDelta = true;
     else if (!strcmp(argv[curr_arg],"-max_abs_delta"))
       bMaxAbsDelta = true;
+    else if (!strcmp(argv[curr_arg],"-skip_summary_zero"))
+      bSkipSummaryZero = true;
     else
       break;
   }
@@ -482,8 +486,10 @@ int main(int argc,char **argv)
 
       if (feof(fptr)) {
         if (bSummarizing) {
-          retval = get_date_from_path(filename,'\\',3,&date_string);
-          printf("%d\t%s\n",summary_val,date_string);
+          if (!bSkipSummaryZero || summary_val) {
+            retval = get_date_from_path(filename,'\\',3,&date_string);
+            printf("%d\t%s\n",summary_val,date_string);
+          }
         }
 
         break;
