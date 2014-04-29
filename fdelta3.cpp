@@ -28,8 +28,8 @@ static char usage[] =
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
-"  (-max_delta) (-min_delta) (-max_abs_delta) (-skip_summary_zero)\n"
-"  player_name filename\n";
+"  (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
+"  (-skip_summary_zero) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -127,7 +127,7 @@ int main(int argc,char **argv)
   bool bStealthTwoPair;
   bool bNormalize;
   bool bOnlyLost;
-  bool bOnlyCount;
+  int only_count;
   bool bOnlyWon;
   bool bOnlyShowdown;
   bool bOnlyNoShowdown;
@@ -143,9 +143,10 @@ int main(int argc,char **argv)
   bool bShowCollected;
   bool bShowOpm;
   bool bOnlyWash;
-  bool bMaxDelta;
-  bool bMinDelta;
-  bool bMaxAbsDelta;
+  int max_delta;
+  int min_delta;
+  int max_abs_delta;
+  int max_collected;
   bool bSkipSummaryZero;
   bool bSuited;
   bool bHaveFlop;
@@ -171,7 +172,7 @@ int main(int argc,char **argv)
   int summary_val;
   char *date_string;
 
-  if ((argc < 3) || (argc > 42)) {
+  if ((argc < 3) || (argc > 43)) {
     printf(usage);
     return 1;
   }
@@ -195,7 +196,7 @@ int main(int argc,char **argv)
   bStealthTwoPair = false;
   bNormalize = false;
   bOnlyLost = false;
-  bOnlyCount = false;
+  only_count = 0;
   bOnlyWon = false;
   bOnlyShowdown = false;
   bOnlyNoShowdown = false;
@@ -211,9 +212,10 @@ int main(int argc,char **argv)
   bShowCollected = false;
   bShowOpm = false;
   bOnlyWash = false;
-  bMaxDelta = false;
-  bMinDelta = false;
-  bMaxAbsDelta = false;
+  max_delta = 0;
+  min_delta = 0;
+  max_abs_delta = 0;
+  max_collected = 0;
   bSkipSummaryZero = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -265,7 +267,7 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-only_lost"))
       bOnlyLost = true;
     else if (!strcmp(argv[curr_arg],"-only_count"))
-      bOnlyCount = true;
+      only_count = 1;
     else if (!strcmp(argv[curr_arg],"-only_won"))
       bOnlyWon = true;
     else if (!strcmp(argv[curr_arg],"-only_showdown"))
@@ -297,11 +299,13 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-only_wash"))
       bOnlyWash = true;
     else if (!strcmp(argv[curr_arg],"-max_delta"))
-      bMaxDelta = true;
+      max_delta = 1;
     else if (!strcmp(argv[curr_arg],"-min_delta"))
-      bMinDelta = true;
+      min_delta = 1;
     else if (!strcmp(argv[curr_arg],"-max_abs_delta"))
-      bMaxAbsDelta = true;
+      max_abs_delta = 1;
+    else if (!strcmp(argv[curr_arg],"-max_collected"))
+      max_collected = 1;
     else if (!strcmp(argv[curr_arg],"-skip_summary_zero"))
       bSkipSummaryZero = true;
     else
@@ -412,32 +416,24 @@ int main(int argc,char **argv)
     return 20;
   }
 
-  if (bMaxDelta && bMinDelta) {
-    printf("can't specify both -max_delta and -min_delta\n");
+  if (only_count + max_delta + min_delta + max_abs_delta + max_collected > 1) {
+    printf("can only specify one of -only_count, -max_delta, -min_delta, -max_abs_delta, and -max_collected\n");
     return 21;
   }
 
-  if (bMaxDelta && bMaxAbsDelta) {
-    printf("can't specify both -max_delta and -max_abs_delta\n");
-    return 22;
-  }
-
-  if (bMinDelta && bMaxAbsDelta) {
-    printf("can't specify both -min_delta and -max_abs_delta\n");
-    return 23;
-  }
-
-  if ((bOnlyCount) || (bMaxDelta) || (bMinDelta) || (bMaxAbsDelta)) {
+  if ((only_count) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected)) {
     bTerse = true;
     bSummarizing = true;
   }
+  else
+    bSummarizing = false;
 
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 24;
+    return 22;
   }
 
   ending_balance = -1;
@@ -641,7 +637,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 25;
+                    return 23;
                   }
                 }
               }
@@ -838,7 +834,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 26;
+              return 24;
             }
           }
 
@@ -865,7 +861,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 27;
+            return 25;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -892,7 +888,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 28;
+            return 26;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -959,17 +955,17 @@ int main(int argc,char **argv)
                                                             printf("%d\n",delta);
                                                         }
                                                         else {
-                                                          if (bOnlyCount)
+                                                          if (only_count)
                                                             summary_val++;
-                                                          else if (bMaxDelta) {
+                                                          else if (max_delta) {
                                                             if (delta > summary_val)
                                                               summary_val = delta;
                                                           }
-                                                          else if (bMinDelta) {
+                                                          else if (min_delta) {
                                                             if (delta < summary_val)
                                                               summary_val = delta;
                                                           }
-                                                          else {
+                                                          else if (max_abs_delta) {
                                                             if (delta < 0) {
                                                               work = delta * -1;
 
@@ -980,6 +976,10 @@ int main(int argc,char **argv)
                                                               if (delta > summary_val)
                                                                 summary_val = delta;
                                                             }
+                                                          }
+                                                          else {
+                                                            if (collected_from_pot > summary_val)
+                                                              summary_val = collected_from_pot;
                                                           }
                                                         }
                                                       }
