@@ -29,7 +29,7 @@ static char usage[] =
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
 "  (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
-"  (-skip_summary_zero) player_name filename\n";
+"  (-skip_summary_zero) (-no_delta) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -148,6 +148,7 @@ int main(int argc,char **argv)
   int max_abs_delta;
   int max_collected;
   bool bSkipSummaryZero;
+  bool bNoDelta;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -172,7 +173,7 @@ int main(int argc,char **argv)
   int summary_val;
   char *date_string;
 
-  if ((argc < 3) || (argc > 43)) {
+  if ((argc < 3) || (argc > 44)) {
     printf(usage);
     return 1;
   }
@@ -217,6 +218,7 @@ int main(int argc,char **argv)
   max_abs_delta = 0;
   max_collected = 0;
   bSkipSummaryZero = false;
+  bNoDelta = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -308,6 +310,8 @@ int main(int argc,char **argv)
       max_collected = 1;
     else if (!strcmp(argv[curr_arg],"-skip_summary_zero"))
       bSkipSummaryZero = true;
+    else if (!strcmp(argv[curr_arg],"-no_delta"))
+      bNoDelta = true;
     else
       break;
   }
@@ -990,8 +994,12 @@ int main(int argc,char **argv)
                                                           printf("%6.4lf (%10d %10d) %s",opm,
                                                             delta,collected_from_pot,hole_cards);
                                                         }
-                                                        else
-                                                          printf("%10d %s",delta,hole_cards);
+                                                        else  {
+                                                          if (!bNoDelta)
+                                                            printf("%10d %s",delta,hole_cards);
+                                                          else
+                                                            printf("%s",hole_cards);
+                                                        }
 
                                                         if (bShowBoard && bHaveRiver)
                                                           printf(" %s",board_cards);
