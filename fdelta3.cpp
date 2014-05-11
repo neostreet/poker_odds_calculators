@@ -28,7 +28,7 @@ static char usage[] =
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
-"  (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
+"  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-skip_summary_zero) (-no_delta) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -143,6 +143,7 @@ int main(int argc,char **argv)
   bool bShowCollected;
   bool bShowOpm;
   bool bOnlyWash;
+  int sum_delta;
   int max_delta;
   int min_delta;
   int max_abs_delta;
@@ -173,7 +174,7 @@ int main(int argc,char **argv)
   int summary_val;
   char *date_string;
 
-  if ((argc < 3) || (argc > 44)) {
+  if ((argc < 3) || (argc > 45)) {
     printf(usage);
     return 1;
   }
@@ -213,6 +214,7 @@ int main(int argc,char **argv)
   bShowCollected = false;
   bShowOpm = false;
   bOnlyWash = false;
+  sum_delta = 0;
   max_delta = 0;
   min_delta = 0;
   max_abs_delta = 0;
@@ -300,6 +302,8 @@ int main(int argc,char **argv)
       bShowOpm = true;
     else if (!strcmp(argv[curr_arg],"-only_wash"))
       bOnlyWash = true;
+    else if (!strcmp(argv[curr_arg],"-sum_delta"))
+      sum_delta = 1;
     else if (!strcmp(argv[curr_arg],"-max_delta"))
       max_delta = 1;
     else if (!strcmp(argv[curr_arg],"-min_delta"))
@@ -420,12 +424,12 @@ int main(int argc,char **argv)
     return 20;
   }
 
-  if (only_count + max_delta + min_delta + max_abs_delta + max_collected > 1) {
-    printf("can only specify one of -only_count, -max_delta, -min_delta, -max_abs_delta, and -max_collected\n");
+  if (only_count + sum_delta + max_delta + min_delta + max_abs_delta + max_collected > 1) {
+    printf("can only specify one of -only_count, -sum_delta, -max_delta, -min_delta, -max_abs_delta, and -max_collected\n");
     return 21;
   }
 
-  if ((only_count) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected)) {
+  if ((only_count) || (sum_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected)) {
     bTerse = true;
     bSummarizing = true;
   }
@@ -961,6 +965,8 @@ int main(int argc,char **argv)
                                                         else {
                                                           if (only_count)
                                                             summary_val++;
+                                                          else if (sum_delta)
+                                                            summary_val += delta;
                                                           else if (max_delta) {
                                                             if (delta > summary_val)
                                                               summary_val = delta;
