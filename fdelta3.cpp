@@ -29,7 +29,7 @@ static char usage[] =
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
 "  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
-"  (-skip_summary_zero) (-no_delta) player_name filename\n";
+"  (-skip_summary_zero) (-no_delta) (-hole_cards_used) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -150,6 +150,7 @@ int main(int argc,char **argv)
   int max_collected;
   bool bSkipSummaryZero;
   bool bNoDelta;
+  bool bHoleCardsUsed;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -173,8 +174,10 @@ int main(int argc,char **argv)
   int retval;
   int summary_val;
   char *date_string;
+  int *poker_hand_cards;
+  int hole_cards_used;
 
-  if ((argc < 3) || (argc > 45)) {
+  if ((argc < 3) || (argc > 46)) {
     printf(usage);
     return 1;
   }
@@ -221,6 +224,7 @@ int main(int argc,char **argv)
   max_collected = 0;
   bSkipSummaryZero = false;
   bNoDelta = false;
+  bHoleCardsUsed = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -316,6 +320,8 @@ int main(int argc,char **argv)
       bSkipSummaryZero = true;
     else if (!strcmp(argv[curr_arg],"-no_delta"))
       bNoDelta = true;
+    else if (!strcmp(argv[curr_arg],"-hole_cards_used"))
+      bHoleCardsUsed = true;
     else
       break;
   }
@@ -436,12 +442,21 @@ int main(int argc,char **argv)
   else
     bSummarizing = false;
 
+  if (bHoleCardsUsed) {
+    if (bAbbrev) {
+      printf("can't specify both -abbrev and -hole_cards_used\n");
+      return 22;
+    }
+
+    bSawFlop = true;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 22;
+    return 23;
   }
 
   ending_balance = -1;
@@ -645,7 +660,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 23;
+                    return 24;
                   }
                 }
               }
@@ -842,7 +857,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 24;
+              return 25;
             }
           }
 
@@ -869,7 +884,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 25;
+            return 26;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -896,7 +911,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 26;
+            return 27;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -953,6 +968,20 @@ int main(int argc,char **argv)
                                                 if (!bHitFelt || (ending_balance == 0)) {
                                                   if (!bNoUncalled || (uncalled_bet_amount == 0)) {
                                                     if (!bNoCollected || (collected_from_pot == 0)) {
+                                                      if (bHoleCardsUsed) {
+                                                        poker_hand_cards = poker_hand.GetCards();
+                                                        hole_cards_used = 0;
+
+                                                        for (p = 0; p < NUM_HOLE_CARDS_IN_HOLDEM_HAND; p++) {
+                                                          for (q = 0; q < NUM_CARDS_IN_HAND; q++) {
+                                                            if (cards[p] == poker_hand_cards[q]) {
+                                                              hole_cards_used++;
+                                                              break;
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+
                                                       if (bTerse) {
                                                         if (!bSummarizing) {
                                                           if (bShowCollected)
@@ -1001,8 +1030,12 @@ int main(int argc,char **argv)
                                                             delta,collected_from_pot,hole_cards);
                                                         }
                                                         else  {
-                                                          if (!bNoDelta)
-                                                            printf("%10d %s",delta,hole_cards);
+                                                          if (!bNoDelta) {
+                                                            if (!bHoleCardsUsed)
+                                                              printf("%10d %s",delta,hole_cards);
+                                                            else
+                                                              printf("%10d %s (%d)",delta,hole_cards,hole_cards_used);
+                                                          }
                                                           else
                                                             printf("%s",hole_cards);
                                                         }
