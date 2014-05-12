@@ -193,6 +193,7 @@ class PokerHand {
   void Terse();
   void Plain();
   void Fancy();
+  int *GetCards();
 
   private:
 

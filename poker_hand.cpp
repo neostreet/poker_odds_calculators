@@ -710,6 +710,11 @@ void PokerHand::Fancy()
   _plain = false;
 }
 
+int *PokerHand::GetCards()
+{
+  return &_card[0];
+}
+
 // default constructor
 
 HoldemPokerHand::HoldemPokerHand()
