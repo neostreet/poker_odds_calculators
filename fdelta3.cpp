@@ -29,7 +29,8 @@ static char usage[] =
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_opm) (-only_wash)\n"
 "  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
-"  (-skip_summary_zero) (-no_delta) (-hole_cards_used) player_name filename\n";
+"  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -148,6 +149,8 @@ int main(int argc,char **argv)
   int min_delta;
   int max_abs_delta;
   int max_collected;
+  int max_delta_hand_type;
+  int max_delta_hand_typ;
   bool bSkipSummaryZero;
   bool bNoDelta;
   bool bHoleCardsUsed;
@@ -177,7 +180,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 46)) {
+  if ((argc < 3) || (argc > 47)) {
     printf(usage);
     return 1;
   }
@@ -222,6 +225,7 @@ int main(int argc,char **argv)
   min_delta = 0;
   max_abs_delta = 0;
   max_collected = 0;
+  max_delta_hand_type = 0;
   bSkipSummaryZero = false;
   bNoDelta = false;
   bHoleCardsUsed = false;
@@ -316,6 +320,8 @@ int main(int argc,char **argv)
       max_abs_delta = 1;
     else if (!strcmp(argv[curr_arg],"-max_collected"))
       max_collected = 1;
+    else if (!strcmp(argv[curr_arg],"-max_delta_hand_type"))
+      max_delta_hand_type = 1;
     else if (!strcmp(argv[curr_arg],"-skip_summary_zero"))
       bSkipSummaryZero = true;
     else if (!strcmp(argv[curr_arg],"-no_delta"))
@@ -430,12 +436,12 @@ int main(int argc,char **argv)
     return 20;
   }
 
-  if (only_count + sum_delta + max_delta + min_delta + max_abs_delta + max_collected > 1) {
-    printf("can only specify one of -only_count, -sum_delta, -max_delta, -min_delta, -max_abs_delta, and -max_collected\n");
+  if (only_count + sum_delta + max_delta + min_delta + max_abs_delta + max_collected + max_delta_hand_type > 1) {
+    printf("can only specify one of -only_count, -sum_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, and -max_delta_hand_type\n");
     return 21;
   }
 
-  if ((only_count) || (sum_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected)) {
+  if ((only_count) || (sum_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected) || (max_delta_hand_type)) {
     bTerse = true;
     bSummarizing = true;
   }
@@ -507,7 +513,13 @@ int main(int argc,char **argv)
         if (bSummarizing) {
           if (!bSkipSummaryZero || summary_val) {
             retval = get_date_from_path(filename,'\\',3,&date_string);
-            printf("%d\t%s\n",summary_val,date_string);
+
+            if (!max_delta_hand_type)
+              printf("%d\t%s\n",summary_val,date_string);
+            else {
+              printf("%d\t%s\t%s\n",summary_val,
+                plain_hand_types[max_delta_hand_typ],date_string);
+            }
           }
         }
 
@@ -1016,9 +1028,15 @@ int main(int argc,char **argv)
                                                                 summary_val = delta;
                                                             }
                                                           }
-                                                          else {
+                                                          else if (max_collected) {
                                                             if (collected_from_pot > summary_val)
                                                               summary_val = collected_from_pot;
+                                                          }
+                                                          else {
+                                                            if (delta > summary_val) {
+                                                              summary_val = delta;
+                                                              max_delta_hand_typ = poker_hand.GetHandType();
+                                                            }
                                                           }
                                                         }
                                                       }
