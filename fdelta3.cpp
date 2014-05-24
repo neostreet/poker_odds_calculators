@@ -27,7 +27,7 @@ static char usage[] =
 "  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-no_uncalled) (-no_collected)\n"
-"  (-show_collected) (-show_opm) (-only_wash)\n"
+"  (-show_collected) (-show_spent) (-show_opm) (-only_wash)\n"
 "  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
 "  player_name filename\n";
@@ -142,6 +142,7 @@ int main(int argc,char **argv)
   bool bNoUncalled;
   bool bNoCollected;
   bool bShowCollected;
+  bool bShowSpent;
   bool bShowOpm;
   bool bOnlyWash;
   int sum_delta;
@@ -180,7 +181,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 47)) {
+  if ((argc < 3) || (argc > 48)) {
     printf(usage);
     return 1;
   }
@@ -218,6 +219,7 @@ int main(int argc,char **argv)
   bNoUncalled = false;
   bNoCollected = false;
   bShowCollected = false;
+  bShowSpent = false;
   bShowOpm = false;
   bOnlyWash = false;
   sum_delta = 0;
@@ -306,6 +308,8 @@ int main(int argc,char **argv)
       bNoCollected = true;
     else if (!strcmp(argv[curr_arg],"-show_collected"))
       bShowCollected = true;
+    else if (!strcmp(argv[curr_arg],"-show_spent"))
+      bShowSpent = true;
     else if (!strcmp(argv[curr_arg],"-show_opm"))
       bShowOpm = true;
     else if (!strcmp(argv[curr_arg],"-only_wash"))
@@ -457,12 +461,17 @@ int main(int argc,char **argv)
     bSawFlop = true;
   }
 
+  if (bShowCollected && bShowSpent) {
+    printf("can't specify both -show_collected and -show_spent\n");
+    return 23;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 23;
+    return 24;
   }
 
   ending_balance = -1;
@@ -672,7 +681,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 24;
+                    return 25;
                   }
                 }
               }
@@ -869,7 +878,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 25;
+              return 26;
             }
           }
 
@@ -896,7 +905,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 26;
+            return 27;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -923,7 +932,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 27;
+            return 28;
           }
 
           if (!bFolded || bVeryBestHand) {
@@ -998,6 +1007,8 @@ int main(int argc,char **argv)
                                                         if (!bSummarizing) {
                                                           if (bShowCollected)
                                                             printf("%d\n",collected_from_pot);
+                                                          else if (bShowSpent)
+                                                            printf("%d\n",spent_this_hand);
                                                           else if (bShowOpm)
                                                             printf("%lf\n",opm);
                                                           else
