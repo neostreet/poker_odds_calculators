@@ -30,7 +30,7 @@ static char usage[] =
 "  (-show_collected) (-show_spent) (-show_opm) (-only_wash)\n"
 "  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
-"  (-only_suited) player_name filename\n";
+"  (-only_suited) (-flopped) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -157,6 +157,7 @@ int main(int argc,char **argv)
   bool bNoDelta;
   bool bHoleCardsUsed;
   bool bOnlySuited;
+  bool bFlopped;
   bool bSuited;
   bool bHaveFlop;
   bool bHaveRiver;
@@ -183,7 +184,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 50)) {
+  if ((argc < 3) || (argc > 51)) {
     printf(usage);
     return 1;
   }
@@ -235,6 +236,7 @@ int main(int argc,char **argv)
   bNoDelta = false;
   bHoleCardsUsed = false;
   bOnlySuited = false;
+  bFlopped = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -340,6 +342,8 @@ int main(int argc,char **argv)
       bHoleCardsUsed = true;
     else if (!strcmp(argv[curr_arg],"-only_suited"))
       bOnlySuited = true;
+    else if (!strcmp(argv[curr_arg],"-flopped"))
+      bFlopped = true;
     else
       break;
   }
@@ -479,12 +483,17 @@ int main(int argc,char **argv)
     return 24;
   }
 
+  if (bVeryBestHand && bFlopped) {
+    printf("can't specify both -very_best_hand and -flopped\n");
+    return 25;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 25;
+    return 26;
   }
 
   ending_balance = -1;
@@ -694,7 +703,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 26;
+                    return 27;
                   }
                 }
               }
@@ -891,7 +900,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 27;
+              return 28;
             }
           }
 
@@ -918,10 +927,10 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 28;
+            return 29;
           }
 
-          if (!bFolded || bVeryBestHand) {
+          if (!bFlopped && (!bFolded || bVeryBestHand)) {
             turn_hand.NewCards(cards[0],cards[1],cards[2],
               cards[3],cards[4],cards[5]);
 
@@ -945,10 +954,10 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 29;
+            return 30;
           }
 
-          if (!bFolded || bVeryBestHand) {
+          if (!bFlopped && (!bFolded || bVeryBestHand)) {
             holdem_hand.NewCards(cards[0],cards[1],cards[2],
               cards[3],cards[4],cards[5],cards[6]);
 
