@@ -31,7 +31,7 @@ static char usage[] =
 "  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
-"  player_name filename\n";
+"  (-show_hand_typ_id) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char in_chips[] = " in chips";
@@ -122,6 +122,7 @@ int main(int argc,char **argv)
   bool bOnlyZero;
   bool bShowBoard;
   bool bShowHandType;
+  bool bShowHandTypId;
   bool bShowHand;
   bool bSawFlop;
   bool bSawRiver;
@@ -189,7 +190,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 54)) {
+  if ((argc < 3) || (argc > 55)) {
     printf(usage);
     return 1;
   }
@@ -206,6 +207,7 @@ int main(int argc,char **argv)
   bOnlyZero = false;
   bShowBoard = false;
   bShowHandType = false;
+  bShowHandTypId = false;
   bShowHand = false;
   bSawFlop = false;
   bSawRiver = false;
@@ -282,6 +284,8 @@ int main(int argc,char **argv)
       bShowBoard = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
       bShowHandType = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand_typ_id"))
+      bShowHandTypId = true;
     else if (!strcmp(argv[curr_arg],"-show_hand"))
       bShowHand = true;
     else if (!strcmp(argv[curr_arg],"-saw_flop"))
@@ -389,14 +393,19 @@ int main(int argc,char **argv)
     return 6;
   }
 
+  if (bAbbrev && bShowHandTypId) {
+    printf("can't specify both -abbrev and -show_hand_typ_id\n");
+    return 7;
+  }
+
   if (bAbbrev && bStealthTwoPair) {
     printf("can't specify both -abbrev and -stealth_two_pair\n");
-    return 7;
+    return 8;
   }
 
   if (bSkipFolded && bOnlyFolded) {
     printf("can't specify both -skip_folded and -only_folded\n");
-    return 8;
+    return 9;
   }
 
   if (!bSawRiver && bSpentMoneyOnTheRiver)
@@ -404,17 +413,17 @@ int main(int argc,char **argv)
 
   if (bStealthTwoPair && bHandTypeSpecified) {
     printf("can't specify both -stealth_two_pair and -hand_typehand_type\n");
-    return 9;
+    return 10;
   }
 
   if (bStealthTwoPair && bHandTypIdSpecified) {
     printf("can't specify both -stealth_two_pair and -hand_typ_idid\n");
-    return 10;
+    return 11;
   }
 
   if (bStealthTwoPair && bHandSpecified) {
     printf("can't specify both -stealth_two_pair and -hand\n");
-    return 11;
+    return 12;
   }
 
   if (bStealthTwoPair && !bSawFlop && !bSawRiver)
@@ -428,57 +437,57 @@ int main(int argc,char **argv)
 
   if (bOnlyLost && bOnlyWon) {
     printf("can't specify both -only_lost and -only_won\n");
-    return 12;
+    return 13;
   }
 
   if (bSkipZero && bOnlyZero) {
     printf("can't specify both -skip_zero and -only_zero\n");
-    return 13;
+    return 14;
   }
 
   if (bHeadsUp && bThreeHanded) {
     printf("can't specify both -heads_up and -three_handed\n");
-    return 14;
+    return 15;
   }
 
   if (bOnlyShowdown && bOnlyNoShowdown) {
     printf("can't specify both -only_showdown and -only_no_showdown\n");
-    return 15;
+    return 16;
   }
 
   if (bAllIn && bNotAllIn) {
     printf("can't specify both -all_in and -not_all_in\n");
-    return 16;
+    return 17;
   }
 
   if (bAllIn && bAllInPreflop) {
     printf("can't specify both -all_in and -all_in_preflop\n");
-    return 17;
+    return 18;
   }
 
   if (bNotAllIn && bAllInPreflop) {
     printf("can't specify both -not_all_in and -all_in_preflop\n");
-    return 18;
+    return 19;
   }
 
   if (bShowCollected && bShowOpm) {
     printf("can't specify both -show_collected and -show_opm\n");
-    return 19;
+    return 20;
   }
 
   if (bOnlyLost && bOnlyWash) {
     printf("can't specify both -only_lost and -only_wash\n");
-    return 20;
+    return 21;
   }
 
   if (bOnlyWon && bOnlyWash) {
     printf("can't specify both -only_won and -only_wash\n");
-    return 21;
+    return 22;
   }
 
   if (only_count + sum_delta + max_delta + min_delta + max_abs_delta + max_collected + max_delta_hand_type > 1) {
     printf("can only specify one of -only_count, -sum_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, and -max_delta_hand_type\n");
-    return 22;
+    return 23;
   }
 
   if ((only_count) || (sum_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected) || (max_delta_hand_type)) {
@@ -491,7 +500,7 @@ int main(int argc,char **argv)
   if (bHoleCardsUsed) {
     if (bAbbrev) {
       printf("can't specify both -abbrev and -hole_cards_used\n");
-      return 23;
+      return 24;
     }
 
     bSawFlop = true;
@@ -499,22 +508,27 @@ int main(int argc,char **argv)
 
   if (bShowCollected && bShowSpent) {
     printf("can't specify both -show_collected and -show_spent\n");
-    return 24;
+    return 25;
   }
 
   if (bHitFelt && bDidntHitFelt) {
     printf("can't specify both -hit_felt and -didnt_hit_felt\n");
-    return 25;
+    return 26;
   }
 
   if (bVeryBestHand && bFlopped) {
     printf("can't specify both -very_best_hand and -flopped\n");
-    return 26;
+    return 27;
   }
 
   if (bHandTypeSpecified && bHandTypIdSpecified) {
     printf("can't specify both -hand_typehand_type and -hand_typ_idid\n");
-    return 27;
+    return 28;
+  }
+
+  if (bShowHandType && bShowHandTypId) {
+    printf("can't specify both -show_hand_type and -show_hand_typ_id\n");
+    return 29;
   }
 
   player_name_ix = curr_arg++;
@@ -522,7 +536,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 28;
+    return 30;
   }
 
   ending_balance = -1;
@@ -732,7 +746,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 29;
+                    return 31;
                   }
                 }
               }
@@ -929,7 +943,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 30;
+              return 32;
             }
           }
 
@@ -956,7 +970,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 31;
+            return 33;
           }
 
           if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -983,7 +997,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 32;
+            return 34;
           }
 
           if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1130,6 +1144,9 @@ int main(int argc,char **argv)
 
                                                                   if (bShowHandType && bHaveFlop)
                                                                     printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+                                                                  if (bShowHandTypId && bHaveFlop)
+                                                                    printf(" %d",poker_hand.GetHandType());
 
                                                                   if (bShowHand && bHaveFlop)
                                                                     printf(" %s",poker_hand.GetHand());
