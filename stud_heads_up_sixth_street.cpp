@@ -8,8 +8,8 @@ using namespace std;
 #include "poker_hand.h"
 
 #define NUM_PLAYERS 2
-#define NUM_STUD_HEADS_UP_TURN_CARDS 12
-#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_STUD_HEADS_UP_TURN_CARDS)
+#define NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS 12
+#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS)
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
@@ -33,7 +33,7 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_no;
   int line_len;
-  int cards[NUM_STUD_HEADS_UP_TURN_CARDS];
+  int cards[NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
@@ -96,7 +96,7 @@ int main(int argc,char **argv)
       return 4;
     }
 
-    for (n = 0; n < NUM_STUD_HEADS_UP_TURN_CARDS; n++) {
+    for (n = 0; n < NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS; n++) {
       retval = card_value_from_card_string(&line[m],&cards[n]);
 
       if (retval) {
@@ -106,7 +106,7 @@ int main(int argc,char **argv)
 
       m += 2;
 
-      if (n < NUM_STUD_HEADS_UP_TURN_CARDS - 1) {
+      if (n < NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS - 1) {
         // skip whitespace
 
         for ( ; m < line_len; m++) {
@@ -124,12 +124,12 @@ int main(int argc,char **argv)
     m = 0;
 
     for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
-      for (o = 0; o < NUM_STUD_HEADS_UP_TURN_CARDS; o++) {
+      for (o = 0; o < NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS; o++) {
         if (n == cards[o])
           break;
       }
 
-      if (o == NUM_STUD_HEADS_UP_TURN_CARDS)
+      if (o == NUM_STUD_HEADS_UP_SIXTH_STREET_CARDS)
         remaining_cards[m++] = n;
     }
 
