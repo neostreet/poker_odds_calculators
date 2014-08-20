@@ -14,7 +14,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: stud_heads_up_turn (-debug) filename";
+static char usage[] = "usage: stud_heads_up_sixth_street (-debug) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
