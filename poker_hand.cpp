@@ -1556,14 +1556,11 @@ int card_value_from_card_string(char *card_string,int *card_value)
   int rank;
   int suit;
 
-  if (strlen(card_string) < 2)
+  if (get_rank_index(card_string[0],&rank))
     return 1;
 
-  if (get_rank_index(card_string[0],&rank))
-    return 2;
-
   if (get_suit_index(card_string[1],&suit))
-    return 3;
+    return 2;
 
   *card_value = suit * NUM_CARDS_IN_SUIT + rank;
 

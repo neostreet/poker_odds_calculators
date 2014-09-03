@@ -192,7 +192,7 @@ int main(int argc,char **argv)
   PokerHand poker_hand;
   HoldemTurnHand turn_hand;
   HoldemPokerHand holdem_hand;
-  char card_string[3];
+  char card_string[2];
   int retval;
   int summary_val;
   char *date_string;
