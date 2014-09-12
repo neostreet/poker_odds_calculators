@@ -31,9 +31,13 @@ static char usage[] =
 "  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
-"  (-show_hand_typ_id) (-didnt_see_flop) (-stud) player_name filename\n";
+"  (-show_hand_typ_id) (-didnt_see_flop) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
+static char pokerstars[] = "PokerStars";
+#define POKERSTARS_LEN (sizeof (pokerstars) - 1)
+static char stud[] = "7 Card Stud";
+#define STUD_LEN (sizeof (stud) - 1)
 static char in_chips[] = " in chips";
 #define IN_CHIPS_LEN (sizeof (in_chips) - 1)
 static char summary[] = "*** SUMMARY ***";
@@ -199,7 +203,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 57)) {
+  if ((argc < 3) || (argc > 56)) {
     printf(usage);
     return 1;
   }
@@ -256,7 +260,6 @@ int main(int argc,char **argv)
   bFlopped = false;
   bPocketPair = false;
   bDidntSeeFlop = false;
-  bStud = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -377,8 +380,6 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][17],"%d",&hand_number);
     else if (!strcmp(argv[curr_arg],"-didnt_see_flop"))
       bDidntSeeFlop = true;
-    else if (!strcmp(argv[curr_arg],"-stud"))
-      bStud = true;
     else
       break;
   }
@@ -559,11 +560,6 @@ int main(int argc,char **argv)
     return 31;
   }
 
-  if (!bStud)
-    max_streets = 3;
-  else
-    max_streets = 4;
-
   ending_balance = -1;
 
   file_no = 0;
@@ -633,7 +629,25 @@ int main(int argc,char **argv)
       if (bDebug)
         printf("line %d %s\n",line_no,line);
 
-      if (!strncmp(line,"Table '",7)) {
+      if (Contains(true,
+        line,line_len,
+        pokerstars,POKERSTARS_LEN,
+        &ix)) {
+
+        if (Contains(true,
+          line,line_len,
+          stud,STUD_LEN,
+          &ix)) {
+
+          bStud = true;
+          max_streets = 4;
+        }
+        else {
+          bStud = false;
+          max_streets = 3;
+        }
+      }
+      else if (!strncmp(line,"Table '",7)) {
         table_count = 0;
 
         for ( ; ; ) {
