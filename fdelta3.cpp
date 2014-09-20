@@ -38,6 +38,8 @@ static char pokerstars[] = "PokerStars";
 #define POKERSTARS_LEN (sizeof (pokerstars) - 1)
 static char stud[] = "7 Card Stud";
 #define STUD_LEN (sizeof (stud) - 1)
+static char razz[] = "Razz";
+#define RAZZ_LEN (sizeof (razz) - 1)
 static char in_chips[] = " in chips";
 #define IN_CHIPS_LEN (sizeof (in_chips) - 1)
 static char summary[] = "*** SUMMARY ***";
@@ -175,6 +177,7 @@ int main(int argc,char **argv)
   bool bPocketPair;
   bool bDidntSeeFlop;
   bool bStud;
+  bool bRazz;
   int hand_number;
   bool bSuited;
   bool bHaveFlop;
@@ -634,18 +637,28 @@ int main(int argc,char **argv)
         pokerstars,POKERSTARS_LEN,
         &ix)) {
 
+        bStud = false;
+        bRazz = false;
+
         if (Contains(true,
           line,line_len,
           stud,STUD_LEN,
           &ix)) {
 
           bStud = true;
+        }
+        else if (Contains(true,
+          line,line_len,
+          razz,RAZZ_LEN,
+          &ix)) {
+
+          bRazz = true;
+        }
+
+        if (bStud || bRazz)
           max_streets = 4;
-        }
-        else {
-          bStud = false;
+        else
           max_streets = 3;
-        }
       }
       else if (!strncmp(line,"Table '",7)) {
         table_count = 0;
@@ -958,7 +971,7 @@ int main(int argc,char **argv)
               line_no,street,work,spent_this_street);
           }
         }
-        else if (bStud && Contains(true,
+        else if ((bStud || bRazz) && Contains(true,
           line,line_len,
           brings_in_for,BRINGS_IN_FOR_LEN,
           &ix)) {
@@ -1037,7 +1050,7 @@ int main(int argc,char **argv)
           }
         }
         else if (!strncmp(line,river,RIVER_LEN)) {
-          if (!bStud) {
+          if (!bStud && !bRazz) {
             n = 12;
 
             for (m = 0; m < 2; m++,n++)
