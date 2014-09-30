@@ -28,7 +28,7 @@ static char usage[] =
 "  (-very_best_hand) (-heads_up) (-three_handed) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_spent) (-show_opm) (-only_wash)\n"
-"  (-sum_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
+"  (-sum_delta) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
 "  (-show_hand_typ_id) (-didnt_see_flop) player_name filename\n";
@@ -163,6 +163,7 @@ int main(int argc,char **argv)
   bool bShowOpm;
   bool bOnlyWash;
   int sum_delta;
+  int sum_abs_delta;
   int max_delta;
   int min_delta;
   int max_abs_delta;
@@ -206,7 +207,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 56)) {
+  if ((argc < 3) || (argc > 57)) {
     printf(usage);
     return 1;
   }
@@ -251,6 +252,7 @@ int main(int argc,char **argv)
   bShowOpm = false;
   bOnlyWash = false;
   sum_delta = 0;
+  sum_abs_delta = 0;
   max_delta = 0;
   min_delta = 0;
   max_abs_delta = 0;
@@ -357,6 +359,8 @@ int main(int argc,char **argv)
       bOnlyWash = true;
     else if (!strcmp(argv[curr_arg],"-sum_delta"))
       sum_delta = 1;
+    else if (!strcmp(argv[curr_arg],"-sum_abs_delta"))
+      sum_abs_delta = 1;
     else if (!strcmp(argv[curr_arg],"-max_delta"))
       max_delta = 1;
     else if (!strcmp(argv[curr_arg],"-min_delta"))
@@ -504,12 +508,12 @@ int main(int argc,char **argv)
     return 22;
   }
 
-  if (only_count + sum_delta + max_delta + min_delta + max_abs_delta + max_collected + max_delta_hand_type > 1) {
-    printf("can only specify one of -only_count, -sum_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, and -max_delta_hand_type\n");
+  if (only_count + sum_delta + sum_abs_delta + max_delta + min_delta + max_abs_delta + max_collected + max_delta_hand_type > 1) {
+    printf("can only specify one of -only_count, -sum_delta, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, and -max_delta_hand_type\n");
     return 23;
   }
 
-  if ((only_count) || (sum_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected) || (max_delta_hand_type)) {
+  if ((only_count) || (sum_delta) || (sum_abs_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected) || (max_delta_hand_type)) {
     bTerse = true;
     bSummarizing = true;
   }
@@ -1161,6 +1165,12 @@ int main(int argc,char **argv)
                                                                         summary_val++;
                                                                       else if (sum_delta)
                                                                         summary_val += delta;
+                                                                      else if (sum_abs_delta) {
+                                                                        if (delta > 0)
+                                                                          summary_val += delta;
+                                                                        else
+                                                                          summary_val -= delta;
+                                                                      }
                                                                       else if (max_delta) {
                                                                         if (delta > summary_val)
                                                                           summary_val = delta;
