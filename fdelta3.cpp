@@ -29,7 +29,7 @@ static char usage[] =
 "  (-all_in_preflop) (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_spent) (-show_opm) (-only_wash)\n"
 "  (-sum_delta) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
-"  (-max_delta_hand_type) (-skip_summary_zero) (-no_delta) (-hole_cards_used)\n"
+"  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
 "  (-show_hand_typ_id) (-didnt_see_flop) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
@@ -170,7 +170,6 @@ int main(int argc,char **argv)
   int max_collected;
   int max_delta_hand_type;
   int max_delta_hand_typ;
-  bool bSkipSummaryZero;
   bool bNoDelta;
   bool bHoleCardsUsed;
   bool bOnlySuited;
@@ -207,7 +206,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 57)) {
+  if ((argc < 3) || (argc > 56)) {
     printf(usage);
     return 1;
   }
@@ -258,7 +257,6 @@ int main(int argc,char **argv)
   max_abs_delta = 0;
   max_collected = 0;
   max_delta_hand_type = 0;
-  bSkipSummaryZero = false;
   bNoDelta = false;
   bHoleCardsUsed = false;
   bOnlySuited = false;
@@ -371,8 +369,6 @@ int main(int argc,char **argv)
       max_collected = 1;
     else if (!strcmp(argv[curr_arg],"-max_delta_hand_type"))
       max_delta_hand_type = 1;
-    else if (!strcmp(argv[curr_arg],"-skip_summary_zero"))
-      bSkipSummaryZero = true;
     else if (!strcmp(argv[curr_arg],"-no_delta"))
       bNoDelta = true;
     else if (!strcmp(argv[curr_arg],"-hole_cards_used"))
@@ -613,7 +609,7 @@ int main(int argc,char **argv)
 
       if (feof(fptr)) {
         if (bSummarizing) {
-          if (!bSkipSummaryZero || summary_val) {
+          if (!bSkipZero || summary_val) {
             retval = get_date_from_path(filename,'\\',3,&date_string);
 
             if (!max_delta_hand_type)
@@ -1107,7 +1103,7 @@ int main(int argc,char **argv)
             }
           }
 
-          if (!bSkipZero || (delta != 0)) {
+          if (bSummarizing || !bSkipZero || (delta != 0)) {
             if (!bOnlyZero || (delta == 0)) {
               if (!bSkipFolded || !bFolded) {
                 if (!bOnlyFolded || bFolded) {
