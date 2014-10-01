@@ -31,7 +31,9 @@ static char usage[] =
 "  (-sum_delta) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta) (-max_collected)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
-"  (-show_hand_typ_id) (-didnt_see_flop) player_name filename\n";
+"  (-show_hand_typ_id) (-didnt_see_flop)\n"
+"  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -176,6 +178,9 @@ int main(int argc,char **argv)
   bool bFlopped;
   bool bPocketPair;
   bool bDidntSeeFlop;
+  bool bOnlyWinningSession;
+  bool bOnlyLosingSession;
+  bool bNeverHitFeltInSession;
   bool bStud;
   bool bRazz;
   int hand_number;
@@ -201,12 +206,14 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   char card_string[2];
   int retval;
+  int total_delta;
+  int hit_felt_in_session_count;
   int summary_val;
   char *date_string;
   int *poker_hand_cards;
   int hole_cards_used;
 
-  if ((argc < 3) || (argc > 56)) {
+  if ((argc < 3) || (argc > 59)) {
     printf(usage);
     return 1;
   }
@@ -263,6 +270,9 @@ int main(int argc,char **argv)
   bFlopped = false;
   bPocketPair = false;
   bDidntSeeFlop = false;
+  bOnlyWinningSession = false;
+  bOnlyLosingSession = false;
+  bNeverHitFeltInSession = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -383,6 +393,12 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][17],"%d",&hand_number);
     else if (!strcmp(argv[curr_arg],"-didnt_see_flop"))
       bDidntSeeFlop = true;
+    else if (!strcmp(argv[curr_arg],"-only_winning_session"))
+      bOnlyWinningSession = true;
+    else if (!strcmp(argv[curr_arg],"-only_losing_session"))
+      bOnlyLosingSession = true;
+    else if (!strcmp(argv[curr_arg],"-never_hit_felt_in_session"))
+      bNeverHitFeltInSession = true;
     else
       break;
   }
@@ -555,12 +571,17 @@ int main(int argc,char **argv)
     return 30;
   }
 
+  if (bOnlyWinningSession && bOnlyLosingSession) {
+    printf("can't specify both -only_winning_session and -only_losing_session\n");
+    return 31;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 31;
+    return 32;
   }
 
   ending_balance = -1;
@@ -581,8 +602,11 @@ int main(int argc,char **argv)
 
     file_no++;
 
-    if (bSummarizing)
+    if (bSummarizing) {
+      total_delta = 0;
+      hit_felt_in_session_count = 0;
       summary_val = 0;
+    }
 
     if (dbg_file_no == file_no)
       dbg = 1;
@@ -610,13 +634,19 @@ int main(int argc,char **argv)
       if (feof(fptr)) {
         if (bSummarizing) {
           if (!bSkipZero || summary_val) {
-            retval = get_date_from_path(filename,'\\',3,&date_string);
+            if (!bOnlyWinningSession || (total_delta > 0)) {
+              if (!bOnlyLosingSession || (total_delta < 0)) {
+                if (!bNeverHitFeltInSession || (!hit_felt_in_session_count)) {
+                  retval = get_date_from_path(filename,'\\',3,&date_string);
 
-            if (!max_delta_hand_type)
-              printf("%d\t%s\n",summary_val,date_string);
-            else {
-              printf("%d\t%s\t%s\n",summary_val,
-                plain_hand_types[max_delta_hand_typ],date_string);
+                  if (!max_delta_hand_type)
+                    printf("%d\t%s\n",summary_val,date_string);
+                  else {
+                    printf("%d\t%s\t%s\n",summary_val,
+                      plain_hand_types[max_delta_hand_typ],date_string);
+                  }
+                }
+              }
             }
           }
         }
@@ -807,7 +837,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 32;
+                    return 33;
                   }
                 }
               }
@@ -919,6 +949,10 @@ int main(int argc,char **argv)
           bFolded = true;
 
           ending_balance = starting_balance - spent_this_hand + collected_from_pot;
+
+          if (bSummarizing && !ending_balance)
+            hit_felt_in_session_count++;
+
           delta = ending_balance - starting_balance;
 
           if (bShowOpm)
@@ -1012,7 +1046,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 33;
+              return 34;
             }
           }
 
@@ -1039,7 +1073,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 34;
+            return 35;
           }
 
           if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1067,7 +1101,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 35;
+              return 36;
             }
 
             if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1093,6 +1127,10 @@ int main(int argc,char **argv)
 
           if (!bFolded) {
             ending_balance = starting_balance - spent_this_hand + collected_from_pot;
+
+            if (bSummarizing && !ending_balance)
+              hit_felt_in_session_count++;
+
             delta = ending_balance - starting_balance;
 
             if (bShowOpm) {
@@ -1157,6 +1195,8 @@ int main(int argc,char **argv)
                                                                         printf("%d\n",delta);
                                                                     }
                                                                     else {
+                                                                      total_delta += delta;
+
                                                                       if (only_count)
                                                                         summary_val++;
                                                                       else if (sum_delta)
