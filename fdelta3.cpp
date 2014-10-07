@@ -33,7 +33,7 @@ static char usage[] =
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
-"  (-collected_genum) player_name filename\n";
+"  (-collected_genum) (-sum_by_table_count) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -78,6 +78,8 @@ static char show_down[] = "*** SHOW DOWN ***";
 #define SHOW_DOWN_LEN (sizeof (show_down) - 1)
 static char all_in[] = "all-in";
 #define ALL_IN_LEN (sizeof (all_in) - 1)
+
+#define MAX_TABLE_COUNT 9
 
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
@@ -182,6 +184,7 @@ int main(int argc,char **argv)
   bool bOnlyLosingSession;
   bool bNeverHitFeltInSession;
   bool bCollectedGe;
+  bool bSumByTableCount;
   int collected_ge_num;
   bool bStud;
   bool bRazz;
@@ -214,8 +217,9 @@ int main(int argc,char **argv)
   char *date_string;
   int *poker_hand_cards;
   int hole_cards_used;
+  int sum_by_table_count[MAX_TABLE_COUNT - 1];
 
-  if ((argc < 3) || (argc > 59)) {
+  if ((argc < 3) || (argc > 60)) {
     printf(usage);
     return 1;
   }
@@ -275,6 +279,7 @@ int main(int argc,char **argv)
   bOnlyLosingSession = false;
   bNeverHitFeltInSession = false;
   bCollectedGe = false;
+  bSumByTableCount = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -404,6 +409,10 @@ int main(int argc,char **argv)
     else if (!strncmp(argv[curr_arg],"-collected_ge",13)) {
       sscanf(&argv[curr_arg][13],"%d",&collected_ge_num);
       bCollectedGe = true;
+    }
+    else if (!strcmp(argv[curr_arg],"-sum_by_table_count")) {
+      bTerse = true;
+      bSumByTableCount = true;
     }
     else
       break;
@@ -595,6 +604,11 @@ int main(int argc,char **argv)
   else
     hole_cards[3] = 0;
 
+  if (bSumByTableCount) {
+    for (n = 0; n < MAX_TABLE_COUNT - 1; n++)
+      sum_by_table_count[n] = 0;
+  }
+
   for ( ; ; ) {
     GetLine(fptr0,filename,&filename_len,MAX_FILENAME_LEN);
 
@@ -778,6 +792,11 @@ int main(int argc,char **argv)
           }
         }
 
+        if (table_count > MAX_TABLE_COUNT) {
+          printf("%s: too many players at the table\n",filename);
+          return 32;
+        }
+
         continue;
       }
       else if (Contains(true,
@@ -838,7 +857,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 32;
+                    return 33;
                   }
                 }
               }
@@ -1047,7 +1066,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 33;
+              return 34;
             }
           }
 
@@ -1074,7 +1093,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 34;
+            return 35;
           }
 
           if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1102,7 +1121,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 35;
+              return 36;
             }
 
             if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1185,7 +1204,7 @@ int main(int argc,char **argv)
                                                                   }
 
                                                                   if (bTerse) {
-                                                                    if (!bSummarizing) {
+                                                                    if (!bSummarizing && !bSumByTableCount) {
                                                                       if (bShowCollected)
                                                                         printf("%d\n",collected_from_pot);
                                                                       else if (bShowSpent)
@@ -1195,7 +1214,7 @@ int main(int argc,char **argv)
                                                                       else
                                                                         printf("%d\n",delta);
                                                                     }
-                                                                    else {
+                                                                    else if (!bSumByTableCount) {
                                                                       total_delta += delta;
 
                                                                       if (only_count)
@@ -1239,6 +1258,8 @@ int main(int argc,char **argv)
                                                                         }
                                                                       }
                                                                     }
+                                                                    else
+                                                                      sum_by_table_count[table_count - 2] += delta;
                                                                   }
                                                                   else {
                                                                     if (bShowCollected)
@@ -1325,6 +1346,11 @@ int main(int argc,char **argv)
   }
 
   fclose(fptr0);
+
+  if (bSumByTableCount) {
+    for (n = 0; n < MAX_TABLE_COUNT - 1; n++)
+      printf("%d %10d\n",n+2,sum_by_table_count[n]);
+  }
 
   return 0;
 }
