@@ -40,6 +40,7 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
   struct outcomes outcomes[NUM_PLAYERS];
+  int double_jeopardy_losses[NUM_PLAYERS];
   int total;
   int comparisons[POKER_3_2_PERMUTATIONS];
   double pct;
@@ -139,6 +140,7 @@ int main(int argc,char **argv)
       outcomes[n].wins = 0;
       outcomes[n].losses = 0;
       outcomes[n].ties = 0;
+      double_jeopardy_losses[n] = 0;
 
       if (bDebug) {
         for (m = 0; m < NUM_HAND_TYPES; m++) {
@@ -186,6 +188,9 @@ int main(int argc,char **argv)
 
         if (bDebug)
           outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+
+        if ((comparisons[0] == -1) && (comparisons[1] == -1))
+          double_jeopardy_losses[0]++;
       }
       else {
         outcomes[0].ties++;
@@ -207,6 +212,9 @@ int main(int argc,char **argv)
 
         if (bDebug)
           outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+
+        if ((comparisons[0] == 1) && (comparisons[2] == -1))
+          double_jeopardy_losses[1]++;
       }
       else {
         outcomes[1].ties++;
@@ -228,6 +236,9 @@ int main(int argc,char **argv)
 
         if (bDebug)
           outcomes[2].losses_hand_counts[hand[2].GetHandType()]++;
+
+        if ((comparisons[1] == 1) && (comparisons[2] == 1))
+          double_jeopardy_losses[2]++;
       }
       else {
         outcomes[2].ties++;
@@ -268,6 +279,9 @@ int main(int argc,char **argv)
           }
         }
       }
+
+      pct = (double)double_jeopardy_losses[n] * (double)100 / (double)total;
+      printf("  dj losses %7d (%5.2lf)\n",double_jeopardy_losses[n],pct);
 
       pct = (double)outcomes[n].ties * (double)100 / (double)total;
       printf("  ties      %7d (%5.2lf)\n",outcomes[n].ties,pct);
