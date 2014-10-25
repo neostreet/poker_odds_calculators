@@ -218,6 +218,7 @@ int main(int argc,char **argv)
   int *poker_hand_cards;
   int hole_cards_used;
   int sum_by_table_count[MAX_TABLE_COUNT - 1];
+  int count_by_table_count[MAX_TABLE_COUNT - 1];
 
   if ((argc < 3) || (argc > 60)) {
     printf(usage);
@@ -605,8 +606,10 @@ int main(int argc,char **argv)
     hole_cards[3] = 0;
 
   if (bSumByTableCount) {
-    for (n = 0; n < MAX_TABLE_COUNT - 1; n++)
+    for (n = 0; n < MAX_TABLE_COUNT - 1; n++) {
       sum_by_table_count[n] = 0;
+      count_by_table_count[n] = 0;
+    }
   }
 
   for ( ; ; ) {
@@ -1258,8 +1261,10 @@ int main(int argc,char **argv)
                                                                         }
                                                                       }
                                                                     }
-                                                                    else
+                                                                    else {
                                                                       sum_by_table_count[table_count - 2] += delta;
+                                                                      count_by_table_count[table_count - 2]++;
+                                                                    }
                                                                   }
                                                                   else {
                                                                     if (bShowCollected)
@@ -1348,8 +1353,10 @@ int main(int argc,char **argv)
   fclose(fptr0);
 
   if (bSumByTableCount) {
-    for (n = 0; n < MAX_TABLE_COUNT - 1; n++)
-      printf("%d %10d\n",n+2,sum_by_table_count[n]);
+    for (n = 0; n < MAX_TABLE_COUNT - 1; n++) {
+      printf("%d %10d (%8d)\n",n+2,sum_by_table_count[n],
+        count_by_table_count[n]);
+    }
   }
 
   return 0;
