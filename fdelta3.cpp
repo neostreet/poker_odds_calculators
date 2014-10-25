@@ -658,10 +658,10 @@ int main(int argc,char **argv)
                   retval = get_date_from_path(filename,'\\',3,&date_string);
 
                   if (!max_delta_hand_type)
-                    printf("%d\t%s\n",summary_val,date_string);
+                    printf("%d\t%s\t(%d)\n",summary_val,date_string,num_hands);
                   else {
-                    printf("%d\t%s\t%s\n",summary_val,
-                      plain_hand_types[max_delta_hand_typ],date_string);
+                    printf("%d\t%s\t%s\t(%d)\n",summary_val,
+                      plain_hand_types[max_delta_hand_typ],date_string,num_hands);
                   }
                 }
               }
