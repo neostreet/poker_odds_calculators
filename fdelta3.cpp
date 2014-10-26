@@ -33,7 +33,8 @@ static char usage[] =
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern) (-hand_typ_idid\n"
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
-"  (-collected_genum) (-sum_by_table_count) player_name filename\n";
+"  (-collected_genum) (-sum_by_table_count)\n"
+"  (-show_table_count) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -185,6 +186,7 @@ int main(int argc,char **argv)
   bool bNeverHitFeltInSession;
   bool bCollectedGe;
   bool bSumByTableCount;
+  bool bShowTableCount;
   int collected_ge_num;
   bool bStud;
   bool bRazz;
@@ -220,7 +222,7 @@ int main(int argc,char **argv)
   int sum_by_table_count[MAX_TABLE_COUNT - 1];
   int count_by_table_count[MAX_TABLE_COUNT - 1];
 
-  if ((argc < 3) || (argc > 60)) {
+  if ((argc < 3) || (argc > 61)) {
     printf(usage);
     return 1;
   }
@@ -281,6 +283,7 @@ int main(int argc,char **argv)
   bNeverHitFeltInSession = false;
   bCollectedGe = false;
   bSumByTableCount = false;
+  bShowTableCount = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -415,6 +418,8 @@ int main(int argc,char **argv)
       bTerse = true;
       bSumByTableCount = true;
     }
+    else if (!strcmp(argv[curr_arg],"-show_table_count"))
+      bShowTableCount = true;
     else
       break;
   }
@@ -587,12 +592,17 @@ int main(int argc,char **argv)
     return 30;
   }
 
+  if (bSumByTableCount && bShowTableCount) {
+    printf("can't specify both -sum_by_table_count and -show_table_count\n");
+    return 31;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 31;
+    return 32;
   }
 
   ending_balance = -1;
@@ -797,7 +807,7 @@ int main(int argc,char **argv)
 
         if (table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 32;
+          return 33;
         }
 
         continue;
@@ -860,7 +870,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 33;
+                    return 34;
                   }
                 }
               }
@@ -1069,7 +1079,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 34;
+              return 35;
             }
           }
 
@@ -1096,7 +1106,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 35;
+            return 36;
           }
 
           if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1124,7 +1134,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 36;
+              return 37;
             }
 
             if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1295,6 +1305,9 @@ int main(int argc,char **argv)
 
                                                                     if (bShowHand && bHaveFlop)
                                                                       printf(" %s",poker_hand.GetHand());
+
+                                                                    if (bShowTableCount)
+                                                                      printf(" %d",table_count);
 
                                                                     if (bVerbose)
                                                                       printf(" %s %3d\n",filename,num_hands);
