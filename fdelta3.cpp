@@ -37,7 +37,7 @@ static char usage[] =
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_genum) (-sum_by_table_count)\n"
-"  (-show_table_name) (-show_table_count) player_name filename\n";
+"  (-show_table_name) (-show_table_count) (-show_hand_count) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -192,6 +192,7 @@ int main(int argc,char **argv)
   bool bSumByTableCount;
   bool bShowTableName;
   bool bShowTableCount;
+  bool bShowHandCount;
   int collected_ge_num;
   bool bStud;
   bool bRazz;
@@ -227,7 +228,7 @@ int main(int argc,char **argv)
   int sum_by_table_count[MAX_TABLE_COUNT - 1];
   int count_by_table_count[MAX_TABLE_COUNT - 1];
 
-  if ((argc < 3) || (argc > 62)) {
+  if ((argc < 3) || (argc > 63)) {
     printf(usage);
     return 1;
   }
@@ -290,6 +291,7 @@ int main(int argc,char **argv)
   bSumByTableCount = false;
   bShowTableName = false;
   bShowTableCount = false;
+  bShowHandCount = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -428,6 +430,8 @@ int main(int argc,char **argv)
       bShowTableName = true;
     else if (!strcmp(argv[curr_arg],"-show_table_count"))
       bShowTableCount = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand_count"))
+      bShowHandCount = true;
     else
       break;
   }
@@ -680,11 +684,21 @@ int main(int argc,char **argv)
                 if (!bNeverHitFeltInSession || (!hit_felt_in_session_count)) {
                   retval = get_date_from_path(filename,'\\',3,&date_string);
 
-                  if (!max_delta_hand_type)
-                    printf("%d\t%s\t(%d)\n",summary_val,date_string,num_hands);
+                  if (!max_delta_hand_type) {
+                    if (!bShowHandCount)
+                      printf("%d\t%s\n",summary_val,date_string);
+                    else
+                      printf("%d\t%s\t(%d)\n",summary_val,date_string,num_hands);
+                  }
                   else {
-                    printf("%d\t%s\t%s\t(%d)\n",summary_val,
-                      plain_hand_types[max_delta_hand_typ],date_string,num_hands);
+                    if (!bShowHandCount) {
+                      printf("%d\t%s\t%s\n",summary_val,
+                        plain_hand_types[max_delta_hand_typ],date_string);
+                    }
+                    else {
+                      printf("%d\t%s\t%s\t(%d)\n",summary_val,
+                        plain_hand_types[max_delta_hand_typ],date_string,num_hands);
+                    }
                   }
                 }
               }
