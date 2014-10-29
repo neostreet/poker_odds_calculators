@@ -38,7 +38,7 @@ static char usage[] =
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_genum) (-sum_by_table_count)\n"
 "  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
-"  player_name filename\n";
+"  (-counterfeit) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -196,6 +196,7 @@ int main(int argc,char **argv)
   bool bShowTableCount;
   bool bShowHandCount;
   bool bBottomTwo;
+  bool bCounterfeit;
   int collected_ge_num;
   bool bStud;
   bool bRazz;
@@ -209,6 +210,7 @@ int main(int argc,char **argv)
   bool bHaveShowdown;
   bool bHaveAllIn;
   bool bHaveAllInPreflop;
+  bool bHaveCounterfeit;
   bool bSummarizing;
   char *hand_type;
   HandType hand_typ_id;
@@ -232,7 +234,7 @@ int main(int argc,char **argv)
   int sum_by_table_count[MAX_TABLE_COUNT - 1];
   int count_by_table_count[MAX_TABLE_COUNT - 1];
 
-  if ((argc < 3) || (argc > 64)) {
+  if ((argc < 3) || (argc > 65)) {
     printf(usage);
     return 1;
   }
@@ -297,6 +299,7 @@ int main(int argc,char **argv)
   bShowTableCount = false;
   bShowHandCount = false;
   bBottomTwo = false;
+  bCounterfeit = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -439,6 +442,10 @@ int main(int argc,char **argv)
       bShowHandCount = true;
     else if (!strcmp(argv[curr_arg],"-bottom_two"))
       bBottomTwo = true;
+    else if (!strcmp(argv[curr_arg],"-counterfeit")) {
+      bCounterfeit = true;
+      bSawRiver = true;
+    }
     else
       break;
   }
@@ -708,6 +715,7 @@ int main(int argc,char **argv)
     bHaveShowdown = false;
     bHaveAllIn = false;
     bHaveAllInPreflop = false;
+    bHaveCounterfeit = false;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -821,6 +829,7 @@ int main(int argc,char **argv)
                 bHaveShowdown = false;
                 bHaveAllIn = false;
                 bHaveAllInPreflop = false;
+                bHaveCounterfeit = false;
 
                 street = 0;
                 num_street_markers = 0;
@@ -1217,6 +1226,15 @@ int main(int argc,char **argv)
               if (!bFolded)
                 bHaveRiver = true;
             }
+
+            if (bCounterfeit) {
+              for (m = 0; m < NUM_COMMUNITY_CARDS - 1; m++) {
+                if (line[RIVER_LEN+m*3] == line[RIVER_LEN+14]) {
+                  bHaveCounterfeit = true;
+                  break;
+                }
+              }
+            }
           }
         }
         else if (!strncmp(line,show_down,SHOW_DOWN_LEN)) {
@@ -1274,120 +1292,122 @@ int main(int argc,char **argv)
                                                               if (!bPocketPair || (hole_cards[0] == hole_cards[3])) {
                                                                 if ((hand_number == -1) || (num_hands == hand_number)) {
                                                                   if (!bCollectedGe || (collected_from_pot >= collected_ge_num)) {
-                                                                    if (bHoleCardsUsed) {
-                                                                      poker_hand_cards = poker_hand.GetCards();
-                                                                      hole_cards_used = 0;
+                                                                    if (!bCounterfeit || bHaveCounterfeit) {
+                                                                      if (bHoleCardsUsed) {
+                                                                        poker_hand_cards = poker_hand.GetCards();
+                                                                        hole_cards_used = 0;
 
-                                                                      for (p = 0; p < NUM_HOLE_CARDS_IN_HOLDEM_HAND; p++) {
-                                                                        for (q = 0; q < NUM_CARDS_IN_HAND; q++) {
-                                                                          if (cards[p] == poker_hand_cards[q]) {
-                                                                            hole_cards_used++;
-                                                                            break;
+                                                                        for (p = 0; p < NUM_HOLE_CARDS_IN_HOLDEM_HAND; p++) {
+                                                                          for (q = 0; q < NUM_CARDS_IN_HAND; q++) {
+                                                                            if (cards[p] == poker_hand_cards[q]) {
+                                                                              hole_cards_used++;
+                                                                              break;
+                                                                            }
                                                                           }
                                                                         }
                                                                       }
-                                                                    }
 
-                                                                    if (bTerse) {
-                                                                      if (!bSummarizing && !bSumByTableCount) {
-                                                                        if (bShowCollected)
-                                                                          printf("%d\n",collected_from_pot);
-                                                                        else if (bShowSpent)
-                                                                          printf("%d\n",spent_this_hand);
-                                                                        else if (bShowOpm)
-                                                                          printf("%lf\n",opm);
-                                                                        else
-                                                                          printf("%d\n",delta);
-                                                                      }
-                                                                      else if (!bSumByTableCount) {
-                                                                        total_delta += delta;
-
-                                                                        if (only_count)
-                                                                          summary_val++;
-                                                                        else if (sum_delta)
-                                                                          summary_val += delta;
-                                                                        else if (sum_abs_delta) {
-                                                                          if (delta > 0)
-                                                                            summary_val += delta;
+                                                                      if (bTerse) {
+                                                                        if (!bSummarizing && !bSumByTableCount) {
+                                                                          if (bShowCollected)
+                                                                            printf("%d\n",collected_from_pot);
+                                                                          else if (bShowSpent)
+                                                                            printf("%d\n",spent_this_hand);
+                                                                          else if (bShowOpm)
+                                                                            printf("%lf\n",opm);
                                                                           else
-                                                                            summary_val -= delta;
+                                                                            printf("%d\n",delta);
                                                                         }
-                                                                        else if (max_delta) {
-                                                                          if (delta > summary_val)
-                                                                            summary_val = delta;
-                                                                        }
-                                                                        else if (min_delta) {
-                                                                          if (delta < summary_val)
-                                                                            summary_val = delta;
-                                                                        }
-                                                                        else if (max_abs_delta) {
-                                                                          if (delta < 0) {
-                                                                            work = delta * -1;
+                                                                        else if (!bSumByTableCount) {
+                                                                          total_delta += delta;
 
-                                                                            if (work > summary_val)
-                                                                              summary_val = work;
+                                                                          if (only_count)
+                                                                            summary_val++;
+                                                                          else if (sum_delta)
+                                                                            summary_val += delta;
+                                                                          else if (sum_abs_delta) {
+                                                                            if (delta > 0)
+                                                                              summary_val += delta;
+                                                                            else
+                                                                              summary_val -= delta;
                                                                           }
-                                                                          else {
+                                                                          else if (max_delta) {
                                                                             if (delta > summary_val)
                                                                               summary_val = delta;
                                                                           }
-                                                                        }
-                                                                        else if (max_collected) {
-                                                                          if (collected_from_pot > summary_val)
-                                                                            summary_val = collected_from_pot;
+                                                                          else if (min_delta) {
+                                                                            if (delta < summary_val)
+                                                                              summary_val = delta;
+                                                                          }
+                                                                          else if (max_abs_delta) {
+                                                                            if (delta < 0) {
+                                                                              work = delta * -1;
+
+                                                                              if (work > summary_val)
+                                                                                summary_val = work;
+                                                                            }
+                                                                            else {
+                                                                              if (delta > summary_val)
+                                                                                summary_val = delta;
+                                                                            }
+                                                                          }
+                                                                          else if (max_collected) {
+                                                                            if (collected_from_pot > summary_val)
+                                                                              summary_val = collected_from_pot;
+                                                                          }
+                                                                          else {
+                                                                            if (delta > summary_val) {
+                                                                              summary_val = delta;
+                                                                              max_delta_hand_typ = poker_hand.GetHandType();
+                                                                            }
+                                                                          }
                                                                         }
                                                                         else {
-                                                                          if (delta > summary_val) {
-                                                                            summary_val = delta;
-                                                                            max_delta_hand_typ = poker_hand.GetHandType();
-                                                                          }
+                                                                          sum_by_table_count[table_count - 2] += delta;
+                                                                          count_by_table_count[table_count - 2]++;
                                                                         }
                                                                       }
                                                                       else {
-                                                                        sum_by_table_count[table_count - 2] += delta;
-                                                                        count_by_table_count[table_count - 2]++;
-                                                                      }
-                                                                    }
-                                                                    else {
-                                                                      if (bShowCollected)
-                                                                        printf("%10d %s",collected_from_pot,hole_cards);
-                                                                      else if (bShowOpm) {
-                                                                        printf("%6.4lf (%10d %10d) %s",opm,
-                                                                          delta,collected_from_pot,hole_cards);
-                                                                      }
-                                                                      else  {
-                                                                        if (!bNoDelta) {
-                                                                          if (!bHoleCardsUsed)
-                                                                            printf("%10d %s",delta,hole_cards);
-                                                                          else
-                                                                            printf("%10d %s (%d)",delta,hole_cards,hole_cards_used);
+                                                                        if (bShowCollected)
+                                                                          printf("%10d %s",collected_from_pot,hole_cards);
+                                                                        else if (bShowOpm) {
+                                                                          printf("%6.4lf (%10d %10d) %s",opm,
+                                                                            delta,collected_from_pot,hole_cards);
                                                                         }
+                                                                        else  {
+                                                                          if (!bNoDelta) {
+                                                                            if (!bHoleCardsUsed)
+                                                                              printf("%10d %s",delta,hole_cards);
+                                                                            else
+                                                                              printf("%10d %s (%d)",delta,hole_cards,hole_cards_used);
+                                                                          }
+                                                                          else
+                                                                            printf("%s",hole_cards);
+                                                                        }
+
+                                                                        if (bShowBoard && bHaveRiver)
+                                                                          printf(" %s",board_cards);
+
+                                                                        if (bShowHandType && bHaveFlop)
+                                                                          printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+                                                                        if (bShowHandTypId && bHaveFlop)
+                                                                          printf(" %d",poker_hand.GetHandType());
+
+                                                                        if (bShowHand && bHaveFlop)
+                                                                          printf(" %s",poker_hand.GetHand());
+
+                                                                        if (bShowTableName)
+                                                                          printf(" %s",table_name);
+
+                                                                        if (bShowTableCount)
+                                                                          printf(" %d",table_count);
+
+                                                                        if (bVerbose)
+                                                                          printf(" %s %3d\n",filename,num_hands);
                                                                         else
-                                                                          printf("%s",hole_cards);
+                                                                          putchar(0x0a);
                                                                       }
-
-                                                                      if (bShowBoard && bHaveRiver)
-                                                                        printf(" %s",board_cards);
-
-                                                                      if (bShowHandType && bHaveFlop)
-                                                                        printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
-
-                                                                      if (bShowHandTypId && bHaveFlop)
-                                                                        printf(" %d",poker_hand.GetHandType());
-
-                                                                      if (bShowHand && bHaveFlop)
-                                                                        printf(" %s",poker_hand.GetHand());
-
-                                                                      if (bShowTableName)
-                                                                        printf(" %s",table_name);
-
-                                                                      if (bShowTableCount)
-                                                                        printf(" %d",table_count);
-
-                                                                      if (bVerbose)
-                                                                        printf(" %s %3d\n",filename,num_hands);
-                                                                      else
-                                                                        putchar(0x0a);
                                                                     }
                                                                   }
                                                                 }
