@@ -38,7 +38,7 @@ static char usage[] =
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_genum) (-sum_by_table_count)\n"
 "  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
-"  (-counterfeit) player_name filename\n";
+"  (-counterfeit) (-num_decisions) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -75,6 +75,8 @@ static char calls[] = " calls ";
 #define CALLS_LEN (sizeof (calls) - 1)
 static char raises[] = " raises ";
 #define RAISES_LEN (sizeof (raises) - 1)
+static char checks[] = " checks ";
+#define CHECKS_LEN (sizeof (checks) - 1)
 static char uncalled_bet[] = "Uncalled bet (";
 #define UNCALLED_BET_LEN (sizeof (uncalled_bet) - 1)
 static char collected[] = " collected ";
@@ -197,6 +199,7 @@ int main(int argc,char **argv)
   bool bShowHandCount;
   bool bBottomTwo;
   bool bCounterfeit;
+  bool bNumDecisions;
   int collected_ge_num;
   bool bStud;
   bool bRazz;
@@ -233,8 +236,9 @@ int main(int argc,char **argv)
   int hole_cards_used;
   int sum_by_table_count[MAX_TABLE_COUNT - 1];
   int count_by_table_count[MAX_TABLE_COUNT - 1];
+  int numdecs;
 
-  if ((argc < 3) || (argc > 65)) {
+  if ((argc < 3) || (argc > 66)) {
     printf(usage);
     return 1;
   }
@@ -300,6 +304,7 @@ int main(int argc,char **argv)
   bShowHandCount = false;
   bBottomTwo = false;
   bCounterfeit = false;
+  bNumDecisions = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -446,6 +451,8 @@ int main(int argc,char **argv)
       bCounterfeit = true;
       bSawRiver = true;
     }
+    else if (!strcmp(argv[curr_arg],"-num_decisions"))
+      bNumDecisions = true;
     else
       break;
   }
@@ -717,6 +724,9 @@ int main(int argc,char **argv)
     bHaveAllInPreflop = false;
     bHaveCounterfeit = false;
 
+    if (bNumDecisions)
+      numdecs = 0;
+
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
@@ -830,6 +840,9 @@ int main(int argc,char **argv)
                 bHaveAllIn = false;
                 bHaveAllInPreflop = false;
                 bHaveCounterfeit = false;
+
+                if (bNumDecisions)
+                  numdecs = 0;
 
                 street = 0;
                 num_street_markers = 0;
@@ -1066,6 +1079,9 @@ int main(int argc,char **argv)
           if (bShowOpm)
             opm = (double)0;
 
+          if (bNumDecisions)
+            numdecs++;
+
           continue;
         }
         else if (Contains(true,
@@ -1082,6 +1098,9 @@ int main(int argc,char **argv)
             printf("line %d street %d BETS work = %d, spent_this_street = %d\n",
               line_no,street,work,spent_this_street);
           }
+
+          if (bNumDecisions)
+            numdecs++;
         }
         else if (Contains(true,
           line,line_len,
@@ -1097,6 +1116,9 @@ int main(int argc,char **argv)
             printf("line %d street %d CALLS work = %d, spent_this_street = %d\n",
               line_no,street,work,spent_this_street);
           }
+
+          if (bNumDecisions)
+            numdecs++;
         }
         else if (Contains(true,
           line,line_len,
@@ -1112,6 +1134,17 @@ int main(int argc,char **argv)
             printf("line %d street %d RAISES work = %d, spent_this_street = %d\n",
               line_no,street,work,spent_this_street);
           }
+
+          if (bNumDecisions)
+            numdecs++;
+        }
+        else if (Contains(true,
+          line,line_len,
+          checks,CHECKS_LEN,
+          &ix)) {
+
+          if (bNumDecisions)
+            numdecs++;
         }
         else if ((bStud || bRazz) && Contains(true,
           line,line_len,
@@ -1315,6 +1348,8 @@ int main(int argc,char **argv)
                                                                             printf("%d\n",spent_this_hand);
                                                                           else if (bShowOpm)
                                                                             printf("%lf\n",opm);
+                                                                          else if (bNumDecisions)
+                                                                            printf("%d\n",numdecs);
                                                                           else
                                                                             printf("%d\n",delta);
                                                                         }
@@ -1323,8 +1358,14 @@ int main(int argc,char **argv)
 
                                                                           if (only_count)
                                                                             summary_val++;
-                                                                          else if (sum_delta)
-                                                                            summary_val += delta;
+                                                                          else if (sum_delta) {
+                                                                            if (bShowCollected)
+                                                                              summary_val += collected_from_pot;
+                                                                            else if (bNumDecisions)
+                                                                              summary_val += numdecs;
+                                                                            else
+                                                                              summary_val += delta;
+                                                                          }
                                                                           else if (sum_abs_delta) {
                                                                             if (delta > 0)
                                                                               summary_val += delta;
