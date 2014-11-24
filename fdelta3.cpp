@@ -39,7 +39,7 @@ static char usage[] =
 "  (-collected_genum) (-sum_by_table_count)\n"
 "  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
-"  player_name filename\n";
+"  (-winning_percentage) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -144,7 +144,7 @@ int main(int argc,char **argv)
   int num_hands;
   int dbg;
   int work;
-  double opm;
+  double dwork;
   char hole_cards[12];
   char board_cards[15];
   bool bHandTypeSpecified;
@@ -191,6 +191,7 @@ int main(int argc,char **argv)
   int max_collected;
   int max_delta_hand_type;
   int max_delta_hand_typ;
+  int winning_percentage;
   bool bNoDelta;
   bool bHoleCardsUsed;
   bool bOnlySuited;
@@ -244,6 +245,7 @@ int main(int argc,char **argv)
   int total_delta;
   int hit_felt_in_session_count;
   int summary_val;
+  int summary_val2;
   char *date_string;
   int *poker_hand_cards;
   int hole_cards_used;
@@ -251,7 +253,7 @@ int main(int argc,char **argv)
   int count_by_table_count[MAX_TABLE_COUNT - 1];
   int numdecs;
 
-  if ((argc < 3) || (argc > 69)) {
+  if ((argc < 3) || (argc > 70)) {
     printf(usage);
     return 1;
   }
@@ -301,6 +303,7 @@ int main(int argc,char **argv)
   max_abs_delta = 0;
   max_collected = 0;
   max_delta_hand_type = 0;
+  winning_percentage = 0;
   bNoDelta = false;
   bHoleCardsUsed = false;
   bOnlySuited = false;
@@ -475,6 +478,10 @@ int main(int argc,char **argv)
       bWonMainPot = true;
     else if (!strcmp(argv[curr_arg],"-last_hand_only"))
       bLastHandOnly = true;
+    else if (!strcmp(argv[curr_arg],"-winning_percentage")) {
+      winning_percentage = 1;
+      bShowHandCount = true;
+    }
     else
       break;
   }
@@ -619,12 +626,16 @@ int main(int argc,char **argv)
     return 26;
   }
 
-  if (only_count + sum_delta + sum_abs_delta + max_delta + min_delta + max_abs_delta + max_collected + max_delta_hand_type > 1) {
-    printf("can only specify one of -only_count, -sum_delta, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, and -max_delta_hand_type\n");
+  if (only_count + sum_delta + sum_abs_delta + max_delta + min_delta +
+    max_abs_delta + max_collected + max_delta_hand_type +
+    winning_percentage > 1) {
+    printf("can only specify one of -only_count, -sum_delta, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, -max_delta_hand_type, and -winning_percentage\n");
     return 27;
   }
 
-  if ((only_count) || (sum_delta) || (sum_abs_delta) || (max_delta) || (min_delta) || (max_abs_delta) || (max_collected) || (max_delta_hand_type)) {
+  if ((only_count) || (sum_delta) || (sum_abs_delta) || (max_delta) ||
+      (min_delta) || (max_abs_delta) || (max_collected) ||
+      (max_delta_hand_type) || (winning_percentage)) {
     bTerse = true;
     bSummarizing = true;
   }
@@ -722,6 +733,7 @@ int main(int argc,char **argv)
       total_delta = 0;
       hit_felt_in_session_count = 0;
       summary_val = 0;
+      summary_val2 = 0;
     }
 
     if (dbg_file_no == file_no)
@@ -774,8 +786,14 @@ int main(int argc,char **argv)
                   if (!max_delta_hand_type) {
                     if (!bShowHandCount)
                       printf("%d\t%s\n",summary_val,date_string);
-                    else
-                      printf("%d\t%s\t(%d)\n",summary_val,date_string,num_hands);
+                    else {
+                      if (!winning_percentage)
+                        printf("%d\t%s\t(%d)\n",summary_val,date_string,num_hands);
+                      else {
+                        dwork = (double)summary_val2 / (double)summary_val;
+                        printf("%lf\t%s\t(%d %d)\n",dwork,date_string,summary_val2,summary_val);
+                      }
+                    }
                   }
                   else {
                     if (!bShowHandCount) {
@@ -1134,7 +1152,7 @@ int main(int argc,char **argv)
           delta = ending_balance - starting_balance;
 
           if (bShowOpm)
-            opm = (double)0;
+            dwork = (double)0;
 
           if (bNumDecisions)
             numdecs++;
@@ -1347,9 +1365,9 @@ int main(int argc,char **argv)
 
             if (bShowOpm) {
               if (collected_from_pot && (delta > 0))
-                opm = (double)delta / (double)collected_from_pot;
+                dwork = (double)delta / (double)collected_from_pot;
               else
-                opm = (double)0;
+                dwork = (double)0;
             }
           }
 
@@ -1407,7 +1425,7 @@ int main(int argc,char **argv)
                                                                                 else if (bShowSpent)
                                                                                   printf("%d\n",spent_this_hand);
                                                                                 else if (bShowOpm)
-                                                                                  printf("%lf\n",opm);
+                                                                                  printf("%lf\n",dwork);
                                                                                 else if (bNumDecisions)
                                                                                   printf("%d\n",numdecs);
                                                                                 else
@@ -1416,7 +1434,13 @@ int main(int argc,char **argv)
                                                                               else if (!bSumByTableCount) {
                                                                                 total_delta += delta;
 
-                                                                                if (only_count)
+                                                                                if (winning_percentage) {
+                                                                                  summary_val++;
+
+                                                                                  if (delta > 0)
+                                                                                    summary_val2++;
+                                                                                }
+                                                                                else if (only_count)
                                                                                   summary_val++;
                                                                                 else if (sum_delta) {
                                                                                   if (bShowCollected)
@@ -1472,7 +1496,7 @@ int main(int argc,char **argv)
                                                                               if (bShowCollected)
                                                                                 printf("%10d %s",collected_from_pot,hole_cards);
                                                                               else if (bShowOpm) {
-                                                                                printf("%6.4lf (%10d %10d) %s",opm,
+                                                                                printf("%6.4lf (%10d %10d) %s",dwork,
                                                                                   delta,collected_from_pot,hole_cards);
                                                                               }
                                                                               else  {
