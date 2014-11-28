@@ -39,7 +39,8 @@ static char usage[] =
 "  (-collected_genum) (-sum_by_table_count)\n"
 "  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
-"  (-winning_percentage) player_name filename\n";
+"  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -212,6 +213,8 @@ int main(int argc,char **argv)
   bool bWonSidePot;
   bool bWonMainPot;
   bool bLastHandOnly;
+  bool bGetDateFromFilename;
+  bool bNoHoleCards;
   int collected_ge_num;
   bool bStud;
   bool bRazz;
@@ -253,7 +256,7 @@ int main(int argc,char **argv)
   int count_by_table_count[MAX_TABLE_COUNT - 1];
   int numdecs;
 
-  if ((argc < 3) || (argc > 70)) {
+  if ((argc < 3) || (argc > 72)) {
     printf(usage);
     return 1;
   }
@@ -324,6 +327,8 @@ int main(int argc,char **argv)
   bWonSidePot = false;
   bWonMainPot = false;
   bLastHandOnly = false;
+  bGetDateFromFilename = false;
+  bNoHoleCards = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -482,6 +487,10 @@ int main(int argc,char **argv)
       winning_percentage = 1;
       bShowHandCount = true;
     }
+    else if (!strcmp(argv[curr_arg],"-get_date_from_filename"))
+      bGetDateFromFilename = true;
+    else if (!strcmp(argv[curr_arg],"-no_hole_cards"))
+      bNoHoleCards = true;
     else
       break;
   }
@@ -727,6 +736,15 @@ int main(int argc,char **argv)
     if (feof(fptr0))
       break;
 
+    if (bGetDateFromFilename) {
+      retval = get_date_from_path(filename,'\\',3,&date_string);
+
+      if (retval) {
+        printf("get_date_from_path() failed on %s: %d\n",filename,retval);
+        continue;
+      }
+    }
+
     file_no++;
 
     if (bSummarizing) {
@@ -781,8 +799,6 @@ int main(int argc,char **argv)
             if (!bOnlyWinningSession || (total_delta > 0)) {
               if (!bOnlyLosingSession || (total_delta < 0)) {
                 if (!bNeverHitFeltInSession || (!hit_felt_in_session_count)) {
-                  retval = get_date_from_path(filename,'\\',3,&date_string);
-
                   if (!max_delta_hand_type) {
                     if (!bShowHandCount)
                       printf("%d\t%s\n",summary_val,date_string);
@@ -1501,12 +1517,20 @@ int main(int argc,char **argv)
                                                                               }
                                                                               else  {
                                                                                 if (!bNoDelta) {
-                                                                                  if (!bHoleCardsUsed)
-                                                                                    printf("%10d %s",delta,hole_cards);
-                                                                                  else
-                                                                                    printf("%10d %s (%d)",delta,hole_cards,hole_cards_used);
+                                                                                  if (!bHoleCardsUsed) {
+                                                                                    if (!bNoHoleCards)
+                                                                                      printf("%10d %s",delta,hole_cards);
+                                                                                    else
+                                                                                      printf("%10d",delta);
+                                                                                  }
+                                                                                  else {
+                                                                                    if (!bNoHoleCards)
+                                                                                      printf("%10d %s (%d)",delta,hole_cards,hole_cards_used);
+                                                                                    else
+                                                                                      printf("%10d (%d)",delta,hole_cards_used);
+                                                                                  }
                                                                                 }
-                                                                                else
+                                                                                else if (!bNoHoleCards)
                                                                                   printf("%s",hole_cards);
                                                                               }
 
@@ -1528,8 +1552,12 @@ int main(int argc,char **argv)
                                                                               if (bShowTableCount)
                                                                                 printf(" %d",table_count);
 
-                                                                              if (bVerbose)
-                                                                                printf(" %s %3d\n",filename,num_hands);
+                                                                              if (bVerbose) {
+                                                                                if (!bGetDateFromFilename)
+                                                                                  printf(" %s %3d\n",filename,num_hands);
+                                                                                else
+                                                                                  printf("\t%s\n",date_string);
+                                                                              }
                                                                               else
                                                                                 putchar(0x0a);
                                                                             }
