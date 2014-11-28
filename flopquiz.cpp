@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 using namespace std;
 
@@ -7,6 +8,8 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] = "usage: flopquiz seed\n";
+static char correct[] = "correct\n";
+static char incorrect[] = "incorrect\n";
 
 static Flop myflop;
 
@@ -60,33 +63,42 @@ int main(int argc,char **argv)
     if (flop_type == DRY) {
       num_dry_flops++;
 
-      if (ans[0] == 'd')
+      if (ans[0] == 'd') {
         correct_answers++;
-      else
+        printf(correct);
+      }
+      else {
         incorrect_answers++;
+        printf(incorrect);
+      }
     }
     else {
       num_wet_flops++;
 
-      if (ans[0] == 'w')
+      if (ans[0] == 'w') {
         correct_answers++;
-      else
+        printf(correct);
+      }
+      else {
         incorrect_answers++;
+        printf(incorrect);
+      }
     }
 
     num_quizzes++;
   }
 
   printf("seed = %d\n",seed);
-  printf("num_quizzes        = %6d\n",num_quizzes);
-  printf("num_dry_flops      = %6d\n",num_dry_flops);
-  printf("num_wet_flops      = %6d\n",num_wet_flops);
-  printf("correct_answers    = %6d\n",correct_answers);
-  printf("incorrect_ansswers = %6d\n",incorrect_answers);
+  printf("num_quizzes       = %6d\n",num_quizzes);
+  printf("num_dry_flops     = %6d\n",num_dry_flops);
+  printf("num_wet_flops     = %6d\n",num_wet_flops);
+  printf("correct_answers   = %6d\n",correct_answers);
+  printf("incorrect_answers = %6d\n",incorrect_answers);
 
-  dwork = (double)correct_answers / (double)num_quizzes * (double)100;
-
-  printf("precent_correct    = %6.2lf\n",dwork);
+  if (num_quizzes) {
+    dwork = (double)correct_answers / (double)num_quizzes * (double)100;
+    printf("percent_correct   = %6.2lf\n",dwork);
+  }
 
   return 0;
 }
