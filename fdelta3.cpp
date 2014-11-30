@@ -1249,6 +1249,8 @@ int main(int argc,char **argv)
 
           spent_this_hand += spent_this_street;
 
+          spent_this_street = 0;
+
           if (bDebug) {
             printf("line %d street %d FOLDS spent_this_street = %d, spent_this_hand = %d\n",
               line_no,street,spent_this_street,spent_this_hand);
@@ -1620,10 +1622,14 @@ int main(int argc,char **argv)
                                                                                           else {
                                                                                             if (bShowCollected)
                                                                                               printf("%10d %s",collected_from_pot,hole_cards);
+                                                                                            else if (bShowSpent)
+                                                                                              printf("%10d %s",spent_this_hand,hole_cards);
                                                                                             else if (bShowOpm) {
                                                                                               printf("%6.4lf (%10d %10d) %s",dwork,
                                                                                                 delta,collected_from_pot,hole_cards);
                                                                                             }
+                                                                                            else if (bNumDecisions)
+                                                                                              printf("%10d %s",numdecs,hole_cards);
                                                                                             else  {
                                                                                               if (!bNoDelta) {
                                                                                                 if (!bHoleCardsUsed) {
