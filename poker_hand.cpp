@@ -1629,3 +1629,28 @@ HandType get_hand_type(char *hand_type_str)
 
   return (HandType)hand_type;
 }
+
+bool four_to_a_flush(int *cards)
+{
+  int m;
+  int n;
+  int suits[NUM_HOLE_CARDS_IN_HOLDEM_HAND+NUM_CARDS_IN_FLOP+1];
+  int suit_count;
+
+  for (n = 0; n < NUM_HOLE_CARDS_IN_HOLDEM_HAND+NUM_CARDS_IN_FLOP+1; n++)
+    suits[n] = suit_of(cards[n]);
+
+  for (m = 0; m < NUM_SUITS; m++) {
+    suit_count = 0;
+
+    for (n = 0; n < NUM_HOLE_CARDS_IN_HOLDEM_HAND+NUM_CARDS_IN_FLOP+1; n++) {
+      if (suits[n] == m)
+        suit_count++;
+    }
+
+    if (suit_count == 4)
+      return true;
+  }
+
+  return false;
+}

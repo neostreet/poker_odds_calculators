@@ -386,3 +386,5 @@ int card_value_from_card_string(char *card_string,int *card_value);
 int card_string_from_card_value(int card_value,char *card_string);
 
 HandType get_hand_type(char *hand_type_str);
+
+bool four_to_a_flush(int *cards);
