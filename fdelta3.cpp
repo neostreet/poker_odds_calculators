@@ -706,6 +706,7 @@ int main(int argc,char **argv)
       (min_delta) || (max_abs_delta) || (max_collected) ||
       (max_delta_hand_type) || (winning_percentage)) {
     bTerse = true;
+    bGetDateFromFilename = true;
     bSummarizing = true;
   }
   else
