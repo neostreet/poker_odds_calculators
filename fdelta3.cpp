@@ -1391,7 +1391,7 @@ int main(int argc,char **argv)
           for (n = 0; n < 8; n++)
             board_cards[n] = line[FLOP_LEN+n];
 
-          board_cards[n] = ' ';
+          board_cards[n] = 0;
 
           for (q = 0; q < NUM_CARDS_IN_FLOP; q++) {
             card_string[0] = board_cards[q*3 + 0];
@@ -1414,12 +1414,14 @@ int main(int argc,char **argv)
             bHaveFlop = true;
         }
         else if (!strncmp(line,turn,TURN_LEN)) {
-          n = 9;
+          n = 8;
+
+          board_cards[n++] = ' ';
 
           for (m = 0; m < 2; m++,n++)
             board_cards[n] = line[TURN_LEN+11+m];
 
-          board_cards[n++] = ' ';
+          board_cards[n] = 0;
 
           card_string[0] = board_cards[9];
           card_string[1] = board_cards[10];
@@ -1445,7 +1447,9 @@ int main(int argc,char **argv)
         }
         else if (!strncmp(line,river,RIVER_LEN)) {
           if (!bStud && !bRazz) {
-            n = 12;
+            n = 11;
+
+            board_cards[n++] = ' ';
 
             for (m = 0; m < 2; m++,n++)
               board_cards[n] = line[RIVER_LEN+14+m];
@@ -1685,7 +1689,7 @@ int main(int argc,char **argv)
                                                                                                     printf("%s",hole_cards);
                                                                                                 }
 
-                                                                                                if (bShowBoard && bHaveRiver)
+                                                                                                if (bShowBoard)
                                                                                                   printf(" %s",board_cards);
 
                                                                                                 if (bShowHandType && bHaveFlop)
