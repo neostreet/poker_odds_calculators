@@ -42,7 +42,7 @@ static char usage[] =
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
 "  (-small_blind) (-big_blind) (-small_or_big_blind) (-no_blind)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
-"  (-chased_flush) (-river_card_used) (-both_hole_cards_used)\n"
+"  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -236,6 +236,7 @@ int main(int argc,char **argv)
   bool bChasedFlush;
   bool bRiverCardUsed;
   bool bBothHoleCardsUsed;
+  bool bShowRiver;
   int no_blind;
   int collected_ge_num;
   bool bStud;
@@ -285,7 +286,7 @@ int main(int argc,char **argv)
   bool bHaveRiverCardUsed;
   bool bHaveBothHoleCardsUsed;
 
-  if ((argc < 3) || (argc > 82)) {
+  if ((argc < 3) || (argc > 83)) {
     printf(usage);
     return 1;
   }
@@ -372,6 +373,7 @@ int main(int argc,char **argv)
   bChasedFlush = false;
   bRiverCardUsed = false;
   bBothHoleCardsUsed = false;
+  bShowRiver = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -562,6 +564,8 @@ int main(int argc,char **argv)
       bRiverCardUsed = true;
     else if (!strcmp(argv[curr_arg],"-both_hole_cards_used"))
       bBothHoleCardsUsed = true;
+    else if (!strcmp(argv[curr_arg],"-show_river"))
+      bShowRiver = true;
     else
       break;
   }
@@ -792,15 +796,20 @@ int main(int argc,char **argv)
     return 40;
   }
 
+  if (bShowBoard && bShowRiver) {
+    printf("can't specify both -show_board and -show_river\n");
+    return 41;
+  }
+
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 41;
+    return 42;
   }
 
-  if (!bSawRiver && (bChasedFlush || bRiverCardUsed))
+  if (!bSawRiver && (bChasedFlush || bRiverCardUsed || bShowRiver))
     bSawRiver = true;
 
   ending_balance = -1;
@@ -1083,7 +1092,7 @@ int main(int argc,char **argv)
 
         if (table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 42;
+          return 43;
         }
 
         continue;
@@ -1149,7 +1158,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 43;
+                    return 44;
                   }
                 }
               }
@@ -1409,7 +1418,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 44;
+              return 45;
             }
           }
 
@@ -1438,7 +1447,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 45;
+            return 46;
           }
 
           if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1471,7 +1480,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 46;
+              return 47;
             }
 
             if (!bFlopped && (!bFolded || bVeryBestHand)) {
@@ -1708,6 +1717,9 @@ int main(int argc,char **argv)
 
                                                                                                   if (bShowHandType && bHaveFlop)
                                                                                                     printf(" %s",plain_hand_types[poker_hand.GetHandType()]);
+
+                                                                                                  if (bShowRiver)
+                                                                                                    printf(" %s",&board_cards[12]);
 
                                                                                                   if (bShowHandTypId && bHaveFlop)
                                                                                                     printf(" %d",poker_hand.GetHandType());
