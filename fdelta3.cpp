@@ -46,8 +46,8 @@ static char usage[] =
 "  (-small_blind) (-big_blind) (-small_or_big_blind) (-no_blind)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
-"  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered)\n"
-"  player_name filename\n";
+"  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
+"  (-winning_hand_typehand_type player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -102,6 +102,12 @@ static char show_down[] = "*** SHOW DOWN ***";
 #define SHOW_DOWN_LEN (sizeof (show_down) - 1)
 static char all_in[] = "all-in";
 #define ALL_IN_LEN (sizeof (all_in) - 1)
+static char won[] = " won ";
+#define WON_LEN (sizeof (won) - 1)
+static char with[] = " with ";
+#define WITH_LEN (sizeof (with) - 1)
+static char with_a[] = " with a ";
+#define WITH_A_LEN (sizeof (with_a) - 1)
 
 #define MAX_TABLE_COUNT 9
 
@@ -115,6 +121,7 @@ static void get_table_name(char *line,int line_len,char *table_name,int max_tabl
 static int bottom_two(char *line,int line_len,char *hole_cards);
 static int get_num_hands_in_file(FILE *fptr,char *player_name,int player_name_len);
 static bool deuce_or_trey_off(char *hole_cards);
+static HandType get_winning_hand_typ_id(char *line,int line_len);
 
 int main(int argc,char **argv)
 {
@@ -163,6 +170,7 @@ int main(int argc,char **argv)
   char hole_cards[12];
   char board_cards[15];
   bool bHandTypeSpecified;
+  bool bWinningHandTypeSpecified;
   bool bHandTypIdSpecified;
   bool bHandSpecified;
   bool bSkipFolded;
@@ -248,6 +256,7 @@ int main(int argc,char **argv)
   bool bHandTypIdGeSpecified;
   bool bBadRiverMoney;
   bool bShowWagered;
+  bool bUberflush;
   int no_blind;
   int collected_ge_num;
   bool bStud;
@@ -270,7 +279,9 @@ int main(int argc,char **argv)
   bool bHaveWonMainPot;
   bool bSummarizing;
   char *hand_type;
+  char *winning_hand_type;
   HandType hand_typ_id;
+  HandType winning_hand_typ_id;
   HandType hand_typ_id_ge;
   char *hand;
   bool bFolded;
@@ -302,15 +313,18 @@ int main(int argc,char **argv)
   bool bHaveBothHoleCardsUsed;
   bool bHaveBadRiverMoney;
 
-  if ((argc < 3) || (argc > 88)) {
+  if ((argc < 3) || (argc > 90)) {
     printf(usage);
     return 1;
   }
+
+  init_plain_hand_type_lens();
 
   bTerse = false;
   bVerbose = false;
   bDebug = false;
   bHandTypeSpecified = false;
+  bWinningHandTypeSpecified = false;
   bHandTypIdSpecified = false;
   bHandSpecified = false;
   bSkipFolded = false;
@@ -395,6 +409,7 @@ int main(int argc,char **argv)
   bHandTypIdGeSpecified = false;
   bBadRiverMoney = false;
   bShowWagered = false;
+  bUberflush = false;
   hand_number = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -407,6 +422,11 @@ int main(int argc,char **argv)
     else if (!strncmp(argv[curr_arg],"-hand_type",10)) {
       hand_type = &argv[curr_arg][10];
       bHandTypeSpecified = true;
+    }
+    else if (!strncmp(argv[curr_arg],"-winning_hand_type",18)) {
+      winning_hand_type = &argv[curr_arg][18];
+      bWinningHandTypeSpecified = true;
+      bOnlyShowdown = true;
     }
     else if (!strncmp(argv[curr_arg],"-hand_typ_id_ge",15)) {
       sscanf(&argv[curr_arg][15],"%d",&hand_typ_id_ge);
@@ -599,6 +619,8 @@ int main(int argc,char **argv)
       bBadRiverMoney = true;
     else if (!strcmp(argv[curr_arg],"-show_wagered"))
       bShowWagered = true;
+    else if (!strcmp(argv[curr_arg],"-uberflush"))
+      bUberflush = true;
     else
       break;
   }
@@ -691,6 +713,12 @@ int main(int argc,char **argv)
 
   if (bBottomTwo && !bSawFlop && !bSawRiver)
     bSawFlop = true;
+
+  if (bUberflush) {
+    bOnlyLost = true;
+    hand_type = plain_hand_types[FLUSH];
+    bHandTypeSpecified = true;
+  }
 
   if (bHandTypeSpecified && !bSawFlop && !bSawRiver)
     bSawFlop = true;
@@ -1195,6 +1223,19 @@ int main(int argc,char **argv)
 
         continue;
       }
+      else if (bSkipping) {
+        if (bWinningHandTypeSpecified) {
+          if (Contains(true,
+            line,line_len,
+            won,WON_LEN,
+            &ix)) {
+
+            winning_hand_typ_id = get_winning_hand_typ_id(line,line_len);
+          }
+        }
+
+        continue;
+      }
       else if (Contains(true,
         line,line_len,
         argv[player_name_ix],player_name_len,
@@ -1213,9 +1254,7 @@ int main(int argc,char **argv)
             bHaveAllInPostflop = true;
         }
 
-        if (bSkipping)
-          continue;
-        else if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
+        if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
           for (n = 0; n < line_len; n++) {
             if (line[n] == '[')
               break;
@@ -1496,8 +1535,6 @@ int main(int argc,char **argv)
           showdown_count++;
         }
       }
-      else if (bSkipping)
-        continue;
       else {
         if (!strncmp(line,flop,FLOP_LEN)) {
           if (bStealthTwoPair && !bFolded) {
@@ -2262,4 +2299,37 @@ static bool deuce_or_trey_off(char *hole_cards)
     return true;
 
   return false;
+}
+
+static HandType get_winning_hand_typ_id(char *line,int line_len)
+{
+  int n;
+  int ix;
+  int ix2;
+
+  if (Contains(true,
+    line,line_len,
+    with,WITH_LEN,
+    &ix)) {
+
+    if (Contains(true,
+      line,line_len,
+      with_a,WITH_A_LEN,
+      &ix2)) {
+
+      ix = ix2 + WITH_A_LEN;
+    }
+    else
+      ix += WITH_LEN;
+
+    for (n = 0; n < NUM_HAND_TYPES; n++) {
+      if (!strncmp(&line[ix],plain_hand_types[n],plain_hand_type_lens[n]))
+        break;
+    }
+
+    if (n < NUM_HAND_TYPES)
+      return (HandType)n;
+  }
+
+  return HIGH_CARD;
 }

@@ -224,6 +224,45 @@ HandType PokerHand::Evaluate()
   return _hand_type;
 }
 
+HandType PokerHand::EvaluateLow()
+{
+  num_evaluations++;
+
+  if (!_have_cards)
+    return HIGH_CARD;
+
+  if (!_hand_sorted) {
+    Sort();
+
+    if (!_hand_sorted)
+      return HIGH_CARD;
+
+    _hand_evaluated = false;
+  }
+
+  if (_hand_evaluated)
+    return _hand_type;
+
+  num_unique_evaluations++;
+
+  if (FourOfAKind())
+    _hand_type = FOUR_OF_A_KIND;
+  else if (FullHouse())
+    _hand_type = FULL_HOUSE;
+  else if (ThreeOfAKind())
+    _hand_type = THREE_OF_A_KIND;
+  else if (TwoPair())
+    _hand_type = TWO_PAIRS;
+  else if (OnePair())
+    _hand_type = ONE_PAIR;
+  else
+    _hand_type = HIGH_CARD;
+
+  _hand_evaluated = true;
+
+  return _hand_type;
+}
+
 void PokerHand::UnEvaluate()
 {
   _hand_evaluated = false;
@@ -540,6 +579,134 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
 
       return 0;
     case ROYAL_FLUSH:
+      return 0;
+  }
+
+  return 0;
+}
+
+int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
+{
+  int n;
+  HandType hand_type;
+  HandType compare_hand_type;
+  int rank;
+  int compare_rank;
+
+  if (!in_holdem_best_poker_hand)
+    num_comparisons++;
+  else
+    num_holdem_best_poker_hand_comparisons++;
+
+  if (!_hand_evaluated)
+    hand_type = Evaluate();
+  else
+    hand_type = _hand_type;
+
+  if (!compare_hand.Evaluated())
+    compare_hand_type = compare_hand.Evaluate();
+  else
+    compare_hand_type = compare_hand.GetHandType();
+
+  if (hand_type < compare_hand_type)
+    return 1;
+
+  if (hand_type > compare_hand_type)
+    return -1;
+
+  switch(hand_type) {
+    case HIGH_CARD:
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+        rank = GetRank(n);
+        compare_rank = compare_hand.GetRank(n);
+
+        if ((rank < compare_rank) && (rank <= EIGHT))
+          return 1;
+
+        if ((rank > compare_rank) && (compare_rank <= EIGHT))
+          return -1;
+      }
+
+      return 0;
+    case ONE_PAIR:
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+        if (n == 1)
+          continue;
+
+        rank = GetRank(n);
+        compare_rank = compare_hand.GetRank(n);
+
+        if (rank < compare_rank)
+          return 1;
+
+        if (rank > compare_rank)
+          return -1;
+      }
+
+      return 0;
+    case TWO_PAIRS:
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+        if ((n == 1) || (n == 3))
+          continue;
+
+        rank = GetRank(n);
+        compare_rank = compare_hand.GetRank(n);
+
+        if (rank < compare_rank)
+          return 1;
+
+        if (rank > compare_rank)
+          return -1;
+      }
+
+      return 0;
+    case THREE_OF_A_KIND:
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+        if ((n == 1) || (n == 2))
+          continue;
+
+        rank = GetRank(n);
+        compare_rank = compare_hand.GetRank(n);
+
+        if (rank < compare_rank)
+          return 1;
+
+        if (rank > compare_rank)
+          return -1;
+      }
+
+      return 0;
+    case FULL_HOUSE:
+      for (n = 0; n < NUM_CARDS_IN_HAND - 1; n++) {
+        if ((n == 1) || (n == 2))
+          continue;
+
+        rank = GetRank(n);
+        compare_rank = compare_hand.GetRank(n);
+
+        if (rank < compare_rank)
+          return 1;
+
+        if (rank > compare_rank)
+          return -1;
+      }
+
+      return 0;
+    case FOUR_OF_A_KIND:
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+        if ((n == 1) || (n == 2) || (n == 3))
+          continue;
+
+        rank = GetRank(n);
+        compare_rank = compare_hand.GetRank(n);
+
+        if (rank < compare_rank)
+          return 1;
+
+        if (rank > compare_rank)
+          return -1;
+      }
+
       return 0;
   }
 
@@ -1407,6 +1574,74 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
   return _best_poker_hand;
 }
 
+PokerHand& OmahaPokerHand::BestLowPokerHand(bool bDebug)
+{
+  int m;
+  int n;
+  int o;
+  int p;
+  int q;
+  int r;
+  int s;
+  PokerHand hand;
+  int ret_compare;
+  char card_string[3];
+
+  for (o = 0; o < POKER_4_2_PERMUTATIONS; o++) {
+    get_permutation_instance_two(
+      NUM_HOLE_CARDS_IN_OMAHA_HAND,
+      &m,&n,o);
+
+    for (s = 0; s < POKER_5_3_PERMUTATIONS; s++) {
+      get_permutation_instance_three(
+        NUM_COMMUNITY_CARDS,
+        &p,&q,&r,s);
+
+      if (bDebug) {
+        card_string_from_card_value(_card[m],card_string);
+        cout << card_string << " ";
+        card_string_from_card_value(_card[n],card_string);
+        cout << card_string << " ";
+
+        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+          card_string);
+        cout << card_string << " ";
+        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+          card_string);
+        cout << card_string << " ";
+        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r],
+          card_string);
+        cout << card_string << " ";
+      }
+
+      hand.NewCards(_card[m],_card[n],
+        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
+
+      hand.EvaluateLow();
+
+      if (bDebug)
+        cout << hand << endl;
+
+      if (!o && !s)
+        _best_poker_hand = hand;
+      else {
+        ret_compare = hand.CompareLow(_best_poker_hand,1);
+
+        if (ret_compare == 1) {
+          _best_poker_hand = hand;
+
+          if (bDebug)
+            cout << "new best poker hand" << endl;
+        }
+      }
+    }
+  }
+
+  return _best_poker_hand;
+}
+
 void OmahaPokerHand::print(ostream& out) const
 {
   int n;
@@ -1653,4 +1888,12 @@ bool four_to_a_flush(int *cards)
   }
 
   return false;
+}
+
+void init_plain_hand_type_lens()
+{
+  int n;
+
+  for (n = 0; n < NUM_HAND_TYPES; n++)
+    plain_hand_type_lens[n] = strlen(plain_hand_types[n]);
 }

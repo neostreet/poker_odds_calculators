@@ -23,6 +23,26 @@ enum Rank {
   NUM_CARDS_IN_SUIT
 };
 
+enum HandType {
+  HIGH_CARD,
+  ONE_PAIR,
+  TWO_PAIRS,
+  THREE_OF_A_KIND,
+  STRAIGHT,
+  FLUSH,
+  FULL_HOUSE,
+  FOUR_OF_A_KIND,
+  STRAIGHT_FLUSH,
+  ROYAL_FLUSH,
+  NUM_HAND_TYPES
+};
+
+enum FlopType {
+  DRY,
+  WET,
+  NUM_FLOP_TYPES
+};
+
 #define NUM_CARDS_IN_DECK (NUM_SUITS * NUM_CARDS_IN_SUIT)
 
 #define suit_of(card) (card / NUM_CARDS_IN_SUIT)
@@ -44,10 +64,12 @@ char *plain_hand_types[] = {
   "straight flush",
   "royal flush"
 };
+int plain_hand_type_lens[NUM_HAND_TYPES];
 #else
 extern char suit_chars[];
 extern char rank_chars[];
 extern char *plain_hand_types[];
+extern int plain_hand_type_lens[];
 #endif
 
 #define NUM_CARDS_IN_HAND 5
@@ -90,26 +112,6 @@ extern char *plain_hand_types[];
 #define NUM_SELECTED_COMMUNITY_CARDS_IN_OMAHA_HAND 3
 
 #define MAX_STREET_MARKERS 6
-
-enum HandType {
-  HIGH_CARD,
-  ONE_PAIR,
-  TWO_PAIRS,
-  THREE_OF_A_KIND,
-  STRAIGHT,
-  FLUSH,
-  FULL_HOUSE,
-  FOUR_OF_A_KIND,
-  STRAIGHT_FLUSH,
-  ROYAL_FLUSH,
-  NUM_HAND_TYPES
-};
-
-enum FlopType {
-  DRY,
-  WET,
-  NUM_FLOP_TYPES
-};
 
 #ifdef MAIN_MODULE
 char *hand_type_abbrevs[] = {
@@ -171,6 +173,7 @@ class PokerHand {
   int GetRank(int card_ix);
   void Sort();
   HandType Evaluate();
+  HandType EvaluateLow();
   void UnEvaluate();
   bool Evaluated();
   bool RoyalFlush();
@@ -187,6 +190,7 @@ class PokerHand {
   HandType GetHandType();
 
   int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
+  int CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand);
 
   void print(ostream& out) const;
   void Verbose();
@@ -339,6 +343,7 @@ class OmahaPokerHand {
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
 
   PokerHand& BestPokerHand(bool bDebug);
+  PokerHand& BestLowPokerHand(bool bDebug);
 
   void print(ostream& out) const;
 
@@ -388,3 +393,5 @@ int card_string_from_card_value(int card_value,char *card_string);
 HandType get_hand_type(char *hand_type_str);
 
 bool four_to_a_flush(int *cards);
+
+void init_plain_hand_type_lens();
