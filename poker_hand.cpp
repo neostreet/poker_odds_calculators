@@ -1862,6 +1862,9 @@ HandType get_hand_type(char *hand_type_str)
       break;
   }
 
+  if (hand_type == NUM_HAND_TYPES)
+    hand_type = HIGH_CARD;
+
   return (HandType)hand_type;
 }
 
