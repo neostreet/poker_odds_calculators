@@ -1817,6 +1817,8 @@ int main(int argc,char **argv)
                                                                                                               else if (sum_delta) {
                                                                                                                 if (local_vars.bShowCollected)
                                                                                                                   summary_val += collected_from_pot;
+                                                                                                                else if (local_vars.bShowWagered)
+                                                                                                                  summary_val += wagered_amount;
                                                                                                                 else if (local_vars.bNumDecisions)
                                                                                                                   summary_val += numdecs;
                                                                                                                 else
