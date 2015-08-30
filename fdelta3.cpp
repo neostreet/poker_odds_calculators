@@ -316,6 +316,8 @@ int main(int argc,char **argv)
   int retval;
   int hit_felt_in_session_count;
   int *poker_hand_cards;
+  bool bFirstFile;
+  bool bFirstHand;
 
   if ((argc < 3) || (argc > 90)) {
     printf(usage);
@@ -921,6 +923,7 @@ int main(int argc,char **argv)
 
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
+  bFirstFile = true;
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
@@ -948,6 +951,11 @@ int main(int argc,char **argv)
   }
 
   for ( ; ; ) {
+    if (bFirstFile)
+      bFirstFile = false;
+     else
+       run_filter(&local_vars);
+
     GetLine(fptr0,filename,&filename_len,MAX_FILENAME_LEN);
 
     if (feof(fptr0))
@@ -1007,6 +1015,7 @@ int main(int argc,char **argv)
     local_vars.bHaveVoluntaryBet = false;
     local_vars.bHaveChasedFlush = false;
     local_vars.bHaveBadRiverMoney = false;
+    bFirstHand = true;
 
     if (local_vars.bWonSidePot)
       local_vars.bHaveWonSidePot = false;
@@ -1094,6 +1103,11 @@ int main(int argc,char **argv)
           max_streets = 3;
       }
       else if (!strncmp(line,"Table '",7)) {
+        if (bFirstHand)
+          bFirstHand = false;
+        else
+          run_filter(&local_vars);
+
         get_table_name(line,line_len,table_name,MAX_TABLE_NAME_LEN);
 
         local_vars.table_count = 0;
@@ -1740,8 +1754,6 @@ int main(int argc,char **argv)
 
           if (local_vars.bOnlyHeadsUpShowdown && local_vars.bHaveShowdown && (showdown_count == 2))
             local_vars.bHaveHeadsUpShowdown = true;
-
-          run_filter(&local_vars);
 
           continue;
         }
