@@ -14,7 +14,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: pct_at_flop (-debug) (-deep_debug) filename";
+static char usage[] =
+"usage: pct_at_flop (-debug) (-deep_debug) (-show_losses) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -25,6 +26,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bDebug;
   int deep_debug;
+  bool bShowLosses;
   int deep_debug_counter;
   int outer_m;
   int outer_n;
@@ -58,19 +60,22 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 4)) {
     cout << usage << endl;
     return 1;
   }
 
   bDebug = false;
   deep_debug = 0;
+  bShowLosses = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
     else if (!strncmp(argv[curr_arg],"-deep_debug",11))
       sscanf(&argv[curr_arg][11],"%d",&deep_debug);
+    else if (!strcmp(argv[curr_arg],"-show_losses"))
+      bShowLosses = true;
     else
       break;
   }
@@ -228,6 +233,13 @@ int main(int argc,char **argv)
 
           if (bDebug)
             hand2_winning_hand_counts[hand2.GetHandType()]++;
+
+          if (bShowLosses) {
+            hand1.print(cout);
+            cout << endl;
+            hand2.print(cout);
+            cout << endl;
+          }
         }
         else {
           ties++;
