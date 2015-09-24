@@ -484,7 +484,7 @@ int main(int argc,char **argv)
       local_vars.bNormalize = true;
     else if (!strcmp(argv[curr_arg],"-only_lost"))
       local_vars.bOnlyLost = true;
-    else if (!strcmp(argv[curr_arg],"-local_vars.only_count"))
+    else if (!strcmp(argv[curr_arg],"-only_count"))
       local_vars.only_count = 1;
     else if (!strcmp(argv[curr_arg],"-only_won"))
       local_vars.bOnlyWon = true;
