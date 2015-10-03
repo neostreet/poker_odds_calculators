@@ -41,7 +41,7 @@ static char usage[] =
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_gevalue) (-sum_by_table_count)\n"
 "  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
-"  (-counterfeit) (-num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
+"  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
 "  (-small_blind) (-big_blind) (-small_or_big_blind) (-no_blind)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
@@ -125,6 +125,15 @@ static bool deuce_or_trey_off(char *hole_cards);
 static HandType get_winning_hand_typ_id(char *line,int line_len);
 static void run_filter(struct vars *varspt);
 
+enum quantum_typ {
+  QUANTUM_TYPE_DELTA,
+  QUANTUM_TYPE_COLLECTED,
+  QUANTUM_TYPE_SPENT,
+  QUANTUM_TYPE_OPM,
+  QUANTUM_TYPE_NUMDECISIONS,
+  QUANTUM_TYPE_WAGERED
+};
+
 struct vars {
   bool bTerse;
   bool bVerbose;
@@ -163,9 +172,11 @@ struct vars {
   bool bDidntHitFelt;
   bool bNoUncalled;
   bool bNoCollected;
-  bool bShowCollected;
-  bool bShowSpent;
-  bool bShowOpm;
+  int show_collected;
+  int show_spent;
+  int show_opm;
+  int show_num_decisions;
+  int show_wagered;
   bool bOnlyWash;
   bool bNoDelta;
   bool bHoleCardsUsed;
@@ -183,7 +194,6 @@ struct vars {
   bool bShowHandCount;
   bool bBottomTwo;
   bool bCounterfeit;
-  bool bNumDecisions;
   bool bWonSidePot;
   bool bWonMainPot;
   bool bLastHandOnly;
@@ -205,7 +215,6 @@ struct vars {
   bool bShowRiver;
   bool bHandTypIdGeSpecified;
   bool bBadRiverMoney;
-  bool bShowWagered;
   bool bUberflush;
   bool bDeltaGe;
   int delta_ge_val;
@@ -250,6 +259,7 @@ struct vars {
   PokerHand poker_hand;
   int table_count;
   int table_count_to_match;
+  int starting_balance;
   int ending_balance;
   int uncalled_bet_amount;
   int collected_from_pot;
@@ -279,6 +289,8 @@ struct vars {
   int count_by_table_count[MAX_TABLE_COUNT - 1];
   char board_cards[15];
   char *date_string;
+  quantum_typ quantum_type;
+  int quantum;
 };
 
 int main(int argc,char **argv)
@@ -304,7 +316,6 @@ int main(int argc,char **argv)
   int street;
   int num_street_markers;
   int max_streets;
-  int starting_balance;
   int ante;
   int bring_in;
   int spent_this_street;
@@ -372,9 +383,12 @@ int main(int argc,char **argv)
   local_vars.bDidntHitFelt = false;
   local_vars.bNoUncalled = false;
   local_vars.bNoCollected = false;
-  local_vars.bShowCollected = false;
-  local_vars.bShowSpent = false;
-  local_vars.bShowOpm = false;
+  local_vars.quantum_type = QUANTUM_TYPE_DELTA;
+  local_vars.show_collected = 0;
+  local_vars.show_spent = 0;
+  local_vars.show_opm = 0;
+  local_vars.show_num_decisions = 0;
+  local_vars.show_wagered = 0;
   local_vars.bOnlyWash = false;
   local_vars.sum_delta = 0;
   local_vars.sum_abs_delta = 0;
@@ -400,7 +414,6 @@ int main(int argc,char **argv)
   local_vars.bShowHandCount = false;
   local_vars.bBottomTwo = false;
   local_vars.bCounterfeit = false;
-  local_vars.bNumDecisions = false;
   local_vars.bWonSidePot = false;
   local_vars.bWonMainPot = false;
   local_vars.bLastHandOnly = false;
@@ -423,7 +436,6 @@ int main(int argc,char **argv)
   local_vars.bShowRiver = false;
   local_vars.bHandTypIdGeSpecified = false;
   local_vars.bBadRiverMoney = false;
-  local_vars.bShowWagered = false;
   local_vars.bUberflush = false;
   local_vars.bDeltaGe = false;
   local_vars.bTableBoss = false;
@@ -524,12 +536,26 @@ int main(int argc,char **argv)
       local_vars.bNoUncalled = true;
     else if (!strcmp(argv[curr_arg],"-no_collected"))
       local_vars.bNoCollected = true;
-    else if (!strcmp(argv[curr_arg],"-show_collected"))
-      local_vars.bShowCollected = true;
-    else if (!strcmp(argv[curr_arg],"-show_spent"))
-      local_vars.bShowSpent = true;
-    else if (!strcmp(argv[curr_arg],"-show_opm"))
-      local_vars.bShowOpm = true;
+    else if (!strcmp(argv[curr_arg],"-show_collected")) {
+      local_vars.show_collected = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_COLLECTED;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_spent")) {
+      local_vars.show_spent = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_SPENT;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_opm")) {
+      local_vars.show_opm = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_OPM;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_num_decisions")) {
+      local_vars.show_num_decisions = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_NUMDECISIONS;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_wagered")) {
+      local_vars.show_wagered = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_WAGERED;
+    }
     else if (!strcmp(argv[curr_arg],"-only_wash"))
       local_vars.bOnlyWash = true;
     else if (!strcmp(argv[curr_arg],"-sum_delta"))
@@ -586,8 +612,6 @@ int main(int argc,char **argv)
       local_vars.bCounterfeit = true;
       local_vars.bSawRiver = true;
     }
-    else if (!strcmp(argv[curr_arg],"-num_decisions"))
-      local_vars.bNumDecisions = true;
     else if (!strcmp(argv[curr_arg],"-won_side_pot"))
       local_vars.bWonSidePot = true;
     else if (!strcmp(argv[curr_arg],"-won_main_pot"))
@@ -634,8 +658,6 @@ int main(int argc,char **argv)
       local_vars.bShowRiver = true;
     else if (!strcmp(argv[curr_arg],"-bad_river_money"))
       local_vars.bBadRiverMoney = true;
-    else if (!strcmp(argv[curr_arg],"-show_wagered"))
-      local_vars.bShowWagered = true;
     else if (!strcmp(argv[curr_arg],"-uberflush"))
       local_vars.bUberflush = true;
     else if (!strncmp(argv[curr_arg],"-delta_ge",9)) {
@@ -792,8 +814,10 @@ int main(int argc,char **argv)
     return 25;
   }
 
-  if (local_vars.bShowCollected && local_vars.bShowOpm) {
-    printf("can't specify both -show_collected and -show_opm\n");
+  if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
+    local_vars.show_num_decisions + local_vars.show_wagered > 1) {
+    printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
+      "  show_num_decisions, show_wagered\n");
     return 26;
   }
 
@@ -833,109 +857,94 @@ int main(int argc,char **argv)
     local_vars.bSawFlop = true;
   }
 
-  if (local_vars.bShowCollected && local_vars.bShowSpent) {
-    printf("can't specify both -show_collected and -show_spent\n");
-    return 31;
-  }
-
-  if (local_vars.bShowCollected && local_vars.bShowWagered) {
-    printf("can't specify both -show_collected and -show_wagered\n");
-    return 32;
-  }
-
-  if (local_vars.bShowSpent && local_vars.bShowWagered) {
-    printf("can't specify both -show_spent and -show_wagered\n");
-    return 33;
-  }
-
   if (local_vars.bHitFelt && local_vars.bDidntHitFelt) {
     printf("can't specify both -hit_felt and -didnt_hit_felt\n");
-    return 34;
+    return 31;
   }
 
   if (local_vars.bVeryBestHand && local_vars.bFlopped) {
     printf("can't specify both -very_best_hand and -flopped\n");
-    return 35;
+    return 32;
   }
 
   if (local_vars.bHandTypeSpecified && local_vars.bHandTypIdSpecified) {
     printf("can't specify both -hand_typehand_type and -hand_typ_idid\n");
-    return 36;
+    return 33;
   }
 
   if (local_vars.bShowHandType && local_vars.bShowHandTypId) {
     printf("can't specify both -show_hand_type and -show_hand_typ_id\n");
-    return 37;
+    return 34;
   }
 
   if (local_vars.bSawFlop && local_vars.bDidntSeeFlop) {
     printf("can't specify both -saw_flop and -didnt_see_flop\n");
-    return 38;
+    return 35;
   }
 
   if (local_vars.bOnlyWinningSession && local_vars.bOnlyLosingSession) {
     printf("can't specify both -only_winning_session and -only_losing_session\n");
-    return 39;
+    return 36;
   }
 
   if (local_vars.bSumByTableCount && local_vars.bShowTableName) {
     printf("can't specify both -sum_by_table_count and -show_table_name\n");
-    return 40;
+    return 37;
   }
 
   if (local_vars.bSumByTableCount && local_vars.bShowTableCount) {
     printf("can't specify both -sum_by_table_count and -show_table_count\n");
-    return 41;
+    return 38;
   }
 
   if (local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind + local_vars.no_blind > 1) {
     printf("can only specify one of -local_vars.small_blind, -big_blind, -local_vars.small_or_big_blind, and -local_vars.no_blind\n");
-    return 42;
+    return 39;
   }
 
   if (local_vars.bHandSpecified && local_vars.bDeuceOrTreyOff) {
     printf("can't specify both -handhand and -deuce_or_trey_off\n");
-    return 43;
+    return 40;
   }
 
   if (local_vars.bVoluntaryBet && local_vars.bNoVoluntaryBet) {
     printf("can't specify both -voluntary_bet and -no_voluntary_bet\n");
-    return 44;
+    return 41;
   }
 
   if (local_vars.bShowBoard && local_vars.bShowRiver) {
     printf("can't specify both -show_board and -show_river\n");
-    return 45;
+    return 42;
   }
 
   if (local_vars.bHandTypIdSpecified && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -hand_typ_idid and -hand_typ_id_geid\n");
-    return 46;
+    return 43;
   }
 
   if (local_vars.bStealthTwoPair && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -stealth_two_pair and -hand_typ_id_geid\n");
-    return 47;
+    return 44;
   }
 
   if (local_vars.bBottomTwo && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -bottom_two and -hand_typ_id_geid\n");
-    return 48;
+    return 45;
   }
 
   if (local_vars.bHandTypeSpecified && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -hand_typehand_type and -hand_typ_id_geid\n");
-    return 49;
+    return 46;
   }
 
   if (local_vars.bAllIn && local_vars.bAllInPostflop) {
     printf("can't specify both -all_in and -all_in_postflop\n");
-    return 50;
+    return 47;
   }
 
   if (local_vars.bAllInPreflop && local_vars.bAllInPostflop) {
     printf("can't specify both -all_in_preflop and -all_in_postflop\n");
-    return 51;
+    return 48;
   }
 
   player_name_ix = curr_arg++;
@@ -944,7 +953,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 52;
+    return 49;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -1040,7 +1049,7 @@ int main(int argc,char **argv)
     if (local_vars.bWonMainPot)
       local_vars.bHaveWonMainPot = false;
 
-    if (local_vars.bNumDecisions)
+    if (local_vars.show_num_decisions)
       local_vars.numdecs = 0;
 
     for ( ; ; ) {
@@ -1174,7 +1183,7 @@ int main(int argc,char **argv)
                 &ix)) {
 
                 my_seat_ix = local_vars.table_count - 1;
-                starting_balance = curr_stack;
+                local_vars.starting_balance = curr_stack;
                 local_vars.num_hands++;
                 local_vars.bFolded = false;
                 local_vars.bSkipping = false;
@@ -1204,7 +1213,7 @@ int main(int argc,char **argv)
                 if (local_vars.bWonMainPot)
                   local_vars.bHaveWonMainPot = false;
 
-                if (local_vars.bNumDecisions)
+                if (local_vars.show_num_decisions)
                   local_vars.numdecs = 0;
 
                 street = 0;
@@ -1218,7 +1227,7 @@ int main(int argc,char **argv)
                 local_vars.collected_from_pot_count = 0;
 
                 if (local_vars.bDebug)
-                  printf("line %d starting_balance = %d\n",line_no,starting_balance);
+                  printf("line %d starting_balance = %d\n",line_no,local_vars.starting_balance);
               }
             }
           }
@@ -1266,7 +1275,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 53;
+          return 50;
         }
 
         continue;
@@ -1345,7 +1354,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 54;
+                    return 51;
                   }
                 }
               }
@@ -1476,19 +1485,41 @@ int main(int argc,char **argv)
 
           local_vars.bFolded = true;
 
-          local_vars.ending_balance = starting_balance - local_vars.spent_this_hand + local_vars.collected_from_pot;
+          local_vars.ending_balance = local_vars.starting_balance - local_vars.spent_this_hand + local_vars.collected_from_pot;
 
           if (local_vars.bSummarizing && !local_vars.ending_balance)
             hit_felt_in_session_count++;
 
-          local_vars.delta = local_vars.ending_balance - starting_balance;
+          local_vars.delta = local_vars.ending_balance - local_vars.starting_balance;
           local_vars.wagered_amount = local_vars.spent_this_hand + local_vars.uncalled_bet_amount;
 
-          if (local_vars.bShowOpm)
-            local_vars.dwork = (double)0;
+          switch(local_vars.quantum_type) {
+            case QUANTUM_TYPE_DELTA:
+              local_vars.quantum = local_vars.delta;
 
-          if (local_vars.bNumDecisions)
-            local_vars.numdecs++;
+              break;
+            case QUANTUM_TYPE_COLLECTED:
+              local_vars.quantum = local_vars.collected_from_pot;
+
+              break;
+            case QUANTUM_TYPE_SPENT:
+              local_vars.quantum = local_vars.spent_this_hand;
+
+              break;
+            case QUANTUM_TYPE_OPM:
+              local_vars.dwork = (double)0;
+
+              break;
+            case QUANTUM_TYPE_NUMDECISIONS:
+              local_vars.numdecs++;
+              local_vars.quantum = local_vars.numdecs;
+
+              break;
+            case QUANTUM_TYPE_WAGERED:
+              local_vars.quantum = local_vars.wagered_amount;
+
+              break;
+          }
 
           continue;
         }
@@ -1507,7 +1538,7 @@ int main(int argc,char **argv)
               line_no,street,local_vars.work,spent_this_street);
           }
 
-          if (local_vars.bNumDecisions)
+          if (local_vars.show_num_decisions)
             local_vars.numdecs++;
 
           local_vars.bHaveVoluntaryBet = true;
@@ -1527,7 +1558,7 @@ int main(int argc,char **argv)
               line_no,street,local_vars.work,spent_this_street);
           }
 
-          if (local_vars.bNumDecisions)
+          if (local_vars.show_num_decisions)
             local_vars.numdecs++;
 
           local_vars.bHaveVoluntaryBet = true;
@@ -1547,7 +1578,7 @@ int main(int argc,char **argv)
               line_no,street,local_vars.work,spent_this_street);
           }
 
-          if (local_vars.bNumDecisions)
+          if (local_vars.show_num_decisions)
             local_vars.numdecs++;
 
           local_vars.bHaveVoluntaryBet = true;
@@ -1557,7 +1588,7 @@ int main(int argc,char **argv)
           checks,CHECKS_LEN,
           &ix)) {
 
-          if (local_vars.bNumDecisions)
+          if (local_vars.show_num_decisions)
             local_vars.numdecs++;
         }
         else if ((local_vars.bStud || local_vars.bRazz) && Contains(true,
@@ -1618,7 +1649,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 55;
+              return 52;
             }
           }
 
@@ -1649,7 +1680,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 56;
+            return 53;
           }
 
           if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -1682,7 +1713,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 57;
+              return 54;
             }
 
             if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -1730,15 +1761,15 @@ int main(int argc,char **argv)
           local_vars.bSkipping = true;
 
           if (!local_vars.bFolded) {
-            local_vars.ending_balance = starting_balance - local_vars.spent_this_hand + local_vars.collected_from_pot;
+            local_vars.ending_balance = local_vars.starting_balance - local_vars.spent_this_hand + local_vars.collected_from_pot;
 
             if (local_vars.bSummarizing && !local_vars.ending_balance)
               hit_felt_in_session_count++;
 
-            local_vars.delta = local_vars.ending_balance - starting_balance;
+            local_vars.delta = local_vars.ending_balance - local_vars.starting_balance;
             local_vars.wagered_amount = local_vars.spent_this_hand + local_vars.uncalled_bet_amount;
 
-            if (local_vars.bShowOpm) {
+            if (local_vars.quantum_type == QUANTUM_TYPE_OPM) {
               if (local_vars.collected_from_pot && (local_vars.delta > 0))
                 local_vars.dwork = (double)local_vars.delta / (double)local_vars.collected_from_pot;
               else
@@ -2203,18 +2234,10 @@ void run_filter(struct vars *varspt)
                                                                                                     if (!varspt->bTableBoss || varspt->bAmTableBoss) {
                                                                                                       if (varspt->bTerse) {
                                                                                                         if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
-                                                                                                          if (varspt->bShowCollected)
-                                                                                                            printf("%d\n",varspt->collected_from_pot);
-                                                                                                          else if (varspt->bShowSpent)
-                                                                                                            printf("%d\n",varspt->spent_this_hand);
-                                                                                                          else if (varspt->bShowOpm)
+                                                                                                          if (varspt->quantum_type == QUANTUM_TYPE_OPM)
                                                                                                             printf("%lf\n",varspt->dwork);
-                                                                                                          else if (varspt->bNumDecisions)
-                                                                                                            printf("%d\n",varspt->numdecs);
-                                                                                                          else if (varspt->bShowWagered)
-                                                                                                            printf("%d\n",varspt->wagered_amount);
                                                                                                           else
-                                                                                                            printf("%d\n",varspt->delta);
+                                                                                                            printf("%d\n",varspt->quantum);
                                                                                                         }
                                                                                                         else if (!varspt->bSumByTableCount) {
                                                                                                           varspt->total_delta += varspt->delta;
@@ -2228,16 +2251,28 @@ void run_filter(struct vars *varspt)
                                                                                                           else if (varspt->only_count)
                                                                                                             varspt->summary_val++;
                                                                                                           else if (varspt->sum_delta) {
-                                                                                                            if (varspt->bShowCollected)
-                                                                                                              varspt->summary_val += varspt->collected_from_pot;
-                                                                                                            else if (varspt->bShowSpent)
-                                                                                                              varspt->summary_val += varspt->spent_this_hand;
-                                                                                                            else if (varspt->bShowWagered)
-                                                                                                              varspt->summary_val += varspt->wagered_amount;
-                                                                                                            else if (varspt->bNumDecisions)
-                                                                                                              varspt->summary_val += varspt->numdecs;
-                                                                                                            else
-                                                                                                              varspt->summary_val += varspt->delta;
+                                                                                                            switch(varspt->quantum_type) {
+                                                                                                              case QUANTUM_TYPE_DELTA:
+                                                                                                                varspt->summary_val += varspt->delta;
+
+                                                                                                                break;
+                                                                                                              case QUANTUM_TYPE_COLLECTED:
+                                                                                                                varspt->summary_val += varspt->collected_from_pot;
+
+                                                                                                                break;
+                                                                                                              case QUANTUM_TYPE_SPENT:
+                                                                                                                varspt->summary_val += varspt->spent_this_hand;
+
+                                                                                                                break;
+                                                                                                              case QUANTUM_TYPE_NUMDECISIONS:
+                                                                                                                varspt->summary_val += varspt->numdecs;
+
+                                                                                                                break;
+                                                                                                              case QUANTUM_TYPE_WAGERED:
+                                                                                                                varspt->summary_val += varspt->wagered_amount;
+
+                                                                                                                break;
+                                                                                                            }
                                                                                                           }
                                                                                                           else if (varspt->sum_abs_delta) {
                                                                                                             if (varspt->delta > 0)
@@ -2282,35 +2317,47 @@ void run_filter(struct vars *varspt)
                                                                                                         }
                                                                                                       }
                                                                                                       else {
-                                                                                                        if (varspt->bShowCollected)
-                                                                                                          printf("%10d %s",varspt->collected_from_pot,varspt->hole_cards);
-                                                                                                        else if (varspt->bShowSpent)
-                                                                                                          printf("%10d %s",varspt->spent_this_hand,varspt->hole_cards);
-                                                                                                        else if (varspt->bShowOpm) {
-                                                                                                          printf("%6.4lf (%10d %10d) %s",varspt->dwork,
-                                                                                                            varspt->delta,varspt->collected_from_pot,varspt->hole_cards);
-                                                                                                        }
-                                                                                                        else if (varspt->bNumDecisions)
-                                                                                                          printf("%10d %s",varspt->numdecs,varspt->hole_cards);
-                                                                                                        else if (varspt->bShowWagered)
-                                                                                                          printf("%10d %s",varspt->wagered_amount,varspt->hole_cards);
-                                                                                                        else  {
-                                                                                                          if (!varspt->bNoDelta) {
-                                                                                                            if (!varspt->bHoleCardsUsed) {
-                                                                                                              if (!varspt->bNoHoleCards)
-                                                                                                                printf("%10d %s",varspt->delta,varspt->hole_cards);
-                                                                                                              else
-                                                                                                                printf("%10d",varspt->delta);
+                                                                                                        switch(varspt->quantum_type) {
+                                                                                                          case QUANTUM_TYPE_DELTA:
+                                                                                                            if (!varspt->bNoDelta) {
+                                                                                                              if (!varspt->bHoleCardsUsed) {
+                                                                                                                if (!varspt->bNoHoleCards)
+                                                                                                                  printf("%10d %s",varspt->delta,varspt->hole_cards);
+                                                                                                                else
+                                                                                                                  printf("%10d",varspt->delta);
+                                                                                                              }
+                                                                                                              else {
+                                                                                                                if (!varspt->bNoHoleCards)
+                                                                                                                  printf("%10d %s (%d)",varspt->delta,varspt->hole_cards,varspt->hole_cards_used);
+                                                                                                                else
+                                                                                                                  printf("%10d (%d)",varspt->delta,varspt->hole_cards_used);
+                                                                                                              }
                                                                                                             }
-                                                                                                            else {
-                                                                                                              if (!varspt->bNoHoleCards)
-                                                                                                                printf("%10d %s (%d)",varspt->delta,varspt->hole_cards,varspt->hole_cards_used);
-                                                                                                              else
-                                                                                                                printf("%10d (%d)",varspt->delta,varspt->hole_cards_used);
-                                                                                                            }
-                                                                                                          }
-                                                                                                          else if (!varspt->bNoHoleCards)
-                                                                                                            printf("%s",varspt->hole_cards);
+                                                                                                            else if (!varspt->bNoHoleCards)
+                                                                                                              printf("%s",varspt->hole_cards);
+
+                                                                                                            break;
+                                                                                                          case QUANTUM_TYPE_COLLECTED:
+                                                                                                            printf("%10d %s",varspt->collected_from_pot,varspt->hole_cards);
+
+                                                                                                            break;
+                                                                                                          case QUANTUM_TYPE_SPENT:
+                                                                                                            printf("%10d %s",varspt->spent_this_hand,varspt->hole_cards);
+
+                                                                                                            break;
+                                                                                                          case QUANTUM_TYPE_OPM:
+                                                                                                            printf("%6.4lf (%10d %10d) %s",varspt->dwork,
+                                                                                                              varspt->delta,varspt->collected_from_pot,varspt->hole_cards);
+
+                                                                                                            break;
+                                                                                                          case QUANTUM_TYPE_NUMDECISIONS:
+                                                                                                            printf("%10d %s",varspt->numdecs,varspt->hole_cards);
+
+                                                                                                            break;
+                                                                                                          case QUANTUM_TYPE_WAGERED:
+                                                                                                            printf("%10d %s",varspt->wagered_amount,varspt->hole_cards);
+
+                                                                                                            break;
                                                                                                         }
 
                                                                                                         if (varspt->bShowBoard && varspt->bHaveFlop2)
