@@ -32,7 +32,7 @@ static char usage[] =
 "  (-all_in_preflop) (-all_in_postflop)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_spent) (-show_opm) (-only_wash)\n"
-"  (-sum_delta) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
+"  (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
@@ -48,7 +48,7 @@ static char usage[] =
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
 "  (-winning_hand_typehand_type (-delta_gevalue)\n"
-"  (-table_boss) player_name filename\n";
+"  (-table_boss) (-show_table_boss) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -124,6 +124,7 @@ static int get_num_hands_in_file(FILE *fptr,char *player_name,int player_name_le
 static bool deuce_or_trey_off(char *hole_cards);
 static HandType get_winning_hand_typ_id(char *line,int line_len);
 static void run_filter(struct vars *varspt);
+static void do_balance_processing(struct vars *varspt);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -131,7 +132,8 @@ enum quantum_typ {
   QUANTUM_TYPE_SPENT,
   QUANTUM_TYPE_OPM,
   QUANTUM_TYPE_NUMDECISIONS,
-  QUANTUM_TYPE_WAGERED
+  QUANTUM_TYPE_WAGERED,
+  QUANTUM_TYPE_TABLE_BOSS
 };
 
 struct vars {
@@ -177,6 +179,7 @@ struct vars {
   int show_opm;
   int show_num_decisions;
   int show_wagered;
+  int show_table_boss;
   bool bOnlyWash;
   bool bNoDelta;
   bool bHoleCardsUsed;
@@ -219,7 +222,7 @@ struct vars {
   bool bDeltaGe;
   int delta_ge_val;
   bool bTableBoss;
-  bool bAmTableBoss;
+  int am_table_boss;
   int no_blind;
   int collected_ge_val;
   bool bStud;
@@ -276,7 +279,7 @@ struct vars {
   int winning_percentage;
   int summary_val;
   int summary_val2;
-  int sum_delta;
+  int sum_quantum;
   double dwork;
   int sum_abs_delta;
   int max_delta;
@@ -291,6 +294,7 @@ struct vars {
   char *date_string;
   quantum_typ quantum_type;
   int quantum;
+  int hit_felt_in_session_count;
 };
 
 int main(int argc,char **argv)
@@ -330,7 +334,6 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   char card_string[2];
   int retval;
-  int hit_felt_in_session_count;
   int *poker_hand_cards;
   bool bFirstFile;
   bool bFirstHand;
@@ -339,7 +342,7 @@ int main(int argc,char **argv)
   int boss_seat_ix;
   int my_seat_ix;
 
-  if ((argc < 3) || (argc > 92)) {
+  if ((argc < 3) || (argc > 93)) {
     printf(usage);
     return 1;
   }
@@ -389,8 +392,9 @@ int main(int argc,char **argv)
   local_vars.show_opm = 0;
   local_vars.show_num_decisions = 0;
   local_vars.show_wagered = 0;
+  local_vars.show_table_boss = 0;
   local_vars.bOnlyWash = false;
-  local_vars.sum_delta = 0;
+  local_vars.sum_quantum = 0;
   local_vars.sum_abs_delta = 0;
   local_vars.max_delta = 0;
   local_vars.min_delta = 0;
@@ -556,10 +560,14 @@ int main(int argc,char **argv)
       local_vars.show_wagered = 1;
       local_vars.quantum_type = QUANTUM_TYPE_WAGERED;
     }
+    else if (!strcmp(argv[curr_arg],"-show_table_boss")) {
+      local_vars.show_table_boss = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_TABLE_BOSS;
+    }
     else if (!strcmp(argv[curr_arg],"-only_wash"))
       local_vars.bOnlyWash = true;
-    else if (!strcmp(argv[curr_arg],"-sum_delta"))
-      local_vars.sum_delta = 1;
+    else if (!strcmp(argv[curr_arg],"-sum_quantum"))
+      local_vars.sum_quantum = 1;
     else if (!strcmp(argv[curr_arg],"-sum_abs_delta"))
       local_vars.sum_abs_delta = 1;
     else if (!strcmp(argv[curr_arg],"-max_delta"))
@@ -815,9 +823,9 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
-    local_vars.show_num_decisions + local_vars.show_wagered > 1) {
+    local_vars.show_num_decisions + local_vars.show_wagered + local_vars.show_table_boss > 1) {
     printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
-      "  show_num_decisions, show_wagered\n");
+      "  show_num_decisions, show_wagered, and show_table_boss\n");
     return 26;
   }
 
@@ -831,14 +839,14 @@ int main(int argc,char **argv)
     return 28;
   }
 
-  if (local_vars.only_count + local_vars.sum_delta + local_vars.sum_abs_delta + local_vars.max_delta + local_vars.min_delta +
+  if (local_vars.only_count + local_vars.sum_quantum + local_vars.sum_abs_delta + local_vars.max_delta + local_vars.min_delta +
     local_vars.max_abs_delta + local_vars.max_collected + local_vars.max_delta_hand_type +
     local_vars.winning_percentage > 1) {
-    printf("can only specify one of -local_vars.only_count, -sum_delta, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, -max_delta_hand_type, and -winning_percentage\n");
+    printf("can only specify one of -only_count, -sum_quantum, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, -max_delta_hand_type, and -winning_percentage\n");
     return 29;
   }
 
-  if ((local_vars.only_count) || (local_vars.sum_delta) || (local_vars.sum_abs_delta) || (local_vars.max_delta) ||
+  if ((local_vars.only_count) || (local_vars.sum_quantum) || (local_vars.sum_abs_delta) || (local_vars.max_delta) ||
       (local_vars.min_delta) || (local_vars.max_abs_delta) || (local_vars.max_collected) ||
       (local_vars.max_delta_hand_type) || (local_vars.winning_percentage)) {
     local_vars.bTerse = true;
@@ -1000,7 +1008,7 @@ int main(int argc,char **argv)
 
     if (local_vars.bSummarizing) {
       local_vars.total_delta = 0;
-      hit_felt_in_session_count = 0;
+      local_vars.hit_felt_in_session_count = 0;
       local_vars.summary_val = 0;
       local_vars.summary_val2 = 0;
     }
@@ -1060,7 +1068,7 @@ int main(int argc,char **argv)
           if (!local_vars.bSkipZero || local_vars.summary_val) {
             if (!local_vars.bOnlyWinningSession || (local_vars.total_delta > 0)) {
               if (!local_vars.bOnlyLosingSession || (local_vars.total_delta < 0)) {
-                if (!local_vars.bNeverHitFeltInSession || (!hit_felt_in_session_count)) {
+                if (!local_vars.bNeverHitFeltInSession || (!local_vars.hit_felt_in_session_count)) {
                   if (!local_vars.max_delta_hand_type) {
                     if (!local_vars.bShowHandCount)
                       printf("%d\t%s\n",local_vars.summary_val,local_vars.date_string);
@@ -1138,7 +1146,7 @@ int main(int argc,char **argv)
 
         local_vars.table_count = 0;
         boss_stack = 0;
-        local_vars.bAmTableBoss = false;
+        local_vars.am_table_boss = 0;
 
         for ( ; ; ) {
           GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -1152,7 +1160,7 @@ int main(int argc,char **argv)
             num_street_markers++;
 
             if (my_seat_ix == boss_seat_ix)
-              local_vars.bAmTableBoss = true;
+              local_vars.am_table_boss = 1;
 
             break;
           }
@@ -1485,41 +1493,7 @@ int main(int argc,char **argv)
 
           local_vars.bFolded = true;
 
-          local_vars.ending_balance = local_vars.starting_balance - local_vars.spent_this_hand + local_vars.collected_from_pot;
-
-          if (local_vars.bSummarizing && !local_vars.ending_balance)
-            hit_felt_in_session_count++;
-
-          local_vars.delta = local_vars.ending_balance - local_vars.starting_balance;
-          local_vars.wagered_amount = local_vars.spent_this_hand + local_vars.uncalled_bet_amount;
-
-          switch(local_vars.quantum_type) {
-            case QUANTUM_TYPE_DELTA:
-              local_vars.quantum = local_vars.delta;
-
-              break;
-            case QUANTUM_TYPE_COLLECTED:
-              local_vars.quantum = local_vars.collected_from_pot;
-
-              break;
-            case QUANTUM_TYPE_SPENT:
-              local_vars.quantum = local_vars.spent_this_hand;
-
-              break;
-            case QUANTUM_TYPE_OPM:
-              local_vars.dwork = (double)0;
-
-              break;
-            case QUANTUM_TYPE_NUMDECISIONS:
-              local_vars.numdecs++;
-              local_vars.quantum = local_vars.numdecs;
-
-              break;
-            case QUANTUM_TYPE_WAGERED:
-              local_vars.quantum = local_vars.wagered_amount;
-
-              break;
-          }
+          do_balance_processing(&local_vars);
 
           continue;
         }
@@ -1760,22 +1734,8 @@ int main(int argc,char **argv)
 
           local_vars.bSkipping = true;
 
-          if (!local_vars.bFolded) {
-            local_vars.ending_balance = local_vars.starting_balance - local_vars.spent_this_hand + local_vars.collected_from_pot;
-
-            if (local_vars.bSummarizing && !local_vars.ending_balance)
-              hit_felt_in_session_count++;
-
-            local_vars.delta = local_vars.ending_balance - local_vars.starting_balance;
-            local_vars.wagered_amount = local_vars.spent_this_hand + local_vars.uncalled_bet_amount;
-
-            if (local_vars.quantum_type == QUANTUM_TYPE_OPM) {
-              if (local_vars.collected_from_pot && (local_vars.delta > 0))
-                local_vars.dwork = (double)local_vars.delta / (double)local_vars.collected_from_pot;
-              else
-                local_vars.dwork = (double)0;
-            }
-          }
+          if (!local_vars.bFolded)
+            do_balance_processing(&local_vars);
 
           if (local_vars.bRiverCardUsed) {
             local_vars.bHaveRiverCardUsed = false;
@@ -2231,7 +2191,7 @@ void run_filter(struct vars *varspt)
                                                                                               if (!varspt->bBothHoleCardsUsed || varspt->bHaveBothHoleCardsUsed) {
                                                                                                 if (!varspt->bHandTypIdGeSpecified || (varspt->poker_hand.GetHandType() >= varspt->hand_typ_id_ge)) {
                                                                                                   if (!varspt->bBadRiverMoney || varspt->bHaveBadRiverMoney) {
-                                                                                                    if (!varspt->bTableBoss || varspt->bAmTableBoss) {
+                                                                                                    if (!varspt->bTableBoss || varspt->am_table_boss) {
                                                                                                       if (varspt->bTerse) {
                                                                                                         if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
                                                                                                           if (varspt->quantum_type == QUANTUM_TYPE_OPM)
@@ -2240,7 +2200,7 @@ void run_filter(struct vars *varspt)
                                                                                                             printf("%d\n",varspt->quantum);
                                                                                                         }
                                                                                                         else if (!varspt->bSumByTableCount) {
-                                                                                                          varspt->total_delta += varspt->delta;
+                                                                                                          varspt->total_delta += varspt->quantum;
 
                                                                                                           if (varspt->winning_percentage) {
                                                                                                             varspt->summary_val++;
@@ -2250,30 +2210,8 @@ void run_filter(struct vars *varspt)
                                                                                                           }
                                                                                                           else if (varspt->only_count)
                                                                                                             varspt->summary_val++;
-                                                                                                          else if (varspt->sum_delta) {
-                                                                                                            switch(varspt->quantum_type) {
-                                                                                                              case QUANTUM_TYPE_DELTA:
-                                                                                                                varspt->summary_val += varspt->delta;
-
-                                                                                                                break;
-                                                                                                              case QUANTUM_TYPE_COLLECTED:
-                                                                                                                varspt->summary_val += varspt->collected_from_pot;
-
-                                                                                                                break;
-                                                                                                              case QUANTUM_TYPE_SPENT:
-                                                                                                                varspt->summary_val += varspt->spent_this_hand;
-
-                                                                                                                break;
-                                                                                                              case QUANTUM_TYPE_NUMDECISIONS:
-                                                                                                                varspt->summary_val += varspt->numdecs;
-
-                                                                                                                break;
-                                                                                                              case QUANTUM_TYPE_WAGERED:
-                                                                                                                varspt->summary_val += varspt->wagered_amount;
-
-                                                                                                                break;
-                                                                                                            }
-                                                                                                          }
+                                                                                                          else if (varspt->sum_quantum)
+                                                                                                            varspt->summary_val += varspt->quantum;
                                                                                                           else if (varspt->sum_abs_delta) {
                                                                                                             if (varspt->delta > 0)
                                                                                                               varspt->summary_val += varspt->delta;
@@ -2337,25 +2275,17 @@ void run_filter(struct vars *varspt)
                                                                                                               printf("%s",varspt->hole_cards);
 
                                                                                                             break;
-                                                                                                          case QUANTUM_TYPE_COLLECTED:
-                                                                                                            printf("%10d %s",varspt->collected_from_pot,varspt->hole_cards);
-
-                                                                                                            break;
-                                                                                                          case QUANTUM_TYPE_SPENT:
-                                                                                                            printf("%10d %s",varspt->spent_this_hand,varspt->hole_cards);
-
-                                                                                                            break;
                                                                                                           case QUANTUM_TYPE_OPM:
                                                                                                             printf("%6.4lf (%10d %10d) %s",varspt->dwork,
                                                                                                               varspt->delta,varspt->collected_from_pot,varspt->hole_cards);
 
                                                                                                             break;
+                                                                                                          case QUANTUM_TYPE_COLLECTED:
+                                                                                                          case QUANTUM_TYPE_SPENT:
                                                                                                           case QUANTUM_TYPE_NUMDECISIONS:
-                                                                                                            printf("%10d %s",varspt->numdecs,varspt->hole_cards);
-
-                                                                                                            break;
                                                                                                           case QUANTUM_TYPE_WAGERED:
-                                                                                                            printf("%10d %s",varspt->wagered_amount,varspt->hole_cards);
+                                                                                                          case QUANTUM_TYPE_TABLE_BOSS:
+                                                                                                            printf("%10d %s",varspt->quantum,varspt->hole_cards);
 
                                                                                                             break;
                                                                                                         }
@@ -2439,5 +2369,48 @@ void run_filter(struct vars *varspt)
         }
       }
     }
+  }
+}
+
+static void do_balance_processing(struct vars *varspt)
+{
+  varspt->ending_balance = varspt->starting_balance - varspt->spent_this_hand + varspt->collected_from_pot;
+
+  if (varspt->bSummarizing && !varspt->ending_balance)
+    varspt->hit_felt_in_session_count++;
+
+  varspt->delta = varspt->ending_balance - varspt->starting_balance;
+  varspt->wagered_amount = varspt->spent_this_hand + varspt->uncalled_bet_amount;
+
+  switch(varspt->quantum_type) {
+    case QUANTUM_TYPE_DELTA:
+      varspt->quantum = varspt->delta;
+
+      break;
+    case QUANTUM_TYPE_COLLECTED:
+      varspt->quantum = varspt->collected_from_pot;
+
+      break;
+    case QUANTUM_TYPE_SPENT:
+      varspt->quantum = varspt->spent_this_hand;
+
+      break;
+    case QUANTUM_TYPE_OPM:
+      varspt->dwork = (double)0;
+
+      break;
+    case QUANTUM_TYPE_NUMDECISIONS:
+      varspt->numdecs++;
+      varspt->quantum = varspt->numdecs;
+
+      break;
+    case QUANTUM_TYPE_WAGERED:
+      varspt->quantum = varspt->wagered_amount;
+
+      break;
+    case QUANTUM_TYPE_TABLE_BOSS:
+      varspt->quantum = varspt->am_table_boss;
+
+      break;
   }
 }
