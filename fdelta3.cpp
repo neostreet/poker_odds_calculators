@@ -2194,10 +2194,18 @@ void run_filter(struct vars *varspt)
                                                                                                     if (!varspt->bTableBoss || varspt->am_table_boss) {
                                                                                                       if (varspt->bTerse) {
                                                                                                         if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
-                                                                                                          if (varspt->quantum_type == QUANTUM_TYPE_OPM)
-                                                                                                            printf("%lf\n",varspt->dwork);
-                                                                                                          else
-                                                                                                            printf("%d\n",varspt->quantum);
+                                                                                                          if (varspt->quantum_type == QUANTUM_TYPE_OPM) {
+                                                                                                            if (!varspt->bShowTableCount)
+                                                                                                              printf("%lf\n",varspt->dwork);
+                                                                                                            else
+                                                                                                              printf("%lf %d\n",varspt->dwork,varspt->table_count);
+                                                                                                          }
+                                                                                                          else {
+                                                                                                            if (!varspt->bShowTableCount)
+                                                                                                              printf("%d\n",varspt->quantum);
+                                                                                                            else
+                                                                                                              printf("%d %d\n",varspt->quantum,varspt->table_count);
+                                                                                                          }
                                                                                                         }
                                                                                                         else if (!varspt->bSumByTableCount) {
                                                                                                           varspt->total_delta += varspt->quantum;
