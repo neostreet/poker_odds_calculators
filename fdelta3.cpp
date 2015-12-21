@@ -1950,6 +1950,15 @@ static int get_date_from_path(char *path,char slash_char,int num_slashes,char **
 
   for (n = len - 1; (n >= 0); n--) {
     if (path[n] == slash_char) {
+      if ((n > 0) && (path[n-1] >= 'a') && (path[n-1] <= 'z'))
+        num_slashes++;
+
+      break;
+    }
+  }
+
+  for (n = len - 1; (n >= 0); n--) {
+    if (path[n] == slash_char) {
       slash_count++;
 
       if (slash_count == num_slashes)
