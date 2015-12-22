@@ -1937,21 +1937,25 @@ static void normalize_hole_cards(char *hole_cards)
   }
 }
 
-static char sql_date_string[11];
+static char sql_date_string[12];
 
 static int get_date_from_path(char *path,char slash_char,int num_slashes,char **date_string_ptr)
 {
   int n;
   int len;
   int slash_count;
+  bool bTournamentLetter;
 
   len = strlen(path);
   slash_count = 0;
+  bTournamentLetter = false;
 
   for (n = len - 1; (n >= 0); n--) {
     if (path[n] == slash_char) {
-      if ((n > 0) && (path[n-1] >= 'a') && (path[n-1] <= 'z'))
+      if ((n > 0) && (path[n-1] >= 'a') && (path[n-1] <= 'z')) {
         num_slashes++;
+        bTournamentLetter = true;
+      }
 
       break;
     }
@@ -1977,7 +1981,13 @@ static int get_date_from_path(char *path,char slash_char,int num_slashes,char **
   strncpy(&sql_date_string[5],&path[n+6],2);
   sql_date_string[7] = '-';
   strncpy(&sql_date_string[8],&path[n+8],2);
-  sql_date_string[10] = 0;
+
+  if (!bTournamentLetter)
+    sql_date_string[10] = 0;
+  else {
+    sql_date_string[10] = path[n+11];
+    sql_date_string[11] = 0;
+  }
 
   *date_string_ptr = sql_date_string;
 
