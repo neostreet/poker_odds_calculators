@@ -1319,7 +1319,9 @@ int main(int argc,char **argv)
             local_vars.bHaveAllInPostflop = true;
         }
 
-        if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
+        if (local_vars.bSkipping)
+          continue;
+        else if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
           for (n = 0; n < line_len; n++) {
             if (line[n] == '[')
               break;
@@ -2161,6 +2163,9 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
 
 void run_filter(struct vars *varspt)
 {
+  if (varspt->bSkipping)
+    return;
+
   if (varspt->bSummarizing || !varspt->bSkipZero || (varspt->delta != 0)) {
     if (!varspt->bOnlyZero || (varspt->delta == 0)) {
       if (!varspt->bSkipFolded || !varspt->bFolded) {
