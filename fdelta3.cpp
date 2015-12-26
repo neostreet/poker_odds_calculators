@@ -250,6 +250,7 @@ struct vars {
   HandType hand_typ_id_ge;
   bool bFolded;
   bool bSkipping;
+  bool bHandFiltered;
   bool bPostedSmallBlind;
   bool bPostedBigBlind;
   bool bHaveDeuceOrTreyOff;
@@ -1029,6 +1030,7 @@ int main(int argc,char **argv)
     line_no = 0;
     local_vars.bFolded = false;
     local_vars.bSkipping = false;
+    local_vars.bHandFiltered = false;
     local_vars.num_hands = 0;
     local_vars.bHaveFlop = false;
     local_vars.bHaveFlop2 = false;
@@ -1195,6 +1197,7 @@ int main(int argc,char **argv)
                 local_vars.num_hands++;
                 local_vars.bFolded = false;
                 local_vars.bSkipping = false;
+                local_vars.bHandFiltered = false;
                 local_vars.bHaveFlop = false;
                 local_vars.bHaveFlop2 = false;
                 local_vars.bHaveRiver = false;
@@ -1319,9 +1322,7 @@ int main(int argc,char **argv)
             local_vars.bHaveAllInPostflop = true;
         }
 
-        if (local_vars.bSkipping)
-          continue;
-        else if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
+        if (!strncmp(line,dealt_to,DEALT_TO_LEN)) {
           for (n = 0; n < line_len; n++) {
             if (line[n] == '[')
               break;
@@ -1408,16 +1409,16 @@ int main(int argc,char **argv)
             if (local_vars.bHandSpecified) {
               if (local_vars.bSuited) {
                 if (local_vars.hole_cards[1] != local_vars.hole_cards[4])
-                  local_vars.bSkipping = true;
+                  local_vars.bHandFiltered = true;
               }
               else {
                 if (local_vars.hole_cards[1] == local_vars.hole_cards[4])
-                  local_vars.bSkipping = true;
+                  local_vars.bHandFiltered = true;
               }
 
               if (((local_vars.hole_cards[0] != hand[0]) || (local_vars.hole_cards[3] != hand[1])) &&
                   ((local_vars.hole_cards[0] != hand[1]) || (local_vars.hole_cards[3] != hand[0])))
-                local_vars.bSkipping = true;
+                local_vars.bHandFiltered = true;
             }
           }
         }
@@ -2163,7 +2164,7 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
 
 void run_filter(struct vars *varspt)
 {
-  if (varspt->bSkipping)
+  if (varspt->bHandFiltered)
     return;
 
   if (varspt->bSummarizing || !varspt->bSkipZero || (varspt->delta != 0)) {
