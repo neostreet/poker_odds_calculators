@@ -48,7 +48,8 @@ static char usage[] =
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
 "  (-winning_hand_typehand_type (-delta_gevalue)\n"
-"  (-table_boss) (-show_table_boss) (-ace_on_the_river) player_name filename\n";
+"  (-table_boss) (-show_table_boss) (-ace_on_the_river)\n"
+"  (-verbose_style2) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -125,6 +126,7 @@ static bool deuce_or_trey_off(char *hole_cards);
 static HandType get_winning_hand_typ_id(char *line,int line_len);
 static void run_filter(struct vars *varspt);
 static void do_balance_processing(struct vars *varspt);
+static char *style2(char *filename);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -139,6 +141,7 @@ enum quantum_typ {
 struct vars {
   bool bTerse;
   bool bVerbose;
+  bool bVerboseStyle2;
   bool bDebug;
   bool bHandTypeSpecified;
   bool bWinningHandTypeSpecified;
@@ -345,7 +348,7 @@ int main(int argc,char **argv)
   int boss_seat_ix;
   int my_seat_ix;
 
-  if ((argc < 3) || (argc > 94)) {
+  if ((argc < 3) || (argc > 95)) {
     printf(usage);
     return 1;
   }
@@ -354,6 +357,7 @@ int main(int argc,char **argv)
 
   local_vars.bTerse = false;
   local_vars.bVerbose = false;
+  local_vars.bVerboseStyle2 = false;
   local_vars.bDebug = false;
   local_vars.bHandTypeSpecified = false;
   local_vars.bWinningHandTypeSpecified = false;
@@ -454,6 +458,10 @@ int main(int argc,char **argv)
       local_vars.bTerse = true;
     else if (!strcmp(argv[curr_arg],"-verbose"))
       local_vars.bVerbose = true;
+    else if (!strcmp(argv[curr_arg],"-verbose_style2")) {
+      local_vars.bVerbose = true;
+      local_vars.bVerboseStyle2 = true;
+    }
     else if (!strcmp(argv[curr_arg],"-debug"))
       local_vars.bDebug = true;
     else if (!strncmp(argv[curr_arg],"-hand_type",10)) {
@@ -2356,8 +2364,12 @@ void run_filter(struct vars *varspt)
                                                                                                             printf(" %d",varspt->table_count);
 
                                                                                                           if (varspt->bVerbose) {
-                                                                                                            if (!varspt->bGetDateFromFilename)
-                                                                                                              printf(" %s %3d\n",filename,varspt->num_hands);
+                                                                                                            if (!varspt->bGetDateFromFilename) {
+                                                                                                              if (!varspt->bVerboseStyle2)
+                                                                                                                printf(" %s %3d\n",filename,varspt->num_hands);
+                                                                                                              else
+                                                                                                                printf(" %s%d.txt\n",style2(filename),varspt->num_hands);
+                                                                                                            }
                                                                                                             else
                                                                                                               printf("\t%s\n",varspt->date_string);
                                                                                                           }
@@ -2458,4 +2470,25 @@ static void do_balance_processing(struct vars *varspt)
 
       break;
   }
+}
+
+#define MAX_STYLE2_LEN 512
+static char style2_buf[MAX_STYLE2_LEN];
+
+static char *style2(char *filename)
+{
+  int n;
+
+  strcpy(style2_buf,filename);
+
+  for (n = strlen(style2_buf) - 1; (n >= 0); n--) {
+    if (style2_buf[n] == '\\')
+      break;
+  }
+
+  n++;
+
+  sprintf(&style2_buf[n],"hand");
+
+  return style2_buf;
 }
