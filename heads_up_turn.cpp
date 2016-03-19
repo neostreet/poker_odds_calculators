@@ -14,7 +14,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: heads_up_turn (-debug) filename";
+static char usage[] = "usage: heads_up_turn (-debug) (-compare_low) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,6 +24,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bDebug;
+  bool bCompareLow;
   int m;
   int n;
   int o;
@@ -49,10 +50,13 @@ int main(int argc,char **argv)
   }
 
   bDebug = false;
+  bCompareLow = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-compare_low"))
+      bCompareLow = true;
     else
       break;
   }
@@ -158,7 +162,10 @@ int main(int argc,char **argv)
       for (p = 0; p < NUM_PLAYERS; p++)
         hand[p] = holdem_hand[p].BestPokerHand();
 
-      ret_compare = hand[0].Compare(hand[1],0);
+      if (!bCompareLow)
+        ret_compare = hand[0].Compare(hand[1],0);
+      else
+        ret_compare = hand[0].CompareLow(hand[1],0);
 
       if (ret_compare == 1) {
         outcomes[0].wins++;
