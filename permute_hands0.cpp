@@ -11,32 +11,28 @@ int main(int argc,char **argv)
 {
   int m;
   int n;
-  int o;
-  int p;
-  int q;
-  int r;
-  int s;
+  int cards[NUM_CARDS_IN_HAND];
   char card_string[3];
 
-  for (r = 0; r < POKER_52_5_PERMUTATIONS; r++) {
+  for (m = 0; m < POKER_52_5_PERMUTATIONS; m++) {
     get_permutation_instance_five(
       NUM_CARDS_IN_DECK,
-      &m,&n,&o,&p,&q,r);
+      &cards[0],&cards[1],&cards[2],&cards[3],&cards[4],m);
 
     if (argc == 1)
-      printf("%d %d %d %d %d\n",m,n,o,p,q);
+      printf("%2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4]);
     else {
       card_string[2] = 0;
-      card_string_from_card_value(m,card_string);
-      printf("%s ",card_string);
-      card_string_from_card_value(n,card_string);
-      printf("%s ",card_string);
-      card_string_from_card_value(o,card_string);
-      printf("%s ",card_string);
-      card_string_from_card_value(p,card_string);
-      printf("%s ",card_string);
-      card_string_from_card_value(q,card_string);
-      printf("%s\n",card_string);
+
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+        card_string_from_card_value(cards[n],card_string);
+        printf("%s",card_string);
+
+        if (n < NUM_CARDS_IN_HAND - 1)
+          putchar(' ');
+        else
+          putchar(0x0a);
+      }
     }
   }
 
