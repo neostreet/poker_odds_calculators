@@ -41,6 +41,7 @@ int main(int argc,char **argv)
   int n;
   int retval;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
+  int work;
   int ordered_cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   FILE *fptr;
   int line_no;
@@ -110,6 +111,12 @@ int main(int argc,char **argv)
       m += 3;
     }
 
+    if (cards[0] > cards[1]) {
+      work = cards[0];
+      cards[0] = cards[1];
+      cards[1] = work;
+    }
+
     sscanf(&line[0],"%d",&delta);
 
     ix = index_of_hand(cards);
@@ -162,7 +169,7 @@ int main(int argc,char **argv)
       (double)line_no;
 
     if (bVerbose) {
-      printf("%10d %10d %10d %6d %6d %6d %6d %6d %9.6lf\n",
+      printf("%10d %10d %10d %6d %6d %6d %6d %6d %9.2lf\n",
         aggreg[m].sum_delta,
         aggreg[m].sum_wins,
         aggreg[m].sum_losses,
@@ -174,7 +181,7 @@ int main(int argc,char **argv)
         freq_factor);
     }
     else {
-      printf("%10d %10d %10d %6d %6d %6d %6d %9.6lf\n",
+      printf("%10d %10d %10d %6d %6d %6d %6d %9.2lf\n",
         aggreg[m].sum_delta,
         aggreg[m].sum_wins,
         aggreg[m].sum_losses,
@@ -223,10 +230,8 @@ static int index_of_hand(int *cards)
 
   for (m = 0; m < NUM_CARDS_IN_DECK - 1; m++) {
     for (n = m + 1; n < NUM_CARDS_IN_DECK; n++) {
-      if (((m == cards[0]) && (n == cards[1])) ||
-          ((m == cards[1]) && (n == cards[0]))) {
+      if ((m == cards[0]) && (n == cards[1]))
         return p;
-      }
 
       p++;
     }
