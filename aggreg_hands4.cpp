@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 using namespace std;
@@ -25,7 +26,7 @@ struct aggreg_info {
   int num_washes;
 };
 
-static struct aggreg_info aggreg[POKER_52_2_PERMUTATIONS];
+static struct aggreg_info *aggreg;
 
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int index_of_hand(int *cards);
@@ -77,6 +78,8 @@ int main(int argc,char **argv)
     printf(couldnt_open,argv[curr_arg]);
     return 3;
   }
+
+  aggreg = (struct aggreg_info *)malloc(POKER_52_2_PERMUTATIONS * sizeof (struct aggreg_info));
 
   for (n = 0; n < POKER_52_2_PERMUTATIONS; n++) {
     aggreg[n].hand_count = 0;
@@ -192,6 +195,8 @@ int main(int argc,char **argv)
         freq_factor);
     }
   }
+
+  free(aggreg);
 
   return 0;
 }
