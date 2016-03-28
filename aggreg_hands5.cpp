@@ -9,12 +9,24 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: index_of_hand5 (-debug) (-verbose) filename\n";
+"usage: aggreg_hands5 (-debug) (-verbose) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
+
+struct aggreg_info {
+  int hand_count;
+  int sum_delta;
+  int sum_wins;
+  int sum_losses;
+  int num_wins;
+  int num_losses;
+  int num_washes;
+};
+
+static struct aggreg_info *aggreg;
 
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int elem_compare(const void *elem1,const void *elem2);
@@ -31,10 +43,14 @@ int main(int argc,char **argv)
   int n;
   int retval;
   int cards[NUM_CARDS_IN_HAND];
+  int ordered_cards[NUM_CARDS_IN_HAND];
   FILE *fptr;
   int line_no;
   int line_len;
+  int delta;
   int ix;
+  char card_string[3];
+  double freq_factor;
 
   if ((argc < 2) || (argc > 4)) {
     printf(usage);
@@ -63,7 +79,20 @@ int main(int argc,char **argv)
     return 3;
   }
 
+  aggreg = (struct aggreg_info *)malloc(POKER_52_5_PERMUTATIONS * sizeof (struct aggreg_info));
+
+  for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
+    aggreg[n].hand_count = 0;
+    aggreg[n].sum_delta = 0;
+    aggreg[n].sum_wins = 0;
+    aggreg[n].sum_losses = 0;
+    aggreg[n].num_wins = 0;
+    aggreg[n].num_losses = 0;
+    aggreg[n].num_washes = 0;
+  }
+
   line_no = 0;
+  card_string[2] = 0;
 
   for ( ; ; ) {
     GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -87,6 +116,8 @@ int main(int argc,char **argv)
 
     qsort(cards,NUM_CARDS_IN_HAND,sizeof (int),elem_compare);
 
+    sscanf(&line[0],"%d",&delta);
+
     ix = index_of_hand(cards);
 
     if (ix == dbg_ix)
@@ -97,10 +128,70 @@ int main(int argc,char **argv)
       ix = 0;
     }
 
-    printf("%7d %s\n",ix,line);
+    aggreg[ix].hand_count++;
+    aggreg[ix].sum_delta += delta;
+
+    if (delta > 0) {
+      aggreg[ix].sum_wins += delta;
+      aggreg[ix].num_wins++;
+    }
+    else if (delta < 0) {
+      aggreg[ix].sum_losses += delta;
+      aggreg[ix].num_losses++;
+    }
+    else
+      aggreg[ix].num_washes++;
   }
 
   fclose(fptr);
+
+  for (m = 0; m < POKER_52_5_PERMUTATIONS; m++) {
+    get_permutation_instance_five(
+      NUM_CARDS_IN_DECK,
+      &cards[0],&cards[1],&cards[2],&cards[3],&cards[4],m);
+
+    if (!aggreg[m].hand_count)
+      continue;
+
+    for (n = 0; n < NUM_CARDS_IN_HAND; n++)
+      ordered_cards[n] = cards[n];
+
+    qsort(ordered_cards,NUM_CARDS_IN_HAND,sizeof (int),elem_compare);
+
+    for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+      card_string_from_card_value(ordered_cards[n],card_string);
+      printf("%s ",card_string);
+    }
+
+    freq_factor = (double)aggreg[m].hand_count * (double)POKER_52_2_PERMUTATIONS /
+      (double)line_no;
+
+    if (bVerbose) {
+      printf("%10d %10d %10d %6d %6d %6d %6d %6d %9.2lf\n",
+        aggreg[m].sum_delta,
+        aggreg[m].sum_wins,
+        aggreg[m].sum_losses,
+        aggreg[m].num_wins,
+        aggreg[m].num_losses,
+        aggreg[m].num_washes,
+        aggreg[m].hand_count,
+        line_no,
+        freq_factor);
+    }
+    else {
+      printf("%10d %10d %10d %6d %6d %6d %6d %9.2lf\n",
+        aggreg[m].sum_delta,
+        aggreg[m].sum_wins,
+        aggreg[m].sum_losses,
+        aggreg[m].num_wins,
+        aggreg[m].num_losses,
+        aggreg[m].num_washes,
+        aggreg[m].hand_count,
+        freq_factor);
+    }
+  }
+
+  free(aggreg);
 
   return 0;
 }
