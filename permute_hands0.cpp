@@ -19,7 +19,7 @@ int main(int argc,char **argv)
   int cards[NUM_CARDS_IN_HAND];
   char card_string[3];
 
-  if (argc > 3) {
+  if (argc > 2) {
     printf(usage);
     return 1;
   }
