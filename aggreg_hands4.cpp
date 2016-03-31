@@ -227,18 +227,19 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
 
 static int index_of_hand(int *cards)
 {
-  int m;
   int n;
-  int p;
+  int index;
+  int num_other_cards;
 
-  p = 0;
+  index = 0;
+  num_other_cards = NUM_CARDS_IN_DECK - 1;
 
-  for (m = 0; m < NUM_CARDS_IN_DECK - 1; m++) {
-    for (n = m + 1; n < NUM_CARDS_IN_DECK; n++) {
-      if ((m == cards[0]) && (n == cards[1]))
-        return p;
-
-      p++;
-    }
+  for (n = 0; n < cards[0]; n++) {
+    index += num_other_cards;
+    num_other_cards--;
   }
+
+  index += cards[1] - cards[0] - 1;
+
+  return index;
 }
