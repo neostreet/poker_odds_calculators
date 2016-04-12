@@ -26,17 +26,6 @@ int main(int argc,char **argv)
     num_other_cards--;
   }
 
-  printf("},\n");
-
-  printf("  {0,");
-
-  for (n = 0; n < NUM_CARDS_IN_DECK - 1; n++) {
-    printf("%d",n);
-
-    if (n < NUM_CARDS_IN_DECK - 2)
-      putchar(',');
-  }
-
   printf("}\n");
 
   printf("};\n");
