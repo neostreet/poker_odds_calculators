@@ -9,7 +9,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: time_old_index_of_hand (-debug) index_algorithm loop_count\n";
+"usage: time_index_of_hand (-debug) index_algorithm loop_count\n";
 
 static int index_of_hand0(int *cards);
 static int index_of_hand1(int *cards);
