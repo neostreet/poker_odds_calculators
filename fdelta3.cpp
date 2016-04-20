@@ -345,7 +345,6 @@ int main(int argc,char **argv)
   char card_string[2];
   int retval;
   int *poker_hand_cards;
-  bool bFirstFile;
   bool bFirstHand;
   int curr_stack;
   int boss_stack;
@@ -978,7 +977,6 @@ int main(int argc,char **argv)
 
   player_name_ix = curr_arg++;
   player_name_len = strlen(argv[player_name_ix]);
-  bFirstFile = true;
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
@@ -1006,11 +1004,6 @@ int main(int argc,char **argv)
   }
 
   for ( ; ; ) {
-    if (bFirstFile)
-      bFirstFile = false;
-     else
-       run_filter(&local_vars);
-
     GetLine(fptr0,filename,&filename_len,MAX_FILENAME_LEN);
 
     if (feof(fptr0))
@@ -1087,6 +1080,8 @@ int main(int argc,char **argv)
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
       if (feof(fptr)) {
+        run_filter(&local_vars);
+
         if (local_vars.bSummarizing) {
           if (!local_vars.bSkipZero || local_vars.summary_val) {
             if (!local_vars.bOnlyWinningSession || (local_vars.total_delta > 0)) {
