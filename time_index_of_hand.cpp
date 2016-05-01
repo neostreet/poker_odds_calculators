@@ -15,12 +15,13 @@ static int index_of_hand0(int *cards);
 static int index_of_hand1(int *cards);
 static int index_of_hand2(int *cards);
 
-static int offsets[][NUM_CARDS_IN_DECK] = {
-  {0,51,101,150,198,245,291,336,380,423,465,506,546,585,623,660,696,731,765,798,830,861,891,920,948,975,1001,1026,1050,1073,1095,1116,1136,1155,1173,1190,1206,1221,1235,1248,1260,1271,1281,1290,1298,1305,1311,1316,1320,1323,1325,1326}
+static int offsets[NUM_CARDS_IN_DECK] = {
+  0,51,101,150,198,245,291,336,380,423,465,506,546,585,623,660,696,731,765,798,830,861,891,920,948,975,1001,1026,1050,1073,1095,1116,1136,1155,1173,1190,1206,1221,1235,1248,1260,1271,1281,1290,1298,1305,1311,1316,1320,1323,1325,1326
 };
 
 int main(int argc,char **argv)
 {
+  int m;
   int n;
   int curr_arg;
   bool bDebug;
@@ -47,7 +48,7 @@ int main(int argc,char **argv)
 
   if (argc - curr_arg != 2) {
     printf(usage);
-    return 1;
+    return 2;
   }
 
   sscanf(argv[curr_arg],"%d",&index_algorithm);
@@ -60,23 +61,30 @@ int main(int argc,char **argv)
     time(&start_sec);
 
   for (n = 0; n < loop_count; n++) {
-    for (cards[0] = 0; cards[0] < NUM_CARDS_IN_DECK - 1; cards[0]++) {
-      for (cards[1] = cards[0] + 1; cards[1] < NUM_CARDS_IN_DECK; cards[1]++) {
-        switch (index_algorithm) {
-          case 0:
-            ix = index_of_hand0(cards);
-            break;
-          case 1:
-            ix = index_of_hand1(cards);
-            break;
-          case 2:
-            ix = index_of_hand2(cards);
-            break;
-        }
+    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+      get_permutation_instance_two(
+        NUM_CARDS_IN_DECK,
+        &cards[0],&cards[1],m);
 
-        if (bDebug)
-          printf("%d\n",ix);
+      switch (index_algorithm) {
+        case 0:
+          ix = index_of_hand0(cards);
+          break;
+        case 1:
+          ix = index_of_hand1(cards);
+          break;
+        case 2:
+          ix = index_of_hand2(cards);
+          break;
       }
+
+      if (ix != m) {
+        printf("bad index for %d: %d\n",m,ix);
+        return 3;
+      }
+
+      if (bDebug)
+        printf("%d\n",ix);
     }
   }
 
@@ -130,5 +138,5 @@ static int index_of_hand1(int *cards)
 
 static int index_of_hand2(int *cards)
 {
-  return offsets[0][cards[0]] + cards[1] - cards[0] - 1;
+  return offsets[cards[0]] + cards[1] - cards[0] - 1;
 }

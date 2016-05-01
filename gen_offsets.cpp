@@ -10,8 +10,8 @@ int main(int argc,char **argv)
   int index;
   int num_other_cards;
 
-  printf("static int offsets[][NUM_CARDS_IN_DECK] = {\n");
-  printf("  {");
+  printf("static int offsets[NUM_CARDS_IN_DECK] = {\n");
+  printf("  ");
 
   index = 0;
   num_other_cards = NUM_CARDS_IN_DECK - 1;
@@ -26,9 +26,7 @@ int main(int argc,char **argv)
     num_other_cards--;
   }
 
-  printf("}\n");
-
-  printf("};\n");
+  printf("\n};\n");
 
   return 0;
 }
