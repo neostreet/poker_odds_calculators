@@ -14,10 +14,13 @@ static char usage[] =
 static int index_of_hand0(int *cards);
 static int index_of_hand1(int *cards);
 static int index_of_hand2(int *cards);
+static int index_of_hand3(int *cards);
 
 static int offsets[NUM_CARDS_IN_DECK] = {
   0,51,101,150,198,245,291,336,380,423,465,506,546,585,623,660,696,731,765,798,830,861,891,920,948,975,1001,1026,1050,1073,1095,1116,1136,1155,1173,1190,1206,1221,1235,1248,1260,1271,1281,1290,1298,1305,1311,1316,1320,1323,1325,1326
 };
+
+static int ixs[NUM_CARDS_IN_DECK][NUM_CARDS_IN_DECK];
 
 int main(int argc,char **argv)
 {
@@ -52,6 +55,22 @@ int main(int argc,char **argv)
   }
 
   sscanf(argv[curr_arg],"%d",&index_algorithm);
+
+  if ((index_algorithm < 0) || (index_algorithm > 3)) {
+    printf("invalid index_algorithm\n");
+    return 3;
+  }
+
+  if (index_algorithm == 3) {
+    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+      get_permutation_instance_two(
+        NUM_CARDS_IN_DECK,
+        &cards[0],&cards[1],m);
+
+      ixs[cards[0]][cards[1]] = m;
+    }
+  }
+
   sscanf(argv[curr_arg+1],"%d",&loop_count);
 
   if (bDebug)
@@ -76,11 +95,14 @@ int main(int argc,char **argv)
         case 2:
           ix = index_of_hand2(cards);
           break;
+        case 3:
+          ix = index_of_hand3(cards);
+          break;
       }
 
       if (ix != m) {
         printf("bad index for %d: %d\n",m,ix);
-        return 3;
+        return 4;
       }
 
       if (bDebug)
@@ -139,4 +161,9 @@ static int index_of_hand1(int *cards)
 static int index_of_hand2(int *cards)
 {
   return offsets[cards[0]] + cards[1] - cards[0] - 1;
+}
+
+static int index_of_hand3(int *cards)
+{
+  return ixs[cards[0]][cards[1]];
 }
