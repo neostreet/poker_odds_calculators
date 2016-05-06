@@ -16,6 +16,7 @@ static int index_of_hand1(int *cards);
 static int index_of_hand2(int *cards);
 static int index_of_hand3(int *cards);
 static int index_of_hand4(int *cards);
+static int index_of_hand5(int *cards);
 
 static int offsets[NUM_CARDS_IN_DECK] = {
   0,51,101,150,198,245,291,336,380,423,465,506,546,585,623,660,696,731,765,798,830,861,891,920,948,975,1001,1026,1050,1073,1095,1116,1136,1155,1173,1190,1206,1221,1235,1248,1260,1271,1281,1290,1298,1305,1311,1316,1320,1323,1325,1326
@@ -58,7 +59,7 @@ int main(int argc,char **argv)
 
   sscanf(argv[curr_arg],"%d",&index_algorithm);
 
-  if ((index_algorithm < 0) || (index_algorithm > 4)) {
+  if ((index_algorithm < 0) || (index_algorithm > 5)) {
     printf("invalid index_algorithm\n");
     return 3;
   }
@@ -112,6 +113,9 @@ int main(int argc,char **argv)
         case 4:
           ix = index_of_hand4(cards);
           break;
+        case 5:
+          ix = index_of_hand5(cards);
+          break;
       }
 
       if (ix != m) {
@@ -137,6 +141,29 @@ static int index_of_hand0(int *cards)
 {
   int m;
   int n;
+  int local_cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
+
+  for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    get_permutation_instance_two(
+      NUM_CARDS_IN_DECK,
+      &local_cards[0],&local_cards[1],m);
+
+    for (n = 0; n < 2; n++) {
+      if (cards[n] != local_cards[n])
+        break;
+    }
+
+    if (n == 2)
+      return m;
+  }
+
+  return 0;
+}
+
+static int index_of_hand1(int *cards)
+{
+  int m;
+  int n;
   int p;
 
   p = 0;
@@ -153,7 +180,7 @@ static int index_of_hand0(int *cards)
   }
 }
 
-static int index_of_hand1(int *cards)
+static int index_of_hand2(int *cards)
 {
   int n;
   int index;
@@ -172,17 +199,17 @@ static int index_of_hand1(int *cards)
   return index;
 }
 
-static int index_of_hand2(int *cards)
+static int index_of_hand3(int *cards)
 {
   return offsets[cards[0]] + cards[1] - cards[0] - 1;
 }
 
-static int index_of_hand3(int *cards)
+static int index_of_hand4(int *cards)
 {
   return ixs[cards[0]][cards[1]];
 }
 
-static int index_of_hand4(int *cards)
+static int index_of_hand5(int *cards)
 {
   return ixs2[cards[0]][cards[1]-1];
 }
