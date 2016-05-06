@@ -61,7 +61,7 @@ int main(int argc,char **argv)
   }
 
   if (index_algorithm == 4) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; m < POKER_52_3_PERMUTATIONS; m++) {
       get_permutation_instance_three(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],&cards[2],m);
@@ -70,7 +70,7 @@ int main(int argc,char **argv)
     }
   }
   else if (index_algorithm == 5) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; m < POKER_52_3_PERMUTATIONS; m++) {
       get_permutation_instance_three(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],&cards[2],m);
@@ -88,7 +88,7 @@ int main(int argc,char **argv)
     time(&start_sec);
 
   for (n = 0; n < loop_count; n++) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; m < POKER_52_3_PERMUTATIONS; m++) {
       get_permutation_instance_three(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],&cards[2],m);
