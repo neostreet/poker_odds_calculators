@@ -1,14 +1,32 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#ifdef FREEBSD
+#define O_BINARY 0
+#endif
+#endif
 using namespace std;
 
 #define MAIN_MODULE
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: permute_hands0 (-card_strings) (-colcol) (-hand_type)\n";
+"usage: permute_hands0 (-card_strings) (-colcol) (-hand_type) (-binfilefile)\n";
+static char couldnt_open[] = "couldn't open %s\n";
+
+struct hand_and_type {
+  char cards[NUM_CARDS_IN_HAND];
+  char hand_type;
+};
 
 int main(int argc,char **argv)
 {
@@ -18,11 +36,15 @@ int main(int argc,char **argv)
   bool bCardStrings;
   int col;
   bool bHandType;
+  bool bBinFile;
+  char *binfile_name;
   int cards[NUM_CARDS_IN_HAND];
   char card_string[3];
   PokerHand hand;
+  struct hand_and_type *hands_and_types;
+  int fhndl;
 
-  if (argc > 4) {
+  if (argc > 5) {
     printf(usage);
     return 1;
   }
@@ -30,6 +52,7 @@ int main(int argc,char **argv)
   bCardStrings = false;
   col = -1;
   bHandType = false;
+  bBinFile = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-card_strings"))
@@ -44,8 +67,22 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-hand_type"))
       bHandType = true;
+    else if (!strncmp(argv[curr_arg],"-binfile",8)) {
+      bHandType = true;
+      bBinFile = true;
+      binfile_name = &argv[curr_arg][8];
+    }
     else
       break;
+  }
+
+  if (bBinFile) {
+    hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+    if (hands_and_types == NULL) {
+      printf("malloc of hands_and_types failed\n");
+      return 3;
+    }
   }
 
   card_string[2] = 0;
@@ -60,45 +97,68 @@ int main(int argc,char **argv)
       hand.Evaluate();
     }
 
-    if (!bCardStrings) {
-      if (col == -1) {
-        if (!bHandType)
-          printf("%2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4]);
-        else
-          printf("%2d %2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4],hand.GetHandType());
-      }
-      else {
-        if (!bHandType)
-          printf("%2d\n",cards[col]);
-        else
-          printf("%2d %2d\n",cards[col],hand.GetHandType());
-      }
+    if (bBinFile) {
+      for (n = 0; n < NUM_CARDS_IN_HAND; n++)
+        hands_and_types[m].cards[n] = (char)cards[n];
+
+      hands_and_types[m].hand_type = (char)hand.GetHandType();
     }
     else {
-      if (col == -1) {
-        for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-          card_string_from_card_value(cards[n],card_string);
-          printf("%s",card_string);
-
-          if (n < NUM_CARDS_IN_HAND - 1)
-            putchar(' ');
+      if (!bCardStrings) {
+        if (col == -1) {
+          if (!bHandType)
+            printf("%2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4]);
+          else
+            printf("%2d %2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4],hand.GetHandType());
         }
-
-        if (bHandType)
-          printf(" %s",hand_type_abbrevs[hand.GetHandType()]);
-
-        putchar(0x0a);
+        else {
+          if (!bHandType)
+            printf("%2d\n",cards[col]);
+          else
+            printf("%2d %2d\n",cards[col],hand.GetHandType());
+        }
       }
       else {
-        card_string_from_card_value(cards[col],card_string);
-        printf("%s",card_string);
+        if (col == -1) {
+          for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+            card_string_from_card_value(cards[n],card_string);
+            printf("%s",card_string);
 
-        if (bHandType)
-          printf(" %s",hand_type_abbrevs[hand.GetHandType()]);
+            if (n < NUM_CARDS_IN_HAND - 1)
+              putchar(' ');
+          }
 
-        putchar(0x0a);
+          if (bHandType)
+            printf(" %s",hand_type_abbrevs[hand.GetHandType()]);
+
+          putchar(0x0a);
+        }
+        else {
+          card_string_from_card_value(cards[col],card_string);
+          printf("%s",card_string);
+
+          if (bHandType)
+            printf(" %s",hand_type_abbrevs[hand.GetHandType()]);
+
+          putchar(0x0a);
+        }
       }
     }
+  }
+
+  if (bBinFile) {
+    if ((fhndl = open(binfile_name,
+      O_CREAT | O_EXCL | O_BINARY | O_WRONLY,
+      S_IREAD | S_IWRITE)) == -1) {
+
+      printf(couldnt_open,binfile_name);
+      return 4;
+    }
+
+    write(fhndl,hands_and_types,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+    close(fhndl);
+
+    free(hands_and_types);
   }
 
   return 0;
