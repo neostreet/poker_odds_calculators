@@ -8,7 +8,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: permute_hands0 (-card_strings) (-colcol)\n";
+"usage: permute_hands0 (-card_strings) (-colcol) (-hand_type)\n";
 
 int main(int argc,char **argv)
 {
@@ -17,16 +17,19 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bCardStrings;
   int col;
+  bool bHandType;
   int cards[NUM_CARDS_IN_HAND];
   char card_string[3];
+  PokerHand hand;
 
-  if (argc > 3) {
+  if (argc > 4) {
     printf(usage);
     return 1;
   }
 
   bCardStrings = false;
   col = -1;
+  bHandType = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-card_strings"))
@@ -39,6 +42,8 @@ int main(int argc,char **argv)
         return 2;
       }
     }
+    else if (!strcmp(argv[curr_arg],"-hand_type"))
+      bHandType = true;
     else
       break;
   }
@@ -50,11 +55,24 @@ int main(int argc,char **argv)
       NUM_CARDS_IN_DECK,
       &cards[0],&cards[1],&cards[2],&cards[3],&cards[4],m);
 
+    if (bHandType) {
+      hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
+      hand.Evaluate();
+    }
+
     if (!bCardStrings) {
-      if (col == -1)
-        printf("%2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4]);
-      else
-        printf("%2d\n",cards[col]);
+      if (col == -1) {
+        if (!bHandType)
+          printf("%2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4]);
+        else
+          printf("%2d %2d %2d %2d %2d %2d\n",cards[0],cards[1],cards[2],cards[3],cards[4],hand.GetHandType());
+      }
+      else {
+        if (!bHandType)
+          printf("%2d\n",cards[col]);
+        else
+          printf("%2d %2d\n",cards[col],hand.GetHandType());
+      }
     }
     else {
       if (col == -1) {
@@ -64,13 +82,21 @@ int main(int argc,char **argv)
 
           if (n < NUM_CARDS_IN_HAND - 1)
             putchar(' ');
-          else
-            putchar(0x0a);
         }
+
+        if (bHandType)
+          printf(" %s",hand_type_abbrevs[hand.GetHandType()]);
+
+        putchar(0x0a);
       }
       else {
         card_string_from_card_value(cards[col],card_string);
-        printf("%s\n",card_string);
+        printf("%s",card_string);
+
+        if (bHandType)
+          printf(" %s",hand_type_abbrevs[hand.GetHandType()]);
+
+        putchar(0x0a);
       }
     }
   }
