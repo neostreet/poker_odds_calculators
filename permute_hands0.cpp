@@ -26,6 +26,7 @@ static char couldnt_open[] = "couldn't open %s\n";
 struct hand_and_type {
   char cards[NUM_CARDS_IN_HAND];
   char hand_type;
+  int ix;
 };
 
 int main(int argc,char **argv)
@@ -102,6 +103,7 @@ int main(int argc,char **argv)
         hands_and_types[m].cards[n] = (char)cards[n];
 
       hands_and_types[m].hand_type = (char)hand.GetHandType();
+      hands_and_types[m].ix = m;
     }
     else {
       if (!bCardStrings) {
