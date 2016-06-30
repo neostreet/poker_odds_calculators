@@ -14,7 +14,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: heads_up_flop (-debug) (-compare_low) filename";
+static char usage[] =
+"usage: heads_up_flop (-debug) (-compare_low) (-turn_only) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -25,6 +26,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bDebug;
   bool bCompareLow;
+  bool bTurnOnly;
   int m;
   int n;
   int o;
@@ -36,6 +38,7 @@ int main(int argc,char **argv)
   int cards[NUM_HEADS_UP_FLOP_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
   HoldemPokerHand holdem_hand[NUM_PLAYERS];
+  HoldemTurnHand turn_hand[NUM_PLAYERS];
   PokerHand hand[NUM_PLAYERS];
   int ret_compare;
   struct outcomes outcomes[NUM_PLAYERS];
@@ -43,20 +46,24 @@ int main(int argc,char **argv)
   double pct;
   time_t start_time;
   time_t end_time;
+  int permutations;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     cout << usage << endl;
     return 1;
   }
 
   bDebug = false;
   bCompareLow = false;
+  bTurnOnly = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
+    else if (!strcmp(argv[curr_arg],"-turn_only"))
+      bTurnOnly = true;
     else
       break;
   }
@@ -150,21 +157,40 @@ int main(int argc,char **argv)
       }
     }
 
-    for (o = 0; o < POKER_45_2_PERMUTATIONS; o++) {
-      get_permutation_instance_two(
-        NUM_REMAINING_CARDS,
-        &m,&n,o);
+    if (!bTurnOnly)
+      permutations = POKER_45_2_PERMUTATIONS;
+    else
+      permutations = NUM_REMAINING_CARDS;
 
-      holdem_hand[0].NewCards(cards[0],cards[1],
-        cards[4],cards[5],cards[6],
-        remaining_cards[m],remaining_cards[n]);
+    for (o = 0; o < permutations; o++) {
+      if (!bTurnOnly) {
+        get_permutation_instance_two(
+          NUM_REMAINING_CARDS,
+          &m,&n,o);
 
-      holdem_hand[1].NewCards(cards[2],cards[3],
-        cards[4],cards[5],cards[6],
-        remaining_cards[m],remaining_cards[n]);
+        holdem_hand[0].NewCards(cards[0],cards[1],
+          cards[4],cards[5],cards[6],
+          remaining_cards[m],remaining_cards[n]);
 
-      for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = holdem_hand[p].BestPokerHand();
+        holdem_hand[1].NewCards(cards[2],cards[3],
+          cards[4],cards[5],cards[6],
+          remaining_cards[m],remaining_cards[n]);
+
+        for (p = 0; p < NUM_PLAYERS; p++)
+          hand[p] = holdem_hand[p].BestPokerHand();
+      }
+      else {
+        turn_hand[0].NewCards(cards[0],cards[1],
+          cards[4],cards[5],cards[6],
+          remaining_cards[o]);
+
+        turn_hand[1].NewCards(cards[2],cards[3],
+          cards[4],cards[5],cards[6],
+          remaining_cards[o]);
+
+        for (p = 0; p < NUM_PLAYERS; p++)
+          hand[p] = turn_hand[p].BestPokerHand();
+      }
 
       if (!bCompareLow)
         ret_compare = hand[0].Compare(hand[1],0);
