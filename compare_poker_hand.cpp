@@ -23,6 +23,7 @@ int main(int argc,char **argv)
   int retval;
   FILE *fptr;
   int line_no;
+  int mod_line_no;
   int line_len;
   int cards[NUM_CARDS_IN_HAND];
   PokerHand hands[2];
@@ -39,6 +40,7 @@ int main(int argc,char **argv)
   }
 
   line_no = 0;
+  mod_line_no = 0;
 
   for ( ; ; ) {
     GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -85,34 +87,33 @@ int main(int argc,char **argv)
       }
     }
 
-    hands[line_no].NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
+    hands[mod_line_no].NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
 
-    if (!line_no)
+    if (!mod_line_no)
       printf("%s - ",line);
-    else
+    else {
       printf("%s ",line);
 
-    line_no++;
+      ret_compare = hands[0].Compare(hands[1],0);
 
-    if (line_no == 2)
-      break;
+      switch(ret_compare) {
+        case -1:
+          printf("less than\n");
+          break;
+        case 0:
+          printf("equal\n");
+          break;
+        case 1:
+          printf("greater than\n");
+          break;
+      }
+    }
+
+    line_no++;
+    mod_line_no = line_no % 2;
   }
 
   fclose(fptr);
-
-  ret_compare = hands[0].Compare(hands[1],0);
-
-  switch(ret_compare) {
-    case -1:
-      printf("less than\n");
-      break;
-    case 0:
-      printf("equal\n");
-      break;
-    case 1:
-      printf("greater than\n");
-      break;
-  }
 
   return 0;
 }
