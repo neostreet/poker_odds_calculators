@@ -87,6 +87,11 @@ int main(int argc,char **argv)
 
     hands[line_no].NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
 
+    if (!line_no)
+      printf("%s - ",line);
+    else
+      printf("%s ",line);
+
     line_no++;
 
     if (line_no == 2)
@@ -97,7 +102,17 @@ int main(int argc,char **argv)
 
   ret_compare = hands[0].Compare(hands[1],0);
 
-  printf("%d\n",ret_compare);
+  switch(ret_compare) {
+    case -1:
+      printf("less than\n");
+      break;
+    case 0:
+      printf("equal\n");
+      break;
+    case 1:
+      printf("greater than\n");
+      break;
+  }
 
   return 0;
 }
