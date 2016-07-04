@@ -796,18 +796,17 @@ void PokerHand::print(ostream& out) const
 
   card_string[2] = 0;
 
-  if (!_hand_evaluated) {
-    for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-      card_string_from_card_value(_card[n],card_string);
+  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+    card_string_from_card_value(_card[n],card_string);
 
-      out << card_string;
+    out << card_string;
 
-      if (n < NUM_CARDS_IN_HAND - 1)
-        out << " ";
-    }
-
-    return;
+    if (_hand_evaluated || (n < NUM_CARDS_IN_HAND - 1))
+      out << " ";
   }
+
+  if (!_hand_evaluated)
+    return;
 
   if (_verbose) {
     for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
