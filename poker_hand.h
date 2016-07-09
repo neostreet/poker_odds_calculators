@@ -174,6 +174,8 @@ class PokerHand {
   void Sort();
   HandType Evaluate();
   HandType EvaluateLow();
+  HandType QuickEvaluate();
+  int GetQuickIx();
   void UnEvaluate();
   bool Evaluated();
   bool RoyalFlush();
@@ -191,6 +193,7 @@ class PokerHand {
 
   int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
   int CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand);
+  int QuickCompare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
 
   void print(ostream& out) const;
   void Verbose();
@@ -214,6 +217,7 @@ class PokerHand {
   bool _plain;
 
   HandType _hand_type;
+  int _quick_ix;
 };
 
 ostream& operator<<(ostream& out,const PokerHand& hand);
@@ -357,6 +361,16 @@ class OmahaPokerHand {
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
 
+struct hand {
+  int cards[NUM_CARDS_IN_HAND];
+};
+
+struct hand_and_type {
+  char cards[NUM_CARDS_IN_HAND];
+  char hand_type;
+  int quick_ix;
+};
+
 void get_permutation_instance_two(
   int set_size,
   int *m,int *n,
@@ -395,3 +409,8 @@ HandType get_hand_type(char *hand_type_str);
 bool four_to_a_flush(int *cards);
 
 void init_plain_hand_type_lens();
+
+int read_hands_and_types(
+  char *hands_and_types_filename,
+  struct hand_and_type **hands_and_types
+);

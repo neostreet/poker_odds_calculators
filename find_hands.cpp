@@ -3,17 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#ifdef FREEBSD
-#define O_BINARY 0
-#endif
-#endif
 using namespace std;
 
 #define MAIN_MODULE
@@ -22,16 +11,6 @@ using namespace std;
 static char usage[] =
 "usage: find_hands (-bsearch) hands_and_types count\n";
 static char couldnt_open[] = "couldn't open %s\n";
-
-struct hand {
-  int cards[NUM_CARDS_IN_HAND];
-};
-
-struct hand_and_type {
-  char cards[NUM_CARDS_IN_HAND];
-  char hand_type;
-  int ix;
-};
 
 int compare_key(const void *elem1,const void *elem2);
 
@@ -42,9 +21,8 @@ int main(int argc,char **argv)
   int p;
   int curr_arg;
   bool bBsearch;
-  int fhndl;
   struct hand_and_type *hands_and_types;
-  int bytes_read;
+  int retval;
   int count;
   struct hand work_hand;
   time_t start_time;
@@ -70,32 +48,18 @@ int main(int argc,char **argv)
     return 2;
   }
 
-  hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+  retval = read_hands_and_types(argv[curr_arg],&hands_and_types);
 
-  if (hands_and_types == NULL) {
-    printf("malloc of hands_and_types failed\n");
+  if (retval) {
+    printf("read_hands_and_types() failed: %d\n",retval);
     return 3;
   }
-
-  if ((fhndl = open(argv[curr_arg],O_BINARY | O_RDONLY,0)) == -1) {
-    printf(couldnt_open,argv[curr_arg]);
-    return 4;
-  }
-
-  bytes_read = read(fhndl,hands_and_types,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
-
-  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
-    printf("%s is the wrong size\n",argv[curr_arg]);
-    return 5;
-  }
-
-  close(fhndl);
 
   sscanf(argv[curr_arg+1],"%d",&count);
 
   if (count > POKER_52_5_PERMUTATIONS) {
     printf("illegal count\n");
-    return 6;
+    return 4;
   }
 
   time(&start_time);
@@ -113,9 +77,9 @@ int main(int argc,char **argv)
         }
 
         if (m == NUM_CARDS_IN_HAND) {
-          if (hands_and_types[p].ix != n) {
-            printf("linear search failed: %d != %d\n",hands_and_types[p].ix,n);
-            return 7;
+          if (hands_and_types[p].quick_ix != n) {
+            printf("linear search failed: %d != %d\n",hands_and_types[p].quick_ix,n);
+            return 5;
           }
 
           break;
@@ -128,12 +92,12 @@ int main(int argc,char **argv)
 
       if (found == NULL) {
         printf("bsearch failed\n");
-        return 8;
+        return 6;
       }
 
-      if (found->ix != n) {
-        printf("binary search failed: %d != %d\n",found->ix,n);
-        return 9;
+      if (found->quick_ix != n) {
+        printf("binary search failed: %d != %d\n",found->quick_ix,n);
+        return 7;
       }
     }
   }

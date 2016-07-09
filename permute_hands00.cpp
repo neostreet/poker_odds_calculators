@@ -25,16 +25,6 @@ static char usage[] =
 "  (-binfilefile)\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
-struct hand {
-  int cards[NUM_CARDS_IN_HAND];
-};
-
-struct hand_and_type {
-  char cards[NUM_CARDS_IN_HAND];
-  char hand_type;
-  int ix;
-};
-
 static int *ixs;
 static int *ixs2;
 static vector<PokerHand> hands;
@@ -192,7 +182,7 @@ int main(int argc,char **argv)
         return 6;
       }
 
-      found->ix = ixs2[m];
+      found->quick_ix = ixs2[m];
     }
   }
 

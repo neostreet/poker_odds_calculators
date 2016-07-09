@@ -1,6 +1,18 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#ifdef FREEBSD
+#define O_BINARY 0
+#endif
+#endif
 using namespace std;
 
 #include "poker_hand.h"
@@ -262,6 +274,10 @@ HandType PokerHand::EvaluateLow()
 
   return _hand_type;
 }
+
+//HandType PokerHand::QuickEvaluate()
+//{
+//}
 
 void PokerHand::UnEvaluate()
 {
@@ -1924,4 +1940,35 @@ void init_plain_hand_type_lens()
 
   for (n = 0; n < NUM_HAND_TYPES; n++)
     plain_hand_type_lens[n] = strlen(plain_hand_types[n]);
+}
+
+int read_hands_and_types(
+  char *hands_and_types_filename,
+  struct hand_and_type **hands_and_types
+)
+{
+  int fhndl;
+  int bytes_read;
+
+  *hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+  if (*hands_and_types == NULL)
+    return 1;
+
+  if ((fhndl = open(hands_and_types_filename,O_BINARY | O_RDONLY,0)) == -1) {
+    free(*hands_and_types);
+    return 2;
+  }
+
+  bytes_read = read(fhndl,*hands_and_types,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
+    close(fhndl);
+    free(*hands_and_types);
+    return 3;
+  }
+
+  close(fhndl);
+
+  return 0;
 }
