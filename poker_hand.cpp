@@ -1972,3 +1972,60 @@ int read_hands_and_types(
 
   return 0;
 }
+
+int compare_key(const void *vkey,const void *velem)
+{
+  int n;
+  struct hand *key;
+  struct hand_and_type *elem;
+
+  key = (struct hand *)vkey;
+  elem = (struct hand_and_type *)velem;
+
+  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+    if (key->cards[n] < (int)elem->cards[n])
+      return -1;
+
+    if (key->cards[n] > (int)elem->cards[n])
+      return 1;
+  }
+
+  return 0;
+}
+
+int find_hand(
+  struct hand *in_hand,
+  struct hand_and_type *hands_and_types,
+  bool bBsearch,
+  struct hand_and_type **out_hand
+)
+{
+  int m;
+  int p;
+  struct hand_and_type *found;
+
+  if (!bBsearch) {
+    for (p = 0; p < POKER_52_5_PERMUTATIONS; p++) {
+      for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
+        if (hands_and_types[p].cards[m] != (char)in_hand->cards[m])
+          break;
+      }
+
+      if (m == NUM_CARDS_IN_HAND) {
+        *out_hand = &hands_and_types[p];
+        return 1;
+      }
+    }
+  }
+  else {
+    found = (struct hand_and_type *)bsearch(in_hand,hands_and_types,POKER_52_5_PERMUTATIONS,
+      sizeof (struct hand_and_type),compare_key);
+
+    if (found) {
+      *out_hand = found;
+      return 1;
+    }
+  }
+
+  return 0;
+}

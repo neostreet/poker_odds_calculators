@@ -414,3 +414,12 @@ int read_hands_and_types(
   char *hands_and_types_filename,
   struct hand_and_type **hands_and_types
 );
+
+int compare_key(const void *elem1,const void *elem2);
+
+int find_hand(
+  struct hand *in_hand,
+  struct hand_and_type *hands_and_types,
+  bool bBsearch,
+  struct hand_and_type **out_hand
+);
