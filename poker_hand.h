@@ -146,6 +146,14 @@ extern int num_holdem_best_poker_hand_comparisons;
 int get_rank_index(char rank_char,int *rank_index_ptr);
 int get_suit_index(char suit_char,int *suit_index_ptr);
 
+typedef struct {
+  int cards[NUM_CARDS_IN_HAND];
+} hand;
+
+typedef struct {
+  int cards[NUM_CARDS_IN_FLOP];
+} flop;
+
 struct outcomes {
   int wins;
   int wins_hand_counts[NUM_HAND_TYPES];
@@ -201,14 +209,17 @@ class PokerHand {
   void Plain();
   void Fancy();
   int *GetCards();
+  void get_permutation_instance_five(int set_size,int instance_ix);
+  int read_quick_hands(char *hands_and_types_filename);
+  int find_quick_hand(struct hand_and_type **out_hand);
 
   private:
 
-  int _card[NUM_CARDS_IN_HAND];
-  int _suit[NUM_CARDS_IN_HAND];
-  int _rank[NUM_CARDS_IN_HAND];
-  int _num_cards_with_same_rank[NUM_CARDS_IN_HAND];
-  int _order[NUM_CARDS_IN_HAND];
+  hand _card;
+  hand _suit;
+  hand _rank;
+  hand _num_cards_with_same_rank;
+  hand _order;
 
   bool _have_cards;
   bool _hand_sorted;
@@ -218,6 +229,7 @@ class PokerHand {
 
   HandType _hand_type;
   int _quick_ix;
+  struct hand_and_type *_quick_hands;
 };
 
 ostream& operator<<(ostream& out,const PokerHand& hand);
@@ -243,7 +255,7 @@ class HoldemPokerHand {
 
   private:
 
-  int _card[NUM_CARDS_IN_HOLDEM_POOL];
+  hand _card;
   PokerHand _best_poker_hand;
 
   int _have_cards;
@@ -272,7 +284,7 @@ class HoldemTurnHand {
 
   private:
 
-  int _card[NUM_CARDS_AT_TURN];
+  hand _card;
   PokerHand _best_poker_hand;
 
   int _have_cards;
@@ -314,11 +326,11 @@ class Flop {
 
   private:
 
-  int _card[NUM_CARDS_IN_FLOP];
-  int _suit[NUM_CARDS_IN_FLOP];
-  int _rank[NUM_CARDS_IN_FLOP];
-  int _num_cards_with_same_rank[NUM_CARDS_IN_FLOP];
-  int _order[NUM_CARDS_IN_FLOP];
+  flop _card;
+  flop _suit;
+  flop _rank;
+  flop _num_cards_with_same_rank;
+  flop _order;
 
   bool _have_cards;
   bool _flop_sorted;
@@ -353,17 +365,13 @@ class OmahaPokerHand {
 
   private:
 
-  int _card[NUM_CARDS_IN_OMAHA_POOL];
+  hand _card;
   PokerHand _best_poker_hand;
 
   int _have_cards;
 };
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
-
-struct hand {
-  int cards[NUM_CARDS_IN_HAND];
-};
 
 struct hand_and_type {
   char cards[NUM_CARDS_IN_HAND];
@@ -389,12 +397,6 @@ void get_permutation_instance_four(
   int instance_ix
 );
 
-void get_permutation_instance_five(
-  int set_size,
-  int *m,int *n,int *o,int *p,int *q,
-  int instance_ix
-);
-
 void get_permutation_instance_seven(
   int set_size,
   int *m,int *n,int *o,int *p,int *q,int *r,int *s,
@@ -410,16 +412,4 @@ bool four_to_a_flush(int *cards);
 
 void init_plain_hand_type_lens();
 
-int read_hands_and_types(
-  char *hands_and_types_filename,
-  struct hand_and_type **hands_and_types
-);
-
 int compare_key(const void *elem1,const void *elem2);
-
-int find_hand(
-  struct hand *in_hand,
-  struct hand_and_type *hands_and_types,
-  bool bBsearch,
-  struct hand_and_type **out_hand
-);

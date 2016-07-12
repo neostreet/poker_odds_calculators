@@ -35,11 +35,11 @@ PokerHand::PokerHand(const PokerHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    _card[n] = hand._card[n];
-    _suit[n] = hand._suit[n];
-    _rank[n] = hand._rank[n];
-    _num_cards_with_same_rank[n] = hand._num_cards_with_same_rank[n];
-    _order[n] = hand._order[n];
+    _card.cards[n] = hand._card.cards[n];
+    _suit.cards[n] = hand._suit.cards[n];
+    _rank.cards[n] = hand._rank.cards[n];
+    _num_cards_with_same_rank.cards[n] = hand._num_cards_with_same_rank.cards[n];
+    _order.cards[n] = hand._order.cards[n];
   }
 
   _have_cards = hand._have_cards;
@@ -58,11 +58,11 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    _card[n] = hand._card[n];
-    _suit[n] = hand._suit[n];
-    _rank[n] = hand._rank[n];
-    _num_cards_with_same_rank[n] = hand._num_cards_with_same_rank[n];
-    _order[n] = hand._order[n];
+    _card.cards[n] = hand._card.cards[n];
+    _suit.cards[n] = hand._suit.cards[n];
+    _rank.cards[n] = hand._rank.cards[n];
+    _num_cards_with_same_rank.cards[n] = hand._num_cards_with_same_rank.cards[n];
+    _order.cards[n] = hand._order.cards[n];
   }
 
   _have_cards = hand._have_cards;
@@ -86,15 +86,15 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
 {
   int n;
 
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    _suit[n] = suit_of(_card[n]);
-    _rank[n] = rank_of(_card[n]);
+    _suit.cards[n] = suit_of(_card.cards[n]);
+    _rank.cards[n] = rank_of(_card.cards[n]);
   }
 
   _have_cards = true;
@@ -108,15 +108,15 @@ void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
 {
   int n;
 
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    _suit[n] = suit_of(_card[n]);
-    _rank[n] = rank_of(_card[n]);
+    _suit.cards[n] = suit_of(_card.cards[n]);
+    _rank.cards[n] = rank_of(_card.cards[n]);
   }
 
   _have_cards = true;
@@ -136,7 +136,7 @@ int PokerHand::GetRank(int card_ix)
     _hand_evaluated = false;
   }
 
-  return _rank[_order[card_ix]];
+  return _rank.cards[_order.cards[card_ix]];
 }
 
 void PokerHand::Sort()
@@ -159,28 +159,28 @@ void PokerHand::Sort()
       if (n == m)
         continue;
 
-      if (_rank[m] == _rank[n])
+      if (_rank.cards[m] == _rank.cards[n])
         num_cards_with_same_rank++;
     }
 
-    _num_cards_with_same_rank[m] = num_cards_with_same_rank;
+    _num_cards_with_same_rank.cards[m] = num_cards_with_same_rank;
   }
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++)
-    _order[n] = n;
+    _order.cards[n] = n;
 
   for (m = 0; m < NUM_CARDS_IN_HAND - 1; m++) {
     for (n = m + 1; n < NUM_CARDS_IN_HAND; n++) {
-      if (_num_cards_with_same_rank[_order[m]] < _num_cards_with_same_rank[_order[n]]) {
-        temp = _order[m];
-        _order[m] = _order[n];
-        _order[n] = temp;
+      if (_num_cards_with_same_rank.cards[_order.cards[m]] < _num_cards_with_same_rank.cards[_order.cards[n]]) {
+        temp = _order.cards[m];
+        _order.cards[m] = _order.cards[n];
+        _order.cards[n] = temp;
       }
-      else if (_num_cards_with_same_rank[_order[m]] == _num_cards_with_same_rank[_order[n]]) {
-        if (_rank[_order[m]] < _rank[_order[n]]) {
-          temp = _order[m];
-          _order[m] = _order[n];
-          _order[n] = temp;
+      else if (_num_cards_with_same_rank.cards[_order.cards[m]] == _num_cards_with_same_rank.cards[_order.cards[n]]) {
+        if (_rank.cards[_order.cards[m]] < _rank.cards[_order.cards[n]]) {
+          temp = _order.cards[m];
+          _order.cards[m] = _order.cards[n];
+          _order.cards[n] = temp;
         }
       }
     }
@@ -295,7 +295,7 @@ bool PokerHand::RoyalFlush()
   if (!StraightFlush())
     return 0;
 
-  if ((_rank[_order[0]] != ACE) || (_rank[_order[1]] != KING))
+  if ((_rank.cards[_order.cards[0]] != ACE) || (_rank.cards[_order.cards[1]] != KING))
     return 0;
 
   return 1;
@@ -314,7 +314,7 @@ bool PokerHand::StraightFlush()
 
 bool PokerHand::FourOfAKind()
 {
-  if (_num_cards_with_same_rank[_order[0]] == 4)
+  if (_num_cards_with_same_rank.cards[_order.cards[0]] == 4)
     return 1;
 
   return 0;
@@ -322,8 +322,8 @@ bool PokerHand::FourOfAKind()
 
 bool PokerHand::FullHouse()
 {
-  if ((_num_cards_with_same_rank[_order[0]] == 3) &&
-      (_num_cards_with_same_rank[_order[3]] == 2))
+  if ((_num_cards_with_same_rank.cards[_order.cards[0]] == 3) &&
+      (_num_cards_with_same_rank.cards[_order.cards[3]] == 2))
     return 1;
 
   return 0;
@@ -334,7 +334,7 @@ bool PokerHand::Flush()
   int n;
 
   for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
-    if (_suit[_order[n]] != _suit[_order[0]])
+    if (_suit.cards[_order.cards[n]] != _suit.cards[_order.cards[0]])
       break;
   }
 
@@ -350,15 +350,15 @@ bool PokerHand::Straight()
 
   // first, handle the special case of a wheel (A, 2, 3, 4, 5)
 
-  if ((_rank[_order[0]] == ACE) &&
-      (_rank[_order[1]] == FIVE) &&
-      (_rank[_order[2]] == FOUR) &&
-      (_rank[_order[3]] == THREE) &&
-      (_rank[_order[4]] == TWO))
+  if ((_rank.cards[_order.cards[0]] == ACE) &&
+      (_rank.cards[_order.cards[1]] == FIVE) &&
+      (_rank.cards[_order.cards[2]] == FOUR) &&
+      (_rank.cards[_order.cards[3]] == THREE) &&
+      (_rank.cards[_order.cards[4]] == TWO))
     return 1;
 
   for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
-    if (_rank[_order[n-1]] != _rank[_order[n]] + 1)
+    if (_rank.cards[_order.cards[n-1]] != _rank.cards[_order.cards[n]] + 1)
       break;
   }
 
@@ -370,7 +370,7 @@ bool PokerHand::Straight()
 
 bool PokerHand::ThreeOfAKind()
 {
-  if (_num_cards_with_same_rank[_order[0]] == 3)
+  if (_num_cards_with_same_rank.cards[_order.cards[0]] == 3)
     return 1;
 
   return 0;
@@ -378,8 +378,8 @@ bool PokerHand::ThreeOfAKind()
 
 bool PokerHand::TwoPair()
 {
-  if ((_num_cards_with_same_rank[_order[0]] == 2) &&
-      (_num_cards_with_same_rank[_order[2]] == 2))
+  if ((_num_cards_with_same_rank.cards[_order.cards[0]] == 2) &&
+      (_num_cards_with_same_rank.cards[_order.cards[2]] == 2))
     return 1;
 
   return 0;
@@ -387,7 +387,7 @@ bool PokerHand::TwoPair()
 
 bool PokerHand::OnePair()
 {
-  if (_num_cards_with_same_rank[_order[0]] == 2)
+  if (_num_cards_with_same_rank.cards[_order.cards[0]] == 2)
     return 1;
 
   return 0;
@@ -406,26 +406,26 @@ char *PokerHand::GetHand()
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
         (_hand_type == ROYAL_FLUSH)) {
-      if ((_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE)) {
+      if ((_rank.cards[_order.cards[0]] == ACE) && (_rank.cards[_order.cards[1]] == FIVE)) {
         if (!n) {
           card_string_from_card_value(
-            _card[_order[0]],
+            _card.cards[_order.cards[0]],
             card_string);
         }
         else {
           card_string_from_card_value(
-            _card[_order[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
+            _card.cards[_order.cards[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
             card_string);
         }
       }
       else {
         card_string_from_card_value(
-          _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
+          _card.cards[_order.cards[NUM_CARDS_IN_HAND - 1 - n]],
           card_string);
       }
     }
     else
-      card_string_from_card_value(_card[_order[n]],card_string);
+      card_string_from_card_value(_card.cards[_order.cards[n]],card_string);
 
     for (m = 0; m < 2; m++)
       hand_string[n * 3 + m] = card_string[m];
@@ -813,7 +813,7 @@ void PokerHand::print(ostream& out) const
   card_string[2] = 0;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    card_string_from_card_value(_card[n],card_string);
+    card_string_from_card_value(_card.cards[n],card_string);
 
     out << card_string;
 
@@ -828,26 +828,26 @@ void PokerHand::print(ostream& out) const
     for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
       if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
           (_hand_type == ROYAL_FLUSH)) {
-        if ((_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE)) {
+        if ((_rank.cards[_order.cards[0]] == ACE) && (_rank.cards[_order.cards[1]] == FIVE)) {
           if (!n) {
             card_string_from_card_value(
-              _card[_order[0]],
+              _card.cards[_order.cards[0]],
               card_string);
           }
           else {
             card_string_from_card_value(
-              _card[_order[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
+              _card.cards[_order.cards[NUM_CARDS_IN_HAND - 1 - (n - 1)]],
               card_string);
           }
         }
         else {
           card_string_from_card_value(
-            _card[_order[NUM_CARDS_IN_HAND - 1 - n]],
+            _card.cards[_order.cards[NUM_CARDS_IN_HAND - 1 - n]],
             card_string);
         }
       }
       else
-        card_string_from_card_value(_card[_order[n]],card_string);
+        card_string_from_card_value(_card.cards[_order.cards[n]],card_string);
 
       out << card_string;
 
@@ -868,21 +868,21 @@ void PokerHand::print(ostream& out) const
         break;
       case 1:
         sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-          rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[0]]]]);
+          rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[0]]]]);
 
         break;
       case 2:
         // first, handle the special case of a wheel (A, 2, 3, 4, 5)
         if (((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
              (_hand_type == ROYAL_FLUSH)) &&
-             (_rank[_order[0]] == ACE) && (_rank[_order[1]] == FIVE))
+             (_rank.cards[_order.cards[0]] == ACE) && (_rank.cards[_order.cards[1]] == FIVE))
           sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
             rank_strings[ACE],
             rank_strings[FIVE]);
         else
           sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-            rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[0]]]],
-            rank_strings[_rank[_order[hand_types[_hand_type].var_info_vars[1]]]]);
+            rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[0]]]],
+            rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[1]]]]);
 
         break;
     }
@@ -920,7 +920,73 @@ void PokerHand::Fancy()
 
 int *PokerHand::GetCards()
 {
-  return &_card[0];
+  return &_card.cards[0];
+}
+
+void PokerHand::get_permutation_instance_five(int set_size,int instance_ix)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (_card.cards[0] = 0; _card.cards[0] < set_size - 5 + 1; _card.cards[0]++) {
+    for (_card.cards[1] = _card.cards[0] + 1; _card.cards[1] < set_size - 5 + 2; _card.cards[1]++) {
+      for (_card.cards[2] = _card.cards[1] + 1; _card.cards[2] < set_size - 5 + 3; _card.cards[2]++) {
+        for (_card.cards[3] = _card.cards[2] + 1; _card.cards[3] < set_size - 5 + 4; _card.cards[3]++) {
+          for (_card.cards[4] = _card.cards[3] + 1; _card.cards[4] < set_size - 5 + 5; _card.cards[4]++) {
+            return;
+
+            after_return_point:
+            ;
+          }
+        }
+      }
+    }
+  }
+}
+
+int PokerHand::read_quick_hands(char *hands_and_types_filename)
+{
+  int fhndl;
+  int bytes_read;
+
+  _quick_hands = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+  if (_quick_hands == NULL)
+    return 1;
+
+  if ((fhndl = open(hands_and_types_filename,O_BINARY | O_RDONLY,0)) == -1) {
+    free(_quick_hands);
+    return 2;
+  }
+
+  bytes_read = read(fhndl,_quick_hands,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
+    close(fhndl);
+    free(_quick_hands);
+    return 3;
+  }
+
+  close(fhndl);
+
+  return 0;
+}
+
+int PokerHand::find_quick_hand(struct hand_and_type **out_hand)
+{
+  int m;
+  int p;
+  struct hand_and_type *found;
+
+  found = (struct hand_and_type *)bsearch(&_card,_quick_hands,POKER_52_5_PERMUTATIONS,
+    sizeof (struct hand_and_type),compare_key);
+
+  if (found) {
+    *out_hand = found;
+    return 1;
+  }
+
+  return 0;
 }
 
 // default constructor
@@ -937,7 +1003,7 @@ HoldemPokerHand::HoldemPokerHand(const HoldemPokerHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++)
-    _card[n] = hand._card[n];
+    _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
 }
@@ -949,7 +1015,7 @@ HoldemPokerHand& HoldemPokerHand::operator=(const HoldemPokerHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++)
-    _card[n] = hand._card[n];
+    _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
 
@@ -964,26 +1030,26 @@ HoldemPokerHand::~HoldemPokerHand()
 
 HoldemPokerHand::HoldemPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
 {
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
-  _card[6] = card7 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _card.cards[6] = card7 % NUM_CARDS_IN_DECK;
 
   _have_cards = true;
 }
 
 void HoldemPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
 {
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
-  _card[6] = card7 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _card.cards[6] = card7 % NUM_CARDS_IN_DECK;
 
   _have_cards = true;
 }
@@ -1000,11 +1066,9 @@ PokerHand& HoldemPokerHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    get_permutation_instance_five(
+    hand.get_permutation_instance_five(
       NUM_CARDS_IN_HOLDEM_POOL,
-      &m,&n,&o,&p,&q,r);
-
-    hand.NewCards(_card[m],_card[n],_card[o],_card[p],_card[q]);
+      r);
 
     if (!r)
       _best_poker_hand = hand;
@@ -1030,7 +1094,7 @@ void HoldemPokerHand::print(ostream& out) const
   card_string[2] = 0;
 
   for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++) {
-    card_string_from_card_value(_card[n],card_string);
+    card_string_from_card_value(_card.cards[n],card_string);
 
     out << card_string;
 
@@ -1060,7 +1124,7 @@ HoldemTurnHand::HoldemTurnHand(const HoldemTurnHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_AT_TURN; n++)
-    _card[n] = hand._card[n];
+    _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
 }
@@ -1072,7 +1136,7 @@ HoldemTurnHand& HoldemTurnHand::operator=(const HoldemTurnHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_AT_TURN; n++)
-    _card[n] = hand._card[n];
+    _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
 
@@ -1087,24 +1151,24 @@ HoldemTurnHand::~HoldemTurnHand()
 
 HoldemTurnHand::HoldemTurnHand(int card1,int card2,int card3,int card4,int card5,int card6)
 {
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[5] = card6 % NUM_CARDS_IN_DECK;
 
   _have_cards = true;
 }
 
 void HoldemTurnHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6)
 {
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[5] = card6 % NUM_CARDS_IN_DECK;
 
   _have_cards = true;
 }
@@ -1121,11 +1185,9 @@ PokerHand& HoldemTurnHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_6_5_PERMUTATIONS; r++) {
-    get_permutation_instance_five(
+    hand.get_permutation_instance_five(
       NUM_CARDS_AT_TURN,
-      &m,&n,&o,&p,&q,r);
-
-    hand.NewCards(_card[m],_card[n],_card[o],_card[p],_card[q]);
+      r);
 
     if (!r)
       _best_poker_hand = hand;
@@ -1151,7 +1213,7 @@ void HoldemTurnHand::print(ostream& out) const
   card_string[2] = 0;
 
   for (n = 0; n < NUM_CARDS_AT_TURN; n++) {
-    card_string_from_card_value(_card[n],card_string);
+    card_string_from_card_value(_card.cards[n],card_string);
 
     out << card_string;
 
@@ -1185,11 +1247,11 @@ Flop::Flop(const Flop& flop)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
-    _card[n] = flop._card[n];
-    _suit[n] = flop._suit[n];
-    _rank[n] = flop._rank[n];
-    _num_cards_with_same_rank[n] = flop._num_cards_with_same_rank[n];
-    _order[n] = flop._order[n];
+    _card.cards[n] = flop._card.cards[n];
+    _suit.cards[n] = flop._suit.cards[n];
+    _rank.cards[n] = flop._rank.cards[n];
+    _num_cards_with_same_rank.cards[n] = flop._num_cards_with_same_rank.cards[n];
+    _order.cards[n] = flop._order.cards[n];
   }
 
   _have_cards = flop._have_cards;
@@ -1208,11 +1270,11 @@ Flop& Flop::operator=(const Flop& flop)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
-    _card[n] = flop._card[n];
-    _suit[n] = flop._suit[n];
-    _rank[n] = flop._rank[n];
-    _num_cards_with_same_rank[n] = flop._num_cards_with_same_rank[n];
-    _order[n] = flop._order[n];
+    _card.cards[n] = flop._card.cards[n];
+    _suit.cards[n] = flop._suit.cards[n];
+    _rank.cards[n] = flop._rank.cards[n];
+    _num_cards_with_same_rank.cards[n] = flop._num_cards_with_same_rank.cards[n];
+    _order.cards[n] = flop._order.cards[n];
   }
 
   _have_cards = flop._have_cards;
@@ -1236,13 +1298,13 @@ Flop::Flop(int card1,int card2,int card3)
 {
   int n;
 
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
 
   for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
-    _suit[n] = suit_of(_card[n]);
-    _rank[n] = rank_of(_card[n]);
+    _suit.cards[n] = suit_of(_card.cards[n]);
+    _rank.cards[n] = rank_of(_card.cards[n]);
   }
 
   _have_cards = true;
@@ -1256,13 +1318,13 @@ void Flop::NewCards(int card1,int card2,int card3)
 {
   int n;
 
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
 
   for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
-    _suit[n] = suit_of(_card[n]);
-    _rank[n] = rank_of(_card[n]);
+    _suit.cards[n] = suit_of(_card.cards[n]);
+    _rank.cards[n] = rank_of(_card.cards[n]);
   }
 
   _have_cards = true;
@@ -1274,7 +1336,7 @@ void Flop::NewCards(int card1,int card2,int card3)
 
 int Flop::GetCard(int card_ix)
 {
-  return _card[card_ix];
+  return _card.cards[card_ix];
 }
 
 int Flop::GetRank(int card_ix)
@@ -1287,7 +1349,7 @@ int Flop::GetRank(int card_ix)
     _flop_evaluated = false;
   }
 
-  return _rank[_order[card_ix]];
+  return _rank.cards[_order.cards[card_ix]];
 }
 
 void Flop::Sort()
@@ -1310,28 +1372,28 @@ void Flop::Sort()
       if (n == m)
         continue;
 
-      if (_rank[m] == _rank[n])
+      if (_rank.cards[m] == _rank.cards[n])
         num_cards_with_same_rank++;
     }
 
-    _num_cards_with_same_rank[m] = num_cards_with_same_rank;
+    _num_cards_with_same_rank.cards[m] = num_cards_with_same_rank;
   }
 
   for (n = 0; n < NUM_CARDS_IN_FLOP; n++)
-    _order[n] = n;
+    _order.cards[n] = n;
 
   for (m = 0; m < NUM_CARDS_IN_FLOP - 1; m++) {
     for (n = m + 1; n < NUM_CARDS_IN_FLOP; n++) {
-      if (_num_cards_with_same_rank[_order[m]] < _num_cards_with_same_rank[_order[n]]) {
-        temp = _order[m];
-        _order[m] = _order[n];
-        _order[n] = temp;
+      if (_num_cards_with_same_rank.cards[_order.cards[m]] < _num_cards_with_same_rank.cards[_order.cards[n]]) {
+        temp = _order.cards[m];
+        _order.cards[m] = _order.cards[n];
+        _order.cards[n] = temp;
       }
-      else if (_num_cards_with_same_rank[_order[m]] == _num_cards_with_same_rank[_order[n]]) {
-        if (_rank[_order[m]] < _rank[_order[n]]) {
-          temp = _order[m];
-          _order[m] = _order[n];
-          _order[n] = temp;
+      else if (_num_cards_with_same_rank.cards[_order.cards[m]] == _num_cards_with_same_rank.cards[_order.cards[n]]) {
+        if (_rank.cards[_order.cards[m]] < _rank.cards[_order.cards[n]]) {
+          temp = _order.cards[m];
+          _order.cards[m] = _order.cards[n];
+          _order.cards[n] = temp;
         }
       }
     }
@@ -1381,7 +1443,7 @@ int Flop::Flush()
   int n;
 
   for (n = 1; n < NUM_CARDS_IN_FLOP; n++) {
-    if (_suit[_order[n]] != _suit[_order[0]])
+    if (_suit.cards[_order.cards[n]] != _suit.cards[_order.cards[0]])
       break;
   }
 
@@ -1411,7 +1473,7 @@ int Flop::Straight()
 
 int Flop::PairOrBetter()
 {
-  if (_num_cards_with_same_rank[_order[0]] >= 2)
+  if (_num_cards_with_same_rank.cards[_order.cards[0]] >= 2)
     return 1;
 
   return 0;
@@ -1437,7 +1499,7 @@ void Flop::print(ostream& out) const
 
   //if (!_flop_evaluated) {
     for (n = 0; n < NUM_CARDS_IN_FLOP; n++) {
-      card_string_from_card_value(_card[n],card_string);
+      card_string_from_card_value(_card.cards[n],card_string);
 
       out << card_string;
 
@@ -1492,7 +1554,7 @@ OmahaPokerHand::OmahaPokerHand(const OmahaPokerHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_OMAHA_POOL; n++)
-    _card[n] = hand._card[n];
+    _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
 }
@@ -1504,7 +1566,7 @@ OmahaPokerHand& OmahaPokerHand::operator=(const OmahaPokerHand& hand)
   int n;
 
   for (n = 0; n < NUM_CARDS_IN_OMAHA_POOL; n++)
-    _card[n] = hand._card[n];
+    _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
 
@@ -1519,30 +1581,30 @@ OmahaPokerHand::~OmahaPokerHand()
 
 OmahaPokerHand::OmahaPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9)
 {
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
-  _card[6] = card7 % NUM_CARDS_IN_DECK;
-  _card[7] = card8 % NUM_CARDS_IN_DECK;
-  _card[8] = card9 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _card.cards[6] = card7 % NUM_CARDS_IN_DECK;
+  _card.cards[7] = card8 % NUM_CARDS_IN_DECK;
+  _card.cards[8] = card9 % NUM_CARDS_IN_DECK;
 
   _have_cards = true;
 }
 
 void OmahaPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9)
 {
-  _card[0] = card1 % NUM_CARDS_IN_DECK;
-  _card[1] = card2 % NUM_CARDS_IN_DECK;
-  _card[2] = card3 % NUM_CARDS_IN_DECK;
-  _card[3] = card4 % NUM_CARDS_IN_DECK;
-  _card[4] = card5 % NUM_CARDS_IN_DECK;
-  _card[5] = card6 % NUM_CARDS_IN_DECK;
-  _card[6] = card7 % NUM_CARDS_IN_DECK;
-  _card[7] = card8 % NUM_CARDS_IN_DECK;
-  _card[8] = card9 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _card.cards[6] = card7 % NUM_CARDS_IN_DECK;
+  _card.cards[7] = card8 % NUM_CARDS_IN_DECK;
+  _card.cards[8] = card9 % NUM_CARDS_IN_DECK;
 
   _have_cards = true;
 }
@@ -1571,26 +1633,26 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
         &p,&q,&r,s);
 
       if (bDebug) {
-        card_string_from_card_value(_card[m],card_string);
+        card_string_from_card_value(_card.cards[m],card_string);
         cout << card_string << " ";
-        card_string_from_card_value(_card[n],card_string);
+        card_string_from_card_value(_card.cards[n],card_string);
         cout << card_string << " ";
 
-        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+        card_string_from_card_value(_card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
           card_string);
         cout << card_string << " ";
-        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+        card_string_from_card_value(_card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
           card_string);
         cout << card_string << " ";
-        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r],
+        card_string_from_card_value(_card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + r],
           card_string);
         cout << card_string << " ";
       }
 
-      hand.NewCards(_card[m],_card[n],
-        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
-        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
-        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
+      hand.NewCards(_card.cards[m],_card.cards[n],
+        _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+        _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+        _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
 
       hand.Evaluate();
 
@@ -1639,26 +1701,26 @@ PokerHand& OmahaPokerHand::BestLowPokerHand(bool bDebug)
         &p,&q,&r,s);
 
       if (bDebug) {
-        card_string_from_card_value(_card[m],card_string);
+        card_string_from_card_value(_card.cards[m],card_string);
         cout << card_string << " ";
-        card_string_from_card_value(_card[n],card_string);
+        card_string_from_card_value(_card.cards[n],card_string);
         cout << card_string << " ";
 
-        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+        card_string_from_card_value(_card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
           card_string);
         cout << card_string << " ";
-        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+        card_string_from_card_value(_card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
           card_string);
         cout << card_string << " ";
-        card_string_from_card_value(_card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r],
+        card_string_from_card_value(_card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + r],
           card_string);
         cout << card_string << " ";
       }
 
-      hand.NewCards(_card[m],_card[n],
-        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
-        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
-        _card[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
+      hand.NewCards(_card.cards[m],_card.cards[n],
+        _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + p],
+        _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
+        _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
 
       hand.EvaluateLow();
 
@@ -1694,7 +1756,7 @@ void OmahaPokerHand::print(ostream& out) const
   card_string[2] = 0;
 
   for (n = 0; n < NUM_CARDS_IN_OMAHA_POOL; n++) {
-    card_string_from_card_value(_card[n],card_string);
+    card_string_from_card_value(_card.cards[n],card_string);
 
     out << card_string;
 
@@ -1767,31 +1829,6 @@ void get_permutation_instance_four(
 
           after_return_point:
           ;
-        }
-      }
-    }
-  }
-}
-
-void get_permutation_instance_five(
-  int set_size,
-  int *m,int *n,int *o,int *p,int *q,
-  int instance_ix
-)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (*m = 0; *m < set_size - 5 + 1; (*m)++) {
-    for (*n = *m + 1; *n < set_size - 5 + 2; (*n)++) {
-      for (*o = *n + 1; *o < set_size - 5 + 3; (*o)++) {
-        for (*p = *o + 1; *p < set_size - 5 + 4; (*p)++) {
-          for (*q = *p + 1; *q < set_size - 5 + 5; (*q)++) {
-            return;
-
-            after_return_point:
-            ;
-          }
         }
       }
     }
@@ -1942,44 +1979,13 @@ void init_plain_hand_type_lens()
     plain_hand_type_lens[n] = strlen(plain_hand_types[n]);
 }
 
-int read_hands_and_types(
-  char *hands_and_types_filename,
-  struct hand_and_type **hands_and_types
-)
-{
-  int fhndl;
-  int bytes_read;
-
-  *hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
-
-  if (*hands_and_types == NULL)
-    return 1;
-
-  if ((fhndl = open(hands_and_types_filename,O_BINARY | O_RDONLY,0)) == -1) {
-    free(*hands_and_types);
-    return 2;
-  }
-
-  bytes_read = read(fhndl,*hands_and_types,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
-
-  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
-    close(fhndl);
-    free(*hands_and_types);
-    return 3;
-  }
-
-  close(fhndl);
-
-  return 0;
-}
-
 int compare_key(const void *vkey,const void *velem)
 {
   int n;
-  struct hand *key;
+  hand *key;
   struct hand_and_type *elem;
 
-  key = (struct hand *)vkey;
+  key = (hand *)vkey;
   elem = (struct hand_and_type *)velem;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
@@ -1988,43 +1994,6 @@ int compare_key(const void *vkey,const void *velem)
 
     if (key->cards[n] > (int)elem->cards[n])
       return 1;
-  }
-
-  return 0;
-}
-
-int find_hand(
-  struct hand *in_hand,
-  struct hand_and_type *hands_and_types,
-  bool bBsearch,
-  struct hand_and_type **out_hand
-)
-{
-  int m;
-  int p;
-  struct hand_and_type *found;
-
-  if (!bBsearch) {
-    for (p = 0; p < POKER_52_5_PERMUTATIONS; p++) {
-      for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
-        if (hands_and_types[p].cards[m] != (char)in_hand->cards[m])
-          break;
-      }
-
-      if (m == NUM_CARDS_IN_HAND) {
-        *out_hand = &hands_and_types[p];
-        return 1;
-      }
-    }
-  }
-  else {
-    found = (struct hand_and_type *)bsearch(in_hand,hands_and_types,POKER_52_5_PERMUTATIONS,
-      sizeof (struct hand_and_type),compare_key);
-
-    if (found) {
-      *out_hand = found;
-      return 1;
-    }
   }
 
   return 0;

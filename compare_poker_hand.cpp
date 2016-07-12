@@ -25,7 +25,7 @@ int main(int argc,char **argv)
   int line_no;
   int mod_line_no;
   int line_len;
-  int cards[NUM_CARDS_IN_HAND];
+  hand work_hand;
   PokerHand hands[2];
   int ret_compare;
 
@@ -63,7 +63,7 @@ int main(int argc,char **argv)
     }
 
     for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-      retval = card_value_from_card_string(&line[m],&cards[n]);
+      retval = card_value_from_card_string(&line[m],&work_hand.cards[n]);
 
       if (retval) {
         printf(parse_error,line_no,n,5);
@@ -87,7 +87,7 @@ int main(int argc,char **argv)
       }
     }
 
-    hands[mod_line_no].NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
+    hands[mod_line_no].NewCards(work_hand.cards[0],work_hand.cards[1],work_hand.cards[2],work_hand.cards[3],work_hand.cards[4]);
 
     if (!mod_line_no)
       printf("%s - ",line);
