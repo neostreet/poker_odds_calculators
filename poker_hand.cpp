@@ -923,72 +923,6 @@ int *PokerHand::GetCards()
   return &_card.cards[0];
 }
 
-void PokerHand::get_permutation_instance_five(int set_size,int instance_ix)
-{
-  if (instance_ix)
-    goto after_return_point;
-
-  for (_card.cards[0] = 0; _card.cards[0] < set_size - 5 + 1; _card.cards[0]++) {
-    for (_card.cards[1] = _card.cards[0] + 1; _card.cards[1] < set_size - 5 + 2; _card.cards[1]++) {
-      for (_card.cards[2] = _card.cards[1] + 1; _card.cards[2] < set_size - 5 + 3; _card.cards[2]++) {
-        for (_card.cards[3] = _card.cards[2] + 1; _card.cards[3] < set_size - 5 + 4; _card.cards[3]++) {
-          for (_card.cards[4] = _card.cards[3] + 1; _card.cards[4] < set_size - 5 + 5; _card.cards[4]++) {
-            return;
-
-            after_return_point:
-            ;
-          }
-        }
-      }
-    }
-  }
-}
-
-int PokerHand::read_quick_hands(char *hands_and_types_filename)
-{
-  int fhndl;
-  int bytes_read;
-
-  _quick_hands = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
-
-  if (_quick_hands == NULL)
-    return 1;
-
-  if ((fhndl = open(hands_and_types_filename,O_BINARY | O_RDONLY,0)) == -1) {
-    free(_quick_hands);
-    return 2;
-  }
-
-  bytes_read = read(fhndl,_quick_hands,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
-
-  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
-    close(fhndl);
-    free(_quick_hands);
-    return 3;
-  }
-
-  close(fhndl);
-
-  return 0;
-}
-
-int PokerHand::find_quick_hand(struct hand_and_type **out_hand)
-{
-  int m;
-  int p;
-  struct hand_and_type *found;
-
-  found = (struct hand_and_type *)bsearch(&_card,_quick_hands,POKER_52_5_PERMUTATIONS,
-    sizeof (struct hand_and_type),compare_key);
-
-  if (found) {
-    *out_hand = found;
-    return 1;
-  }
-
-  return 0;
-}
-
 // default constructor
 
 HoldemPokerHand::HoldemPokerHand()
@@ -1066,9 +1000,11 @@ PokerHand& HoldemPokerHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    hand.get_permutation_instance_five(
+    get_permutation_instance_five(
       NUM_CARDS_IN_HOLDEM_POOL,
-      r);
+      &m,&n,&o,&p,&q,r);
+
+    hand.NewCards(_card.cards[m],_card.cards[n],_card.cards[o],_card.cards[p],_card.cards[q]);
 
     if (!r)
       _best_poker_hand = hand;
@@ -1185,9 +1121,11 @@ PokerHand& HoldemTurnHand::BestPokerHand()
   int ret_compare;
 
   for (r = 0; r < POKER_6_5_PERMUTATIONS; r++) {
-    hand.get_permutation_instance_five(
+    get_permutation_instance_five(
       NUM_CARDS_AT_TURN,
-      r);
+      &m,&n,&o,&p,&q,r);
+
+    hand.NewCards(_card.cards[m],_card.cards[n],_card.cards[o],_card.cards[p],_card.cards[q]);
 
     if (!r)
       _best_poker_hand = hand;
@@ -1835,6 +1773,31 @@ void get_permutation_instance_four(
   }
 }
 
+void get_permutation_instance_five(
+  int set_size,
+  int *m,int *n,int *o,int *p,int *q,
+  int instance_ix
+)
+{
+  if (instance_ix)
+    goto after_return_point;
+
+  for (*m = 0; *m < set_size - 5 + 1; (*m)++) {
+    for (*n = *m + 1; *n < set_size - 5 + 2; (*n)++) {
+      for (*o = *n + 1; *o < set_size - 5 + 3; (*o)++) {
+        for (*p = *o + 1; *p < set_size - 5 + 4; (*p)++) {
+          for (*q = *p + 1; *q < set_size - 5 + 5; (*q)++) {
+            return;
+
+            after_return_point:
+            ;
+          }
+        }
+      }
+    }
+  }
+}
+
 void get_permutation_instance_seven(
   int set_size,
   int *m,int *n,int *o,int *p,int *q,int *r,int *s,
@@ -1979,6 +1942,37 @@ void init_plain_hand_type_lens()
     plain_hand_type_lens[n] = strlen(plain_hand_types[n]);
 }
 
+int read_hands_and_types(
+  char *hands_and_types_filename,
+  struct hand_and_type **hands_and_types
+)
+{
+  int fhndl;
+  int bytes_read;
+
+  *hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+  if (*hands_and_types == NULL)
+    return 1;
+
+  if ((fhndl = open(hands_and_types_filename,O_BINARY | O_RDONLY,0)) == -1) {
+    free(*hands_and_types);
+    return 2;
+  }
+
+  bytes_read = read(fhndl,*hands_and_types,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+
+  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
+    close(fhndl);
+    free(*hands_and_types);
+    return 3;
+  }
+
+  close(fhndl);
+
+  return 0;
+}
+
 int compare_key(const void *vkey,const void *velem)
 {
   int n;
@@ -1994,6 +1988,43 @@ int compare_key(const void *vkey,const void *velem)
 
     if (key->cards[n] > (int)elem->cards[n])
       return 1;
+  }
+
+  return 0;
+}
+
+int find_hand(
+  hand *in_hand,
+  struct hand_and_type *hands_and_types,
+  bool bBsearch,
+  struct hand_and_type **out_hand
+)
+{
+  int m;
+  int p;
+  struct hand_and_type *found;
+
+  if (!bBsearch) {
+    for (p = 0; p < POKER_52_5_PERMUTATIONS; p++) {
+      for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
+        if (hands_and_types[p].cards[m] != (char)in_hand->cards[m])
+          break;
+      }
+
+      if (m == NUM_CARDS_IN_HAND) {
+        *out_hand = &hands_and_types[p];
+        return 1;
+      }
+    }
+  }
+  else {
+    found = (struct hand_and_type *)bsearch(in_hand,hands_and_types,POKER_52_5_PERMUTATIONS,
+      sizeof (struct hand_and_type),compare_key);
+
+    if (found) {
+      *out_hand = found;
+      return 1;
+    }
   }
 
   return 0;

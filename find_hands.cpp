@@ -9,60 +9,81 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: find_hands hands_and_types count\n";
+"usage: find_hands (-bsearch) hands_and_types (count)\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 int main(int argc,char **argv)
 {
   int m;
   int n;
+  int curr_arg;
+  bool bBsearch;
+  struct hand_and_type *hands_and_types;
   int retval;
   int count;
-  PokerHand myhand;
+  hand work_hand;
   time_t start_time;
   time_t end_time;
   struct hand_and_type *found;
 
-  if (argc != 3) {
+  if ((argc < 2) || (argc > 4)) {
     printf(usage);
     return 1;
   }
 
-  retval = myhand.read_quick_hands(argv[1]);
+  bBsearch = false;
 
-  if (retval) {
-    printf("read_quick_hands() failed: %d\n",retval);
+  for (curr_arg = 1; curr_arg < argc; curr_arg++) {
+    if (!strcmp(argv[curr_arg],"-bsearch"))
+      bBsearch = true;
+    else
+      break;
+  }
+
+  if ((argc - curr_arg != 1) && (argc - curr_arg != 2)) {
+    printf(usage);
     return 2;
   }
 
-  sscanf(argv[2],"%d",&count);
+  retval = read_hands_and_types(argv[curr_arg],&hands_and_types);
+
+  if (retval) {
+    printf("read_hands_and_types() failed: %d\n",retval);
+    return 3;
+  }
+
+  if (argc - curr_arg != 2)
+    count = POKER_52_5_PERMUTATIONS;
+  else
+    sscanf(argv[curr_arg+1],"%d",&count);
 
   if (count > POKER_52_5_PERMUTATIONS) {
     printf("illegal count\n");
-    return 3;
+    return 4;
   }
 
   time(&start_time);
 
   for (n = 0; n < count; n++) {
-    myhand.get_permutation_instance_five(
+    get_permutation_instance_five(
       NUM_CARDS_IN_DECK,
-      n);
+      &work_hand.cards[0],&work_hand.cards[1],&work_hand.cards[2],&work_hand.cards[3],&work_hand.cards[4],n);
 
-    retval = myhand.find_quick_hand(&found);
+    retval = find_hand(&work_hand,hands_and_types,bBsearch,&found);
 
     if (!retval) {
-      printf("find_quick_hand() failed: %d\n",retval);
-      return 4;
+      printf("find_hand() failed: %d\n",retval);
+      return 5;
     }
 
     if (found->quick_ix != n) {
       printf("linear search failed: %d != %d\n",found->quick_ix,n);
-      return 5;
+      return 6;
     }
   }
 
   time(&end_time);
+  free(hands_and_types);
 
   printf("computation time: %d seconds\n",end_time - start_time);
 

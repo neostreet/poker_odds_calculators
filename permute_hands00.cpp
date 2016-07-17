@@ -30,7 +30,6 @@ static int *ixs2;
 static vector<PokerHand> hands;
 
 int elem_compare(const void *elem1,const void *elem2);
-int compare_key(const void *elem1,const void *elem2);
 
 int main(int argc,char **argv)
 {
@@ -46,13 +45,13 @@ int main(int argc,char **argv)
   char *binfile_name;
   int cards[NUM_CARDS_IN_HAND];
   char card_string[3];
-  PokerHand hand;
+  PokerHand myhand;
   time_t start_time;
   time_t end_time;
   int ties;
   struct hand_and_type *hands_and_types;
   int *cards_ptr;
-  struct hand work_hand;
+  hand work_hand;
   struct hand_and_type *found;
   int fhndl;
 
@@ -124,16 +123,16 @@ int main(int argc,char **argv)
       NUM_CARDS_IN_DECK,
       &cards[0],&cards[1],&cards[2],&cards[3],&cards[4],m);
 
-    hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
-    hand.Evaluate();
-    hands.push_back(hand);
+    myhand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
+    myhand.Evaluate();
+    hands.push_back(myhand);
     ixs[m] = m;
 
     if (bBinFile) {
       for (n = 0; n < NUM_CARDS_IN_HAND; n++)
         hands_and_types[m].cards[n] = (char)cards[n];
 
-      hands_and_types[m].hand_type = (char)hand.GetHandType();
+      hands_and_types[m].hand_type = (char)myhand.GetHandType();
     }
   }
 
@@ -229,24 +228,4 @@ int elem_compare(const void *elem1,const void *elem2)
   ix2 = *(int *)elem2;
 
   return hands[ix1].Compare(hands[ix2],0);
-}
-
-int compare_key(const void *vkey,const void *velem)
-{
-  int n;
-  struct hand *key;
-  struct hand_and_type *elem;
-
-  key = (struct hand *)vkey;
-  elem = (struct hand_and_type *)velem;
-
-  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    if (key->cards[n] < (int)elem->cards[n])
-      return -1;
-
-    if (key->cards[n] > (int)elem->cards[n])
-      return 1;
-  }
-
-  return 0;
 }
