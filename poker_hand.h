@@ -151,6 +151,10 @@ typedef struct {
 } hand;
 
 typedef struct {
+  int cards[NUM_CARDS_IN_HOLDEM_POOL];
+} holdem_hand;
+
+typedef struct {
   int cards[NUM_CARDS_IN_FLOP];
 } flop;
 
@@ -257,7 +261,7 @@ class HoldemPokerHand {
 
   private:
 
-  hand _card;
+  holdem_hand _card;
   PokerHand _best_poker_hand;
 
   int _have_cards;
