@@ -9,7 +9,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: find_hands (-bsearch) hands_and_types (count)\n";
+"usage: find_hands (-bsearch) (-validate) hands_and_types (count)\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 int main(int argc,char **argv)
@@ -18,6 +18,7 @@ int main(int argc,char **argv)
   int n;
   int curr_arg;
   bool bBsearch;
+  bool bValidate;
   struct hand_and_type *hands_and_types;
   int retval;
   int count;
@@ -26,16 +27,19 @@ int main(int argc,char **argv)
   time_t end_time;
   struct hand_and_type *found;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     printf(usage);
     return 1;
   }
 
   bBsearch = false;
+  bValidate = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-bsearch"))
       bBsearch = true;
+    else if (!strcmp(argv[curr_arg],"-validate"))
+      bValidate = true;
     else
       break;
   }
@@ -76,9 +80,11 @@ int main(int argc,char **argv)
       return 5;
     }
 
-    if (found->quick_ix != n) {
-      printf("linear search failed: %d != %d\n",found->quick_ix,n);
-      return 6;
+    if (bValidate) {
+      if (found->quick_ix != n) {
+        printf("linear search failed: %d != %d\n",found->quick_ix,n);
+        return 6;
+      }
     }
   }
 

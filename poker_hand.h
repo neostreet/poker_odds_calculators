@@ -192,7 +192,7 @@ class PokerHand {
   void Sort();
   HandType Evaluate();
   HandType EvaluateLow();
-  HandType QuickEvaluate();
+  HandType EvaluateQuick(struct hand_and_type *hands_and_types);
   int GetQuickIx();
   void UnEvaluate();
   bool Evaluated();
@@ -211,7 +211,7 @@ class PokerHand {
 
   int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
   int CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand);
-  int QuickCompare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
+  int CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types);
 
   void print(ostream& out) const;
   void Verbose();
@@ -256,6 +256,7 @@ class HoldemPokerHand {
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
 
   PokerHand& BestPokerHand();
+  PokerHand& BestPokerHandQuick(struct hand_and_type *hands_and_types);
 
   void print(ostream& out) const;
 

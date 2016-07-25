@@ -275,15 +275,46 @@ HandType PokerHand::EvaluateLow()
   return _hand_type;
 }
 
-//HandType PokerHand::QuickEvaluate()
-//{
-//}
+HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
+{
+  int retval;
+  struct hand_and_type *found;
+
+  num_evaluations++;
+
+  if (!_have_cards)
+    return HIGH_CARD;
+
+  if (!_hand_sorted) {
+    Sort();
+
+    if (!_hand_sorted)
+      return HIGH_CARD;
+
+    _hand_evaluated = false;
+  }
+
+  if (_hand_evaluated)
+    return _hand_type;
+
+  retval = find_hand(&_card,hands_and_types,true,&found);
+
+  if (!retval)
+    return HIGH_CARD;
+
+  _hand_type = (HandType)found->hand_type;
+  _quick_ix = found->quick_ix;
+}
+
+int PokerHand::GetQuickIx()
+{
+  return _quick_ix;
+}
 
 void PokerHand::UnEvaluate()
 {
   _hand_evaluated = false;
 }
-
 
 bool PokerHand::Evaluated()
 {
@@ -755,6 +786,27 @@ int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   return 0;
 }
 
+int PokerHand::CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types)
+{
+  int compare_quick_ix;
+
+  if (!_hand_evaluated)
+    EvaluateQuick(hands_and_types);
+
+  if (!compare_hand.Evaluated()) {
+    compare_hand.EvaluateQuick(hands_and_types);
+    compare_quick_ix = compare_hand.GetQuickIx();
+  }
+
+  if (_quick_ix > compare_quick_ix)
+    return 1;
+
+  if (_quick_ix < compare_quick_ix)
+    return -1;
+
+  return 0;
+}
+
 static char *suit_strings[] = {
   "clubs",
   "diamonds",
@@ -1010,6 +1062,37 @@ PokerHand& HoldemPokerHand::BestPokerHand()
       _best_poker_hand = hand;
     else {
       ret_compare = hand.Compare(_best_poker_hand,1);
+
+      if (ret_compare == 1)
+        _best_poker_hand = hand;
+    }
+  }
+
+  return _best_poker_hand;
+}
+
+PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_types)
+{
+  int m;
+  int n;
+  int o;
+  int p;
+  int q;
+  int r;
+  PokerHand hand;
+  int ret_compare;
+
+  for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
+    get_permutation_instance_five(
+      NUM_CARDS_IN_HOLDEM_POOL,
+      &m,&n,&o,&p,&q,r);
+
+    hand.NewCards(_card.cards[m],_card.cards[n],_card.cards[o],_card.cards[p],_card.cards[q]);
+
+    if (!r)
+      _best_poker_hand = hand;
+    else {
+      ret_compare = hand.CompareQuick(_best_poker_hand,hands_and_types);
 
       if (ret_compare == 1)
         _best_poker_hand = hand;
