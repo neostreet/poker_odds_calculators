@@ -11,7 +11,7 @@ static char line[MAX_LINE_LEN];
 
 static char usage[] =
 "usage: best_holdem_hand_quick (-unevaluate) (-verbose) (-plain) (-no_stream)\n"
-"  filename hands_and_types_filename";
+"  (-card_ixs) filename hands_and_types_filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,6 +24,7 @@ int main(int argc,char **argv)
   bool bVerbose;
   bool bPlain;
   bool bNoStream;
+  bool bCardIxs;
   int m;
   int n;
   int retval;
@@ -35,7 +36,7 @@ int main(int argc,char **argv)
   HoldemPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 3) || (argc > 7)) {
+  if ((argc < 3) || (argc > 8)) {
     cout << usage << endl;
     return 1;
   }
@@ -44,6 +45,7 @@ int main(int argc,char **argv)
   bVerbose = false;
   bPlain = false;
   bNoStream = false;
+  bCardIxs = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-unevaluate"))
@@ -54,6 +56,8 @@ int main(int argc,char **argv)
       bPlain = true;
     else if (!strcmp(argv[curr_arg],"-no_stream"))
       bNoStream = true;
+    else if (!strcmp(argv[curr_arg],"-card_ixs"))
+      bCardIxs = true;
     else
       break;
   }
@@ -85,41 +89,47 @@ int main(int argc,char **argv)
 
     line_no++;
 
-    m = 0;
-
-    // skip whitespace
-
-    for ( ; m < line_len; m++) {
-      if (line[m] != ' ')
-        break;
+    if (bCardIxs) {
+      sscanf(line,"%d %d %d %d %d %d %d",
+        &cards[0],&cards[1],&cards[2],&cards[3],&cards[4],&cards[5],&cards[6]);
     }
+    else {
+      m = 0;
 
-    if (m == line_len) {
-      printf(parse_error,line_no,-1,3);
-      return 5;
-    }
+      // skip whitespace
 
-    for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++) {
-      retval = card_value_from_card_string(&line[m],&cards[n]);
-
-      if (retval) {
-        printf(parse_error,line_no,n,5);
-        return 6;
+      for ( ; m < line_len; m++) {
+        if (line[m] != ' ')
+          break;
       }
 
-      m += 2;
+      if (m == line_len) {
+        printf(parse_error,line_no,-1,3);
+        return 5;
+      }
 
-      if (n < NUM_CARDS_IN_HOLDEM_POOL - 1) {
-        // skip whitespace
+      for (n = 0; n < NUM_CARDS_IN_HOLDEM_POOL; n++) {
+        retval = card_value_from_card_string(&line[m],&cards[n]);
 
-        for ( ; m < line_len; m++) {
-          if (line[m] != ' ')
-            break;
+        if (retval) {
+          printf(parse_error,line_no,n,5);
+          return 6;
         }
 
-        if (m == line_len) {
-          printf(parse_error,line_no,n,6);
-          return 7;
+        m += 2;
+
+        if (n < NUM_CARDS_IN_HOLDEM_POOL - 1) {
+          // skip whitespace
+
+          for ( ; m < line_len; m++) {
+            if (line[m] != ' ')
+              break;
+          }
+
+          if (m == line_len) {
+            printf(parse_error,line_no,n,6);
+            return 7;
+          }
         }
       }
     }
