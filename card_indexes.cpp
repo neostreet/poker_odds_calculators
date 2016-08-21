@@ -107,21 +107,21 @@ int main(int argc,char **argv)
         }
       }
     }
+
+    if (bSort)
+      qsort(cards,num_cards,sizeof (int),compare);
+
+    for (n = 0; n < num_cards; n++) {
+      printf("%d",cards[n]);
+
+      if (n < num_cards - 1)
+        putchar(' ');
+      else
+        putchar(0x0a);
+    }
   }
 
   fclose(fptr);
-
-  if (bSort)
-    qsort(cards,num_cards,sizeof (int),compare);
-
-  for (n = 0; n < num_cards; n++) {
-    printf("%d",cards[n]);
-
-    if (n < num_cards - 1)
-      putchar(' ');
-    else
-      putchar(0x0a);
-  }
 
   return 0;
 }
