@@ -10,7 +10,8 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: get_hand_ixs_by_quick_ix (-verbose) hands_and_types_filename quick_ix";
+"usage: get_hand_ixs_by_quick_ix (-verbose) (-card_ixs) (-no_ixs)\n"
+"  hands_and_types_filename quick_ix";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -20,20 +21,31 @@ int main(int argc,char **argv)
   int n;
   int curr_arg;
   bool bVerbose;
+  bool bCardIxs;
+  bool bNoIxs;
   int retval;
   struct hand_and_type *hands_and_types;
   int quick_ix;
+  char card_string[3];
 
-  if ((argc < 3) || (argc > 4)) {
+  if ((argc < 3) || (argc > 6)) {
     printf(usage);
     return 1;
   }
 
   bVerbose = false;
+  bCardIxs = false;
+  bNoIxs = false;
+
+  card_string[2] = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
+    else if (!strcmp(argv[curr_arg],"-card_ixs"))
+      bCardIxs = true;
+    else if (!strcmp(argv[curr_arg],"-no_ixs"))
+      bNoIxs = true;
     else
       break;
   }
@@ -57,16 +69,21 @@ int main(int argc,char **argv)
       if (!bVerbose)
         printf("%d\n",n);
       else {
-        printf("%d ",n);
+        if (!bNoIxs)
+          printf("%d ",n);
 
         for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
-          printf("%d",hands_and_types[n].cards[m]);
-
-          if (m < NUM_CARDS_IN_HAND - 1)
-            putchar(' ');
+          if (!bCardIxs) {
+            card_string_from_card_value(
+              hands_and_types[n].cards[m],
+              card_string);
+            printf("%s ",card_string);
+          }
           else
-            putchar(0x0a);
+            printf("%d ",hands_and_types[n].cards[m]);
         }
+
+        printf("%s\n",plain_hand_types[hands_and_types[n].hand_type]);
       }
     }
   }
