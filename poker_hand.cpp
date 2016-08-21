@@ -288,7 +288,6 @@ int compare1(const void *elem1,const void *elem2)
 
 HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
 {
-  int n;
   int retval;
   hand sorted_hand;
   struct hand_and_type *found;
