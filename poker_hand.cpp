@@ -275,9 +275,22 @@ HandType PokerHand::EvaluateLow()
   return _hand_type;
 }
 
+int compare1(const void *elem1,const void *elem2)
+{
+  int int1;
+  int int2;
+
+  int1 = *(int *)elem1;
+  int2 = *(int *)elem2;
+
+  return int1 - int2;
+}
+
 HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
 {
+  int n;
   int retval;
+  hand sorted_hand;
   struct hand_and_type *found;
 
   num_evaluations++;
@@ -297,7 +310,10 @@ HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
   if (_hand_evaluated)
     return _hand_type;
 
-  retval = find_hand(&_card,hands_and_types,true,&found);
+  sorted_hand = _card;
+  qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
+
+  retval = find_hand(&sorted_hand,hands_and_types,true,&found);
 
   if (!retval)
     return HIGH_CARD;
