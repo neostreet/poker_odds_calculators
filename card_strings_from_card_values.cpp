@@ -27,6 +27,8 @@ int main(int argc,char **argv)
     return 1;
   }
 
+  card_string[2] = 0;
+
   for (n = 1; n < argc; n++) {
     sscanf(argv[n],"%d",&val);
     card_string_from_card_value(val,card_string);
