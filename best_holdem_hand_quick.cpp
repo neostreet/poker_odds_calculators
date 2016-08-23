@@ -11,7 +11,7 @@ static char line[MAX_LINE_LEN];
 
 static char usage[] =
 "usage: best_holdem_hand_quick (-unevaluate) (-verbose) (-plain) (-no_stream)\n"
-"  (-card_ixs) filename hands_and_types_filename";
+"  (-card_ixs) (-debug) filename hands_and_types_filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -25,6 +25,7 @@ int main(int argc,char **argv)
   bool bPlain;
   bool bNoStream;
   bool bCardIxs;
+  bool bDebug;
   int m;
   int n;
   int retval;
@@ -36,7 +37,7 @@ int main(int argc,char **argv)
   HoldemPokerHand board_poker_hand;
   PokerHand best_poker_hand;
 
-  if ((argc < 3) || (argc > 8)) {
+  if ((argc < 3) || (argc > 9)) {
     cout << usage << endl;
     return 1;
   }
@@ -46,6 +47,7 @@ int main(int argc,char **argv)
   bPlain = false;
   bNoStream = false;
   bCardIxs = false;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-unevaluate"))
@@ -58,6 +60,8 @@ int main(int argc,char **argv)
       bNoStream = true;
     else if (!strcmp(argv[curr_arg],"-card_ixs"))
       bCardIxs = true;
+    else if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
     else
       break;
   }
@@ -139,7 +143,7 @@ int main(int argc,char **argv)
 
     cout << board_poker_hand << endl;
 
-    best_poker_hand = board_poker_hand.BestPokerHandQuick(hands_and_types);
+    best_poker_hand = board_poker_hand.BestPokerHandQuick(hands_and_types,bDebug);
 
     cout << "best hand: " << endl << endl;
 

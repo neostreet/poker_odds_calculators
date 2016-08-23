@@ -209,9 +209,9 @@ class PokerHand {
   char *GetHand();
   HandType GetHandType();
 
-  int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
+  int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug);
   int CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand);
-  int CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types);
+  int CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types,bool bDebug);
 
   void print(ostream& out) const;
   void Verbose();
@@ -255,8 +255,8 @@ class HoldemPokerHand {
   HoldemPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
 
-  PokerHand& BestPokerHand();
-  PokerHand& BestPokerHandQuick(struct hand_and_type *hands_and_types);
+  PokerHand& BestPokerHand(bool bDebug);
+  PokerHand& BestPokerHandQuick(struct hand_and_type *hands_and_types,bool bDebug);
 
   void print(ostream& out) const;
 

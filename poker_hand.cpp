@@ -496,7 +496,7 @@ HandType PokerHand::GetHandType()
   return _hand_type;
 }
 
-int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
+int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug)
 {
   int n;
   HandType hand_type;
@@ -509,13 +509,21 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   else
     num_holdem_best_poker_hand_comparisons++;
 
-  if (!_hand_evaluated)
+  if (!_hand_evaluated) {
+    if (bDebug)
+      cout << "dbg: PokerHand::Compare(): calling Evaluate() 1" << endl;
+
     hand_type = Evaluate();
+  }
   else
     hand_type = _hand_type;
 
-  if (!compare_hand.Evaluated())
+  if (!compare_hand.Evaluated()) {
+    if (bDebug)
+      cout << "dbg: PokerHand::Compare(): calling Evaluate() 2" << endl;
+
     compare_hand_type = compare_hand.Evaluate();
+  }
   else
     compare_hand_type = compare_hand.GetHandType();
 
@@ -804,15 +812,23 @@ int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   return 0;
 }
 
-int PokerHand::CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types)
+int PokerHand::CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types,bool bDebug)
 {
   int compare_quick_ix;
 
-  if (!_hand_evaluated)
-    EvaluateQuick(hands_and_types);
+  if (!_hand_evaluated) {
+    if (bDebug)
+      cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 1" << endl;
 
-  if (!compare_hand.Evaluated())
+    EvaluateQuick(hands_and_types);
+  }
+
+  if (!compare_hand.Evaluated()) {
+    if (bDebug)
+      cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 2" << endl;
+
     compare_hand.EvaluateQuick(hands_and_types);
+  }
 
   compare_quick_ix = compare_hand.GetQuickIx();
 
@@ -1058,7 +1074,7 @@ void HoldemPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5
   _have_cards = true;
 }
 
-PokerHand& HoldemPokerHand::BestPokerHand()
+PokerHand& HoldemPokerHand::BestPokerHand(bool bDebug)
 {
   int m;
   int n;
@@ -1079,7 +1095,13 @@ PokerHand& HoldemPokerHand::BestPokerHand()
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.Compare(_best_poker_hand,1);
+      ret_compare = hand.Compare(_best_poker_hand,1,bDebug);
+
+      if (bDebug) {
+        cout << "dbg: HoldemPokerHand::BestPokerHand(): hand             = " << hand << endl;
+        cout << "dbg: HoldemPokerHand::BestPokerHand(): _best_poker_hand = " << _best_poker_hand << endl;
+        cout << "dbg: HoldemPokerHand::BestPokerHand(): ret_compare = " << ret_compare << endl;
+      }
 
       if (ret_compare == 1)
         _best_poker_hand = hand;
@@ -1089,7 +1111,7 @@ PokerHand& HoldemPokerHand::BestPokerHand()
   return _best_poker_hand;
 }
 
-PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_types)
+PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_types,bool bDebug)
 {
   int m;
   int n;
@@ -1110,7 +1132,13 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.CompareQuick(_best_poker_hand,hands_and_types);
+      ret_compare = hand.CompareQuick(_best_poker_hand,hands_and_types,bDebug);
+
+      if (bDebug) {
+        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): hand             = " << hand << endl;
+        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): _best_poker_hand = " << _best_poker_hand << endl;
+        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): ret_compare = " << ret_compare << endl;
+      }
 
       if (ret_compare == 1)
         _best_poker_hand = hand;
@@ -1231,7 +1259,7 @@ PokerHand& HoldemTurnHand::BestPokerHand()
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.Compare(_best_poker_hand,1);
+      ret_compare = hand.Compare(_best_poker_hand,1,false);
 
       if (ret_compare == 1)
         _best_poker_hand = hand;
@@ -1701,7 +1729,7 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
       if (!o && !s)
         _best_poker_hand = hand;
       else {
-        ret_compare = hand.Compare(_best_poker_hand,1);
+        ret_compare = hand.Compare(_best_poker_hand,1,false);
 
         if (ret_compare == 1) {
           _best_poker_hand = hand;
