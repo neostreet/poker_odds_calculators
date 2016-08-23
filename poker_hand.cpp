@@ -811,10 +811,10 @@ int PokerHand::CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_
   if (!_hand_evaluated)
     EvaluateQuick(hands_and_types);
 
-  if (!compare_hand.Evaluated()) {
+  if (!compare_hand.Evaluated())
     compare_hand.EvaluateQuick(hands_and_types);
-    compare_quick_ix = compare_hand.GetQuickIx();
-  }
+
+  compare_quick_ix = compare_hand.GetQuickIx();
 
   if (_quick_ix > compare_quick_ix)
     return 1;
