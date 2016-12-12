@@ -49,7 +49,8 @@ static char usage[] =
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
 "  (-winning_hand_typehand_type (-delta_gevalue)\n"
 "  (-table_boss) (-show_table_boss) (-ace_on_the_river)\n"
-"  (-verbose_style2) (-only_knockout) (-only_double_up) player_name filename\n";
+"  (-verbose_style2) (-only_knockout) (-only_double_up)\n"
+"  (-show_num_possible_checks) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -137,7 +138,8 @@ enum quantum_typ {
   QUANTUM_TYPE_OPM,
   QUANTUM_TYPE_NUMDECISIONS,
   QUANTUM_TYPE_WAGERED,
-  QUANTUM_TYPE_TABLE_BOSS
+  QUANTUM_TYPE_TABLE_BOSS,
+  QUANTUM_TYPE_NUM_POSSIBLE_CHECKS
 };
 
 struct vars {
@@ -186,6 +188,7 @@ struct vars {
   int show_num_decisions;
   int show_wagered;
   int show_table_boss;
+  int show_num_possible_checks;
   bool bAceOnTheRiver;
   bool bOnlyWash;
   bool bNoDelta;
@@ -309,6 +312,7 @@ struct vars {
   quantum_typ quantum_type;
   int quantum;
   int hit_felt_in_session_count;
+  int num_possible_checks;
 };
 
 int main(int argc,char **argv)
@@ -355,7 +359,7 @@ int main(int argc,char **argv)
   int boss_seat_ix;
   int my_seat_ix;
 
-  if ((argc < 3) || (argc > 98)) {
+  if ((argc < 3) || (argc > 99)) {
     printf(usage);
     return 1;
   }
@@ -408,6 +412,7 @@ int main(int argc,char **argv)
   local_vars.show_num_decisions = 0;
   local_vars.show_wagered = 0;
   local_vars.show_table_boss = 0;
+  local_vars.show_num_possible_checks = 0;
   local_vars.bAceOnTheRiver = false;
   local_vars.bOnlyWash = false;
   local_vars.sum_quantum = 0;
@@ -587,6 +592,10 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_table_boss")) {
       local_vars.show_table_boss = 1;
       local_vars.quantum_type = QUANTUM_TYPE_TABLE_BOSS;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_num_possible_checks")) {
+      local_vars.show_num_possible_checks = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_NUM_POSSIBLE_CHECKS;
     }
     else if (!strcmp(argv[curr_arg],"-ace_on_the_river"))
       local_vars.bAceOnTheRiver = true;
@@ -853,9 +862,11 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
-    local_vars.show_num_decisions + local_vars.show_wagered + local_vars.show_table_boss > 1) {
+    local_vars.show_num_decisions + local_vars.show_wagered +
+    local_vars.show_table_boss + local_vars.show_num_possible_checks > 1) {
     printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
-      "  show_num_decisions, show_wagered, and show_table_boss\n");
+      "  show_num_decisions, show_wagered, show_table_boss,\n"
+      "  and show_num_possible_checks\n");
     return 26;
   }
 
@@ -1267,6 +1278,7 @@ int main(int argc,char **argv)
                 local_vars.uncalled_bet_amount = 0;
                 local_vars.collected_from_pot = 0;
                 local_vars.collected_from_pot_count = 0;
+                local_vars.num_possible_checks = 0;
 
                 if (local_vars.bDebug)
                   printf("line %d starting_balance = %d\n",line_no,local_vars.starting_balance);
@@ -2388,6 +2400,7 @@ void run_filter(struct vars *varspt)
                                                                                                                   case QUANTUM_TYPE_NUMDECISIONS:
                                                                                                                   case QUANTUM_TYPE_WAGERED:
                                                                                                                   case QUANTUM_TYPE_TABLE_BOSS:
+                                                                                                                  case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
                                                                                                                     printf("%10d %s",varspt->quantum,varspt->hole_cards);
 
                                                                                                                     break;
@@ -2524,6 +2537,10 @@ static void do_balance_processing(struct vars *varspt)
       break;
     case QUANTUM_TYPE_TABLE_BOSS:
       varspt->quantum = varspt->am_table_boss;
+
+      break;
+    case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
+      varspt->quantum = varspt->num_possible_checks;
 
       break;
   }
