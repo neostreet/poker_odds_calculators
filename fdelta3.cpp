@@ -1098,6 +1098,9 @@ int main(int argc,char **argv)
     if (local_vars.show_num_decisions)
       local_vars.numdecs = 0;
 
+    if (local_vars.show_num_possible_checks)
+      local_vars.num_possible_checks = 0;
+
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
@@ -1269,6 +1272,9 @@ int main(int argc,char **argv)
                 if (local_vars.show_num_decisions)
                   local_vars.numdecs = 0;
 
+                if (local_vars.show_num_possible_checks)
+                  local_vars.num_possible_checks = 0;
+
                 street = 0;
                 num_street_markers = 0;
                 ante = 0;
@@ -1278,7 +1284,6 @@ int main(int argc,char **argv)
                 local_vars.uncalled_bet_amount = 0;
                 local_vars.collected_from_pot = 0;
                 local_vars.collected_from_pot_count = 0;
-                local_vars.num_possible_checks = 0;
 
                 if (local_vars.bDebug)
                   printf("line %d starting_balance = %d\n",line_no,local_vars.starting_balance);
@@ -1579,6 +1584,9 @@ int main(int argc,char **argv)
           if (local_vars.show_num_decisions)
             local_vars.numdecs++;
 
+          if (local_vars.show_num_possible_checks)
+            local_vars.num_possible_checks++;
+
           local_vars.bHaveVoluntaryBet = true;
         }
         else if (Contains(true,
@@ -1628,6 +1636,9 @@ int main(int argc,char **argv)
 
           if (local_vars.show_num_decisions)
             local_vars.numdecs++;
+
+          if (local_vars.show_num_possible_checks)
+            local_vars.num_possible_checks++;
         }
         else if ((local_vars.bStud || local_vars.bRazz) && Contains(true,
           line,line_len,
