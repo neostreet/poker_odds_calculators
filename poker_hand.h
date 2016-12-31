@@ -147,7 +147,7 @@ int get_rank_index(char rank_char,int *rank_index_ptr);
 int get_suit_index(char suit_char,int *suit_index_ptr);
 
 typedef struct {
-  int cards[NUM_CARDS_IN_HAND];
+  int cards[NUM_CARDS_AT_TURN];
 } hand;
 
 typedef struct {
