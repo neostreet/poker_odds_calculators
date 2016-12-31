@@ -1121,6 +1121,8 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
   int r;
   PokerHand hand;
   int ret_compare;
+  int dbg_loop_count = -1;
+  int dbg;
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
     get_permutation_instance_five(
@@ -1128,6 +1130,9 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
       &m,&n,&o,&p,&q,r);
 
     hand.NewCards(_card.cards[m],_card.cards[n],_card.cards[o],_card.cards[p],_card.cards[q]);
+
+    if (r == dbg_loop_count)
+      dbg = 1;
 
     if (!r)
       _best_poker_hand = hand;
