@@ -147,8 +147,12 @@ int get_rank_index(char rank_char,int *rank_index_ptr);
 int get_suit_index(char suit_char,int *suit_index_ptr);
 
 typedef struct {
-  int cards[NUM_CARDS_AT_TURN];
+  int cards[NUM_CARDS_IN_HAND];
 } hand;
+
+typedef struct {
+  int cards[NUM_CARDS_AT_TURN];
+} turn_hand;
 
 typedef struct {
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
@@ -291,7 +295,7 @@ class HoldemTurnHand {
 
   private:
 
-  hand _card;
+  turn_hand _card;
   PokerHand _best_poker_hand;
 
   int _have_cards;
