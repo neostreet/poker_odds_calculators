@@ -1562,6 +1562,9 @@ int main(int argc,char **argv)
 
           local_vars.bFolded = true;
 
+          if (local_vars.show_num_decisions)
+            local_vars.numdecs++;
+
           do_balance_processing(&local_vars);
 
           continue;
@@ -2538,7 +2541,6 @@ static void do_balance_processing(struct vars *varspt)
 
       break;
     case QUANTUM_TYPE_NUMDECISIONS:
-      varspt->numdecs++;
       varspt->quantum = varspt->numdecs;
 
       break;
