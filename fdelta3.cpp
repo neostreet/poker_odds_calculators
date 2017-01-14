@@ -50,7 +50,7 @@ static char usage[] =
 "  (-winning_hand_typehand_type (-delta_gevalue)\n"
 "  (-table_boss) (-show_table_boss) (-ace_on_the_river)\n"
 "  (-verbose_style2) (-only_knockout) (-only_double_up)\n"
-"  (-show_num_possible_checks) player_name filename\n";
+"  (-show_num_possible_checks) (-filter_percentage) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -294,6 +294,7 @@ struct vars {
   int wagered_amount;
   int total_delta;
   int winning_percentage;
+  int filter_percentage;
   int summary_val;
   int summary_val2;
   int sum_quantum;
@@ -359,7 +360,7 @@ int main(int argc,char **argv)
   int boss_seat_ix;
   int my_seat_ix;
 
-  if ((argc < 3) || (argc > 99)) {
+  if ((argc < 3) || (argc > 100)) {
     printf(usage);
     return 1;
   }
@@ -423,6 +424,7 @@ int main(int argc,char **argv)
   local_vars.max_collected = 0;
   local_vars.max_delta_hand_type = 0;
   local_vars.winning_percentage = 0;
+  local_vars.filter_percentage = 0;
   local_vars.bNoDelta = false;
   local_vars.bHoleCardsUsed = false;
   local_vars.bOnlySuited = false;
@@ -665,6 +667,10 @@ int main(int argc,char **argv)
       local_vars.winning_percentage = 1;
       local_vars.bShowHandCount = true;
     }
+    else if (!strcmp(argv[curr_arg],"-filter_percentage")) {
+      local_vars.filter_percentage = 1;
+      local_vars.bShowHandCount = true;
+    }
     else if (!strcmp(argv[curr_arg],"-get_date_from_filename"))
       local_vars.bGetDateFromFilename = true;
     else if (!strcmp(argv[curr_arg],"-no_hole_cards"))
@@ -882,14 +888,14 @@ int main(int argc,char **argv)
 
   if (local_vars.only_count + local_vars.sum_quantum + local_vars.sum_abs_delta + local_vars.max_delta + local_vars.min_delta +
     local_vars.max_abs_delta + local_vars.max_collected + local_vars.max_delta_hand_type +
-    local_vars.winning_percentage > 1) {
-    printf("can only specify one of -only_count, -sum_quantum, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, -max_delta_hand_type, and -winning_percentage\n");
+    local_vars.winning_percentage + local_vars.filter_percentage > 1) {
+    printf("can only specify one of -only_count, -sum_quantum, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, -max_delta_hand_type, -winning_percentage, and filter_percentage\n");
     return 29;
   }
 
   if ((local_vars.only_count) || (local_vars.sum_quantum) || (local_vars.sum_abs_delta) || (local_vars.max_delta) ||
       (local_vars.min_delta) || (local_vars.max_abs_delta) || (local_vars.max_collected) ||
-      (local_vars.max_delta_hand_type) || (local_vars.winning_percentage)) {
+      (local_vars.max_delta_hand_type) || (local_vars.winning_percentage) || (local_vars.filter_percentage)) {
     local_vars.bTerse = true;
     local_vars.bGetDateFromFilename = true;
     local_vars.bSummarizing = true;
@@ -1116,12 +1122,12 @@ int main(int argc,char **argv)
                     if (!local_vars.bShowHandCount)
                       printf("%d\t%s\n",local_vars.summary_val,local_vars.date_string);
                     else {
-                      if (!local_vars.winning_percentage)
-                        printf("%d\t%s\t(%d)\n",local_vars.summary_val,local_vars.date_string,local_vars.num_hands);
-                      else {
+                      if (local_vars.winning_percentage || local_vars.filter_percentage) {
                         local_vars.dwork = (double)local_vars.summary_val2 / (double)local_vars.summary_val;
                         printf("%lf\t%s\t(%d %d)\n",local_vars.dwork,local_vars.date_string,local_vars.summary_val2,local_vars.summary_val);
                       }
+                      else
+                        printf("%d\t%s\t(%d)\n",local_vars.summary_val,local_vars.date_string,local_vars.num_hands);
                     }
                   }
                   else {
@@ -2259,6 +2265,9 @@ void run_filter(struct vars *varspt)
   if (varspt->bHandFiltered)
     return;
 
+  if (varspt->filter_percentage)
+    varspt->summary_val++;
+
   if (varspt->bSummarizing || !varspt->bSkipZero || (varspt->delta != 0)) {
     if (!varspt->bOnlyZero || (varspt->delta == 0)) {
       if (!varspt->bSkipFolded || !varspt->bFolded) {
@@ -2337,6 +2346,8 @@ void run_filter(struct vars *varspt)
                                                                                                                     if (varspt->delta > 0)
                                                                                                                       varspt->summary_val2++;
                                                                                                                   }
+                                                                                                                  else if (varspt->filter_percentage)
+                                                                                                                    varspt->summary_val2++;
                                                                                                                   else if (varspt->only_count)
                                                                                                                     varspt->summary_val++;
                                                                                                                   else if (varspt->sum_quantum)
