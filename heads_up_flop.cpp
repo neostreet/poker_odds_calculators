@@ -177,7 +177,7 @@ int main(int argc,char **argv)
           remaining_cards[m],remaining_cards[n]);
 
         for (p = 0; p < NUM_PLAYERS; p++)
-          hand[p] = holdem_hand[p].BestPokerHand();
+          hand[p] = holdem_hand[p].BestPokerHand(bDebug);
       }
       else {
         turn_hand[0].NewCards(cards[0],cards[1],
@@ -193,7 +193,7 @@ int main(int argc,char **argv)
       }
 
       if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0);
+        ret_compare = hand[0].Compare(hand[1],0,bDebug);
       else
         ret_compare = hand[0].CompareLow(hand[1],0);
 

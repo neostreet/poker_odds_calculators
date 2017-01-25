@@ -170,9 +170,9 @@ int main(int argc,char **argv)
         remaining_cards[m],remaining_cards[n]);
 
       for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = holdem_hand[p].BestPokerHandQuick(hands_and_types);
+        hand[p] = holdem_hand[p].BestPokerHandQuick(hands_and_types,bDebug);
 
-      ret_compare = hand[0].CompareQuick(hand[1],hands_and_types);
+      ret_compare = hand[0].CompareQuick(hand[1],hands_and_types,bDebug);
 
       if (ret_compare == 1) {
         outcomes[0].wins++;

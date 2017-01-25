@@ -165,11 +165,11 @@ int main(int argc,char **argv)
         remaining_cards[o],remaining_cards[p],
         remaining_cards[q]);
 
-      hand[0] = holdem_hand[0].BestPokerHand();
-      hand[1] = holdem_hand[1].BestPokerHand();
+      hand[0] = holdem_hand[0].BestPokerHand(bDebug);
+      hand[1] = holdem_hand[1].BestPokerHand(bDebug);
 
       if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0);
+        ret_compare = hand[0].Compare(hand[1],0,bDebug);
       else
         ret_compare = hand[0].CompareLow(hand[1],0);
 
