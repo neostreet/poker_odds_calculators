@@ -15,7 +15,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up_flop (-debug) (-compare_low) (-turn_only) filename";
+"usage: heads_up_flop (-debuglevel) (-compare_low) (-turn_only) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -25,6 +25,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bDebug;
+  int debug_level;
   bool bCompareLow;
   bool bTurnOnly;
   int m;
@@ -58,8 +59,14 @@ int main(int argc,char **argv)
   bTurnOnly = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug"))
+    if (!strncmp(argv[curr_arg],"-debug",6)) {
       bDebug = true;
+
+      if (strlen(argv[curr_arg]) == 6)
+        debug_level = 0;
+      else
+        sscanf(&argv[curr_arg][6],"%d",&debug_level);
+    }
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
     else if (!strcmp(argv[curr_arg],"-turn_only"))
@@ -177,7 +184,7 @@ int main(int argc,char **argv)
           remaining_cards[m],remaining_cards[n]);
 
         for (p = 0; p < NUM_PLAYERS; p++)
-          hand[p] = holdem_hand[p].BestPokerHand(bDebug);
+          hand[p] = holdem_hand[p].BestPokerHand((debug_level > 1));
       }
       else {
         turn_hand[0].NewCards(cards[0],cards[1],
@@ -193,7 +200,7 @@ int main(int argc,char **argv)
       }
 
       if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0,bDebug);
+        ret_compare = hand[0].Compare(hand[1],0,(debug_level > 1));
       else
         ret_compare = hand[0].CompareLow(hand[1],0);
 

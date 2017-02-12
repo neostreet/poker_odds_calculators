@@ -14,7 +14,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: heads_up_turn (-debug) (-compare_low) filename";
+static char usage[] = "usage: heads_up_turn (-debuglevel) (-compare_low) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,6 +24,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bDebug;
+  int debug_level;
   bool bCompareLow;
   int m;
   int n;
@@ -53,8 +54,14 @@ int main(int argc,char **argv)
   bCompareLow = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug"))
+    if (!strncmp(argv[curr_arg],"-debug",6)) {
       bDebug = true;
+
+      if (strlen(argv[curr_arg]) == 6)
+        debug_level = 0;
+      else
+        sscanf(&argv[curr_arg][6],"%d",&debug_level);
+    }
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
     else
@@ -160,10 +167,10 @@ int main(int argc,char **argv)
         remaining_cards[m]);
 
       for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = holdem_hand[p].BestPokerHand(bDebug);
+        hand[p] = holdem_hand[p].BestPokerHand((debug_level > 1));
 
       if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0,bDebug);
+        ret_compare = hand[0].Compare(hand[1],0,(debug_level > 1));
       else
         ret_compare = hand[0].CompareLow(hand[1],0);
 
