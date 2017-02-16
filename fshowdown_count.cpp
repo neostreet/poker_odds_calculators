@@ -50,6 +50,8 @@ static char mucked[] = " mucked ";
 static char showed[] = " showed ";
 #define SHOWED_LEN (sizeof (showed) - 1)
 
+#define MAX_SHOWDOWN_HANDS 9
+
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
@@ -77,6 +79,7 @@ int main(int argc,char **argv)
   int file_no;
   int dbg_file_no;
   int showdown_count;
+  int local_showdown_count;
   int ix;
   int retval;
   char card_string[2];
@@ -112,6 +115,7 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_all_hands")) {
       bShowAllHands = true;
       bVerbose = true;
+      bShowBoard = true;
     }
     else
       break;
@@ -156,6 +160,7 @@ int main(int argc,char **argv)
     line_no = 0;
     dbg_line_no = -1;
     bHaveShowdown = false;
+    local_showdown_count = 0;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -197,9 +202,11 @@ int main(int argc,char **argv)
             }
           }
 
-          poker_hand.NewCards(cards[2],cards[3],cards[4],cards[5],cards[6]);
-          poker_hand.Evaluate();
-          cout << poker_hand << endl;
+          if (!bShowAllHands) {
+            poker_hand.NewCards(cards[2],cards[3],cards[4],cards[5],cards[6]);
+            poker_hand.Evaluate();
+            cout << poker_hand << endl;
+          }
         }
       }
       else if (bHaveShowdown && bShowBestHand && Contains(true,line,line_len,and_won,AND_WON_LEN,&ix)) {
