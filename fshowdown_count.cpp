@@ -27,8 +27,8 @@ static char couldnt_open[] = "couldn't open %s\n";
 static char show_down[] = "*** SHOW DOWN ***";
 #define SHOW_DOWN_LEN (sizeof (show_down) - 1)
 
-static char board[] = "Board [";
-#define BOARD_LEN (sizeof (board) - 1)
+static char board_str[] = "Board [";
+#define BOARD_STR_LEN (sizeof (board_str) - 1)
 
 static char and_won[] = " and won ";
 #define AND_WON_LEN (sizeof (and_won) - 1)
@@ -82,6 +82,7 @@ int main(int argc,char **argv)
   int local_showdown_count;
   int ix;
   int retval;
+  char board[15];
   char card_string[2];
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
   char player_name[MAX_PLAYER_NAME_LEN+1];
@@ -98,6 +99,7 @@ int main(int argc,char **argv)
   bShowBoard = false;
   bShowBestHand = false;
   bShowAllHands = false;
+  board[14] = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
@@ -114,8 +116,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-show_all_hands")) {
       bShowAllHands = true;
-      bVerbose = true;
       bShowBoard = true;
+      bVerbose = true;
     }
     else
       break;
@@ -130,7 +132,6 @@ int main(int argc,char **argv)
     printf("can't specify both -show_best_hand and -show_all_hands\n");
     return 3;
   }
-
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
@@ -186,11 +187,16 @@ int main(int argc,char **argv)
         if (!bShowBoard && !bShowBestHand && !bShowAllHands)
           break;
       }
-      else if (bHaveShowdown && bShowBoard && !strncmp(line,board,BOARD_LEN)) {
-        if (!bNot) {
+      else if (bHaveShowdown) {
+        if (bShowBoard && !strncmp(line,board_str,BOARD_STR_LEN)) {
+          // grab board
+          for (q = 0; q < 14; q++)
+            board[q] = line[BOARD_STR_LEN + q];
+
+          // grab board cards
           for (q = 0; q < NUM_COMMUNITY_CARDS; q++) {
-            card_string[0] = line[BOARD_LEN + q*3 + 0];
-            card_string[1] = line[BOARD_LEN + q*3 + 1];
+            card_string[0] = line[BOARD_STR_LEN + q*3 + 0];
+            card_string[1] = line[BOARD_STR_LEN + q*3 + 1];
 
             retval = card_value_from_card_string(
               card_string,&cards[q+2]);
@@ -202,48 +208,48 @@ int main(int argc,char **argv)
             }
           }
 
-          if (!bShowAllHands) {
+          if (!bNot) {
             poker_hand.NewCards(cards[2],cards[3],cards[4],cards[5],cards[6]);
             poker_hand.Evaluate();
-            cout << poker_hand << endl;
+            cout << board << endl;
           }
         }
-      }
-      else if (bHaveShowdown && bShowBestHand && Contains(true,line,line_len,and_won,AND_WON_LEN,&ix)) {
-        if (!bNot) {
-          line[ix-1] = 0;
-          printf("%s %s\n",filename,&line[ix-6]);
-        }
-      }
-      else if (bHaveShowdown && bShowAllHands && !strncmp(line,"Seat ",5) && Contains(true,line,line_len,"[",1,&ix)) {
-        if (!bNot) {
-          retval = get_player_name(line,line_len,player_name,MAX_PLAYER_NAME_LEN);
-
-          if (retval) {
-            printf("get_player_name() failed on line %d: %d\n",
-              line_no,retval);
-            return 6;
+        else if (bShowBestHand && Contains(true,line,line_len,and_won,AND_WON_LEN,&ix)) {
+          if (!bNot) {
+            line[ix-1] = 0;
+            printf("%s %s\n",filename,&line[ix-6]);
           }
-
-          line[ix+6] = 0;
-
-          for (q = 0; q < NUM_HOLE_CARDS_IN_HOLDEM_HAND; q++) {
-            card_string[0] = line[ix + 1 + q*3 + 0];
-            card_string[1] = line[ix + 1 + q*3 + 1];
-
-            retval = card_value_from_card_string(
-              card_string,&cards[q]);
+        }
+        else if (bShowAllHands && !strncmp(line,"Seat ",5) && Contains(true,line,line_len,"[",1,&ix)) {
+          if (!bNot) {
+            retval = get_player_name(line,line_len,player_name,MAX_PLAYER_NAME_LEN);
 
             if (retval) {
-              printf("invalid card string %s on line %d: %d\n",
-                card_string,line_no,retval);
-              return 7;
+              printf("get_player_name() failed on line %d: %d\n",
+                line_no,retval);
+              return 6;
             }
-          }
 
-          holdem_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6]);
-          poker_hand = holdem_hand.BestPokerHand(false);
-          cout << poker_hand << " " << &line[ix+1] << " " << player_name << " " << filename << endl;
+            line[ix+6] = 0;
+
+            for (q = 0; q < NUM_HOLE_CARDS_IN_HOLDEM_HAND; q++) {
+              card_string[0] = line[ix + 1 + q*3 + 0];
+              card_string[1] = line[ix + 1 + q*3 + 1];
+
+              retval = card_value_from_card_string(
+                card_string,&cards[q]);
+
+              if (retval) {
+                printf("invalid card string %s on line %d: %d\n",
+                  card_string,line_no,retval);
+                return 7;
+              }
+            }
+
+            holdem_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6]);
+            poker_hand = holdem_hand.BestPokerHand(false);
+            cout << "  " << poker_hand << " " << &line[ix+1] << " " << player_name << " " << filename << endl;
+          }
         }
       }
     }
