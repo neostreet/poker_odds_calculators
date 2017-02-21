@@ -85,9 +85,10 @@ int main(int argc,char **argv)
   char board[15];
   char card_string[2];
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
-  char player_name[MAX_PLAYER_NAME_LEN+1];
+  char hole_cards[MAX_SHOWDOWN_HANDS][6];
+  char player_name[MAX_SHOWDOWN_HANDS][MAX_PLAYER_NAME_LEN+1];
   HoldemPokerHand holdem_hand;
-  PokerHand poker_hand;
+  PokerHand poker_hand[MAX_SHOWDOWN_HANDS];
 
   if ((argc < 2) || (argc > 7)) {
     printf(usage);
@@ -100,6 +101,9 @@ int main(int argc,char **argv)
   bShowBestHand = false;
   bShowAllHands = false;
   board[14] = 0;
+
+  for (n = 0; n < MAX_SHOWDOWN_HANDS; n++)
+    hole_cards[n][5] = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
@@ -208,11 +212,8 @@ int main(int argc,char **argv)
             }
           }
 
-          if (!bNot) {
-            poker_hand.NewCards(cards[2],cards[3],cards[4],cards[5],cards[6]);
-            poker_hand.Evaluate();
+          if (!bNot)
             cout << board << endl;
-          }
         }
         else if (bShowBestHand && Contains(true,line,line_len,and_won,AND_WON_LEN,&ix)) {
           if (!bNot) {
@@ -222,7 +223,7 @@ int main(int argc,char **argv)
         }
         else if (bShowAllHands && !strncmp(line,"Seat ",5) && Contains(true,line,line_len,"[",1,&ix)) {
           if (!bNot) {
-            retval = get_player_name(line,line_len,player_name,MAX_PLAYER_NAME_LEN);
+            retval = get_player_name(line,line_len,player_name[local_showdown_count],MAX_PLAYER_NAME_LEN);
 
             if (retval) {
               printf("get_player_name() failed on line %d: %d\n",
@@ -230,7 +231,8 @@ int main(int argc,char **argv)
               return 6;
             }
 
-            line[ix+6] = 0;
+            for (n = 0; n < 5; n++)
+              hole_cards[local_showdown_count][n] = line[ix+1+n];
 
             for (q = 0; q < NUM_HOLE_CARDS_IN_HOLDEM_HAND; q++) {
               card_string[0] = line[ix + 1 + q*3 + 0];
@@ -247,8 +249,9 @@ int main(int argc,char **argv)
             }
 
             holdem_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6]);
-            poker_hand = holdem_hand.BestPokerHand(false);
-            cout << "  " << poker_hand << " " << &line[ix+1] << " " << player_name << " " << filename << endl;
+            poker_hand[local_showdown_count] = holdem_hand.BestPokerHand(false);
+
+            local_showdown_count++;
           }
         }
       }
@@ -256,7 +259,12 @@ int main(int argc,char **argv)
 
     fclose(fptr);
 
-    if (bNot && !bHaveShowdown) {
+    if (!bNot) {
+      for (n = 0; n < local_showdown_count; n++) {
+        cout << "  " << poker_hand[n] << " " << hole_cards[n] << " " << player_name[n] << " " << filename << endl;
+      }
+    }
+    else if (!bHaveShowdown) {
       if (!bVerbose)
         showdown_count++;
       else
