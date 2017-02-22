@@ -89,6 +89,7 @@ int main(int argc,char **argv)
   char player_name[MAX_SHOWDOWN_HANDS][MAX_PLAYER_NAME_LEN+1];
   HoldemPokerHand holdem_hand;
   PokerHand poker_hand[MAX_SHOWDOWN_HANDS];
+  int best_hand;
 
   if ((argc < 2) || (argc > 7)) {
     printf(usage);
@@ -116,6 +117,7 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-show_best_hand")) {
       bShowBestHand = true;
+      bShowBoard = true;
       bVerbose = true;
     }
     else if (!strcmp(argv[curr_arg],"-show_all_hands")) {
@@ -215,13 +217,7 @@ int main(int argc,char **argv)
           if (!bNot)
             cout << board << endl;
         }
-        else if (bShowBestHand && Contains(true,line,line_len,and_won,AND_WON_LEN,&ix)) {
-          if (!bNot) {
-            line[ix-1] = 0;
-            printf("%s %s\n",filename,&line[ix-6]);
-          }
-        }
-        else if (bShowAllHands && !strncmp(line,"Seat ",5) && Contains(true,line,line_len,"[",1,&ix)) {
+        else if ((bShowBestHand || bShowAllHands) && !strncmp(line,"Seat ",5) && Contains(true,line,line_len,"[",1,&ix)) {
           if (!bNot) {
             retval = get_player_name(line,line_len,player_name[local_showdown_count],MAX_PLAYER_NAME_LEN);
 
@@ -260,8 +256,20 @@ int main(int argc,char **argv)
     fclose(fptr);
 
     if (!bNot) {
-      for (n = 0; n < local_showdown_count; n++) {
-        cout << "  " << poker_hand[n] << " " << hole_cards[n] << " " << player_name[n] << " " << filename << endl;
+      if (bShowBestHand && local_showdown_count) {
+        best_hand = 0;
+
+        for (n = 1; n < local_showdown_count; n++) {
+          if (poker_hand[best_hand].Compare(poker_hand[n],0,false) == -1)
+            best_hand = n;
+        }
+
+        cout << "  " << poker_hand[best_hand] << " " << hole_cards[best_hand] << " " << player_name[best_hand] << " " << filename << endl;
+      }
+      else if (bShowAllHands) {
+        for (n = 0; n < local_showdown_count; n++) {
+          cout << "  " << poker_hand[n] << " " << hole_cards[n] << " " << player_name[n] << " " << filename << endl;
+        }
       }
     }
     else if (!bHaveShowdown) {
