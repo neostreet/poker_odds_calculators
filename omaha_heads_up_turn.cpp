@@ -14,7 +14,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: omaha_heads_up_turn (-debug) filename";
+static char usage[] =
+"usage: omaha_heads_up_turn (-debug) (-low) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,6 +25,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bDebug;
+  bool bLow;
   int m;
   int n;
   int o;
@@ -43,16 +45,19 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 4)) {
     cout << usage << endl;
     return 1;
   }
 
   bDebug = false;
+  bLow = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-low"))
+      bLow = true;
     else
       break;
   }
@@ -155,10 +160,17 @@ int main(int argc,char **argv)
         cards[8],cards[9],cards[10],cards[11],
         remaining_cards[m]);
 
-      for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = omaha_hand[p].BestPokerHand(false);
+      for (p = 0; p < NUM_PLAYERS; p++) {
+        if (!bLow)
+          hand[p] = omaha_hand[p].BestPokerHand(false);
+        else
+          hand[p] = omaha_hand[p].BestLowPokerHand(false);
+      }
 
-      ret_compare = hand[0].Compare(hand[1],0);
+      if (!bLow)
+        ret_compare = hand[0].Compare(hand[1],0);
+      else
+        ret_compare = hand[0].CompareLow(hand[1],0);
 
       if (ret_compare == 1) {
         outcomes[0].wins++;
