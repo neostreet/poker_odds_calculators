@@ -27,7 +27,7 @@ int main(int argc,char **argv)
   int ix;
   char card_string[3];
 
-  if ((argc < 3) || (argc > 6)) {
+  if ((argc < 3) || (argc > 5)) {
     printf(usage);
     return 1;
   }
