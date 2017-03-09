@@ -832,6 +832,9 @@ int PokerHand::CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_
 
   compare_quick_ix = compare_hand.GetQuickIx();
 
+  if (bDebug)
+    cout << "dbg: PokerHand::CompareQuick(): _quick_ix = " << _quick_ix << ", compare_quick_ix = " << compare_quick_ix << endl;
+
   if (_quick_ix > compare_quick_ix)
     return 1;
 
@@ -1100,7 +1103,8 @@ PokerHand& HoldemPokerHand::BestPokerHand(bool bDebug)
       if (bDebug) {
         cout << "dbg: HoldemPokerHand::BestPokerHand(): hand             = " << hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHand(): _best_poker_hand = " << _best_poker_hand << endl;
-        cout << "dbg: HoldemPokerHand::BestPokerHand(): ret_compare = " << ret_compare << endl;
+        cout << "dbg: HoldemPokerHand::BestPokerHand(): ret_compare = " <<
+          ret_compare << ", num_evaluations = " << num_evaluations << endl;
       }
 
       if (ret_compare == 1)
@@ -1142,7 +1146,8 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
       if (bDebug) {
         cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): hand             = " << hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): _best_poker_hand = " << _best_poker_hand << endl;
-        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): ret_compare = " << ret_compare << endl;
+        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): ret_compare = " <<
+          ret_compare << ", num_evaluations = " << num_evaluations << endl;
       }
 
       if (ret_compare == 1)
