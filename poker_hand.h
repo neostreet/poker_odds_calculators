@@ -165,6 +165,7 @@ typedef struct {
 struct hand_and_type {
   char cards[NUM_CARDS_IN_HAND];
   char hand_type;
+  int hand_ix;
   int quick_ix;
 };
 

@@ -133,6 +133,7 @@ int main(int argc,char **argv)
         hands_and_types[m].cards[n] = (char)cards[n];
 
       hands_and_types[m].hand_type = (char)myhand.GetHandType();
+      hands_and_types[m].hand_ix = m;
     }
   }
 
