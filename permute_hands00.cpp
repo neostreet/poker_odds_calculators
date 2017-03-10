@@ -143,7 +143,7 @@ int main(int argc,char **argv)
     ties = 0;
 
     for (m = 0; m < count - 1; m++) {
-      if (!hands[ixs[m]].Compare(hands[ixs[m+1]],0))
+      if (!hands[ixs[m]].Compare(hands[ixs[m+1]],0,false))
         ties++;
     }
   }
@@ -153,7 +153,7 @@ int main(int argc,char **argv)
 
   for (m = 0; m < count - 1; ) {
     for (n = m + 1; n < count; n++) {
-      if (hands[ixs[m]].Compare(hands[ixs[n]],0))
+      if (hands[ixs[m]].Compare(hands[ixs[n]],0,false))
         break;
     }
 
@@ -227,5 +227,5 @@ int elem_compare(const void *elem1,const void *elem2)
   ix1 = *(int *)elem1;
   ix2 = *(int *)elem2;
 
-  return hands[ix1].Compare(hands[ix2],0);
+  return hands[ix1].Compare(hands[ix2],0,false);
 }
