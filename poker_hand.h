@@ -198,6 +198,7 @@ class PokerHand {
   HandType Evaluate();
   HandType EvaluateLow();
   HandType EvaluateQuick(struct hand_and_type *hands_and_types);
+  int GetHandIx();
   int GetQuickIx();
   void UnEvaluate();
   bool Evaluated();
@@ -240,6 +241,7 @@ class PokerHand {
   bool _plain;
 
   HandType _hand_type;
+  int _hand_ix;
   int _quick_ix;
 };
 
