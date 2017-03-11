@@ -72,6 +72,8 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _plain = hand._plain;
 
   _hand_type = hand._hand_type;
+  _hand_ix = hand._hand_ix;
+  _quick_ix = hand._quick_ix;
 
   return *this;
 }
