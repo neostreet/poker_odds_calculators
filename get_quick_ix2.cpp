@@ -80,10 +80,10 @@ int main(int argc,char **argv)
   }
 
   if (!bVerbose)
-    printf("%d\n",found->quick_ix);
+    printf("%d %d\n",found->hand_ix,found->quick_ix);
   else {
     if (!bNoIxs)
-      printf("%d ",found->quick_ix);
+      printf("%d %d ",found->hand_ix,found->quick_ix);
 
     for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
       if (!bCardIxs) {
