@@ -50,7 +50,6 @@ int main(int argc,char **argv)
   time_t end_time;
   int ties;
   struct hand_and_type *hands_and_types;
-  int *cards_ptr;
   hand work_hand;
   struct hand_and_type *found;
   int fhndl;
@@ -168,22 +167,8 @@ int main(int argc,char **argv)
   if (bBinFile) {
     /* calculate ixs */
 
-    for (m = 0; m < count; m++) {
-      cards_ptr = hands[ixs[m]].GetCards();
-
-      for (n = 0; n < NUM_CARDS_IN_HAND; n++)
-        work_hand.cards[n] = cards_ptr[n];
-
-      found = (struct hand_and_type *)bsearch(&work_hand,hands_and_types,count,
-        sizeof (struct hand_and_type),compare_key);
-
-      if (found == NULL) {
-        printf("bsearch failed\n");
-        return 6;
-      }
-
-      found->quick_ix = ixs2[m];
-    }
+    for (m = 0; m < count; m++)
+      hands_and_types[hands_and_types[ixs[m]].hand_ix].quick_ix = ixs2[m];
   }
 
   time(&end_time);
