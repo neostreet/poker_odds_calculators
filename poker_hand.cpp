@@ -318,6 +318,7 @@ HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
     return HIGH_CARD;
 
   _hand_type = (HandType)found->hand_type;
+  _hand_ix = found->hand_ix;
   _quick_ix = found->quick_ix;
   _hand_evaluated = true;
 
