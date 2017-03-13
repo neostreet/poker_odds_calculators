@@ -311,6 +311,8 @@ HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
   if (_hand_evaluated)
     return _hand_type;
 
+  num_unique_evaluations++;
+
   sorted_hand = _card;
   qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
 
@@ -820,10 +822,15 @@ int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   return 0;
 }
 
-int PokerHand::CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types,bool bDebug)
+int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug,struct hand_and_type *hands_and_types)
 {
   int compare_hand_ix;
   int compare_quick_ix;
+
+  if (!in_holdem_best_poker_hand)
+    num_comparisons++;
+  else
+    num_holdem_best_poker_hand_comparisons++;
 
   if (!_hand_evaluated) {
     if (bDebug)
@@ -1154,7 +1161,7 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.CompareQuick(_best_poker_hand,hands_and_types,bDebug);
+      ret_compare = hand.CompareQuick(_best_poker_hand,1,bDebug,hands_and_types);
 
       if (bDebug) {
         cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): hand             = " << hand << endl;

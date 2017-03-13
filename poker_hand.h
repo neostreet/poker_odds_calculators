@@ -217,7 +217,7 @@ class PokerHand {
 
   int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug);
   int CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand);
-  int CompareQuick(PokerHand& compare_hand,struct hand_and_type *hands_and_types,bool bDebug);
+  int CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug,struct hand_and_type *hands_and_types);
 
   void print(ostream& out) const;
   void Verbose();
