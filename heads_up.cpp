@@ -14,7 +14,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: heads_up (-debug) (-compare_low) filename";
+static char usage[] =
+"usage: heads_up (-debug) (-verbose) (-compare_low) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,6 +25,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bDebug;
+  bool bVerbose;
   bool bCompareLow;
   int m;
   int n;
@@ -46,17 +48,20 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     cout << usage << endl;
     return 1;
   }
 
   bDebug = false;
+  bVerbose= false;
   bCompareLow = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
     else
@@ -250,7 +255,7 @@ int main(int argc,char **argv)
       printf("  total     %7d\n",total);
     }
 
-    if (bDebug) {
+    if (bVerbose) {
       putchar(0x0a);
       printf("num_evaluations                        %10d\n",num_evaluations);
       printf("num_unique_evaluations                 %10d\n",num_unique_evaluations);
