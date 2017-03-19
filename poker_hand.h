@@ -215,9 +215,9 @@ class PokerHand {
   char *GetHand();
   HandType GetHandType();
 
-  int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug);
+  int Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand);
   int CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand);
-  int CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug,struct hand_and_type *hands_and_types);
+  int CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,struct hand_and_type *hands_and_types);
 
   void print(ostream& out) const;
   void Verbose();
@@ -225,6 +225,8 @@ class PokerHand {
   void Plain();
   void Fancy();
   int *GetCards();
+
+  void SetDebugLevel(int debug_level);
 
   private:
 
@@ -243,6 +245,8 @@ class PokerHand {
   HandType _hand_type;
   int _hand_ix;
   int _quick_ix;
+
+  int _debug_level;
 };
 
 ostream& operator<<(ostream& out,const PokerHand& hand);
@@ -262,10 +266,12 @@ class HoldemPokerHand {
   HoldemPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7);
 
-  PokerHand& BestPokerHand(bool bDebug);
-  PokerHand& BestPokerHandQuick(struct hand_and_type *hands_and_types,bool bDebug);
+  PokerHand& BestPokerHand();
+  PokerHand& BestPokerHandQuick(struct hand_and_type *hands_and_types);
 
   void print(ostream& out) const;
+
+  void SetDebugLevel(int debug_level);
 
   private:
 
@@ -273,6 +279,8 @@ class HoldemPokerHand {
   PokerHand _best_poker_hand;
 
   int _have_cards;
+
+  int _debug_level;
 };
 
 ostream& operator<<(ostream& out,const HoldemPokerHand& board_hand);
@@ -296,12 +304,16 @@ class HoldemTurnHand {
 
   void print(ostream& out) const;
 
+  void SetDebugLevel(int debug_level);
+
   private:
 
   turn_hand _card;
   PokerHand _best_poker_hand;
 
   int _have_cards;
+
+  int _debug_level;
 };
 
 ostream& operator<<(ostream& out,const HoldemTurnHand& board_hand);
@@ -338,6 +350,8 @@ class Flop {
   void Plain();
   void Fancy();
 
+  void SetDebugLevel(int debug_level);
+
   private:
 
   flop _card;
@@ -353,6 +367,8 @@ class Flop {
   bool _plain;
 
   FlopType _flop_type;
+
+  int _debug_level;
 };
 
 ostream& operator<<(ostream& out,const Flop& hand);
@@ -372,10 +388,12 @@ class OmahaPokerHand {
   OmahaPokerHand(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
   void NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8,int card9);
 
-  PokerHand& BestPokerHand(bool bDebug);
-  PokerHand& BestLowPokerHand(bool bDebug);
+  PokerHand& BestPokerHand();
+  PokerHand& BestLowPokerHand();
 
   void print(ostream& out) const;
+
+  void SetDebugLevel(int debug_level);
 
   private:
 
@@ -383,6 +401,8 @@ class OmahaPokerHand {
   PokerHand _best_poker_hand;
 
   int _have_cards;
+
+  int _debug_level;
 };
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);

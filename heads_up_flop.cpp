@@ -15,7 +15,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up_flop (-debuglevel) (-compare_low) (-turn_only) filename";
+"usage: heads_up_flop (-debuglevel) (-verbose) (-compare_low) (-turn_only) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -26,6 +26,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bDebug;
   int debug_level;
+  bool bVerbose;
   bool bCompareLow;
   bool bTurnOnly;
   int m;
@@ -49,12 +50,13 @@ int main(int argc,char **argv)
   time_t end_time;
   int permutations;
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 6)) {
     cout << usage << endl;
     return 1;
   }
 
   bDebug = false;
+  bVerbose = false;
   bCompareLow = false;
   bTurnOnly = false;
 
@@ -67,6 +69,8 @@ int main(int argc,char **argv)
       else
         sscanf(&argv[curr_arg][6],"%d",&debug_level);
     }
+    else if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
     else if (!strcmp(argv[curr_arg],"-turn_only"))
@@ -184,7 +188,7 @@ int main(int argc,char **argv)
           remaining_cards[m],remaining_cards[n]);
 
         for (p = 0; p < NUM_PLAYERS; p++)
-          hand[p] = holdem_hand[p].BestPokerHand((debug_level > 1));
+          hand[p] = holdem_hand[p].BestPokerHand();
       }
       else {
         turn_hand[0].NewCards(cards[0],cards[1],
@@ -200,7 +204,7 @@ int main(int argc,char **argv)
       }
 
       if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0,(debug_level > 1));
+        ret_compare = hand[0].Compare(hand[1],0);
       else
         ret_compare = hand[0].CompareLow(hand[1],0);
 
@@ -281,7 +285,7 @@ int main(int argc,char **argv)
       printf("  total     %7d\n",total);
     }
 
-    if (bDebug) {
+    if (bVerbose) {
       putchar(0x0a);
       printf("num_evaluations        %10d\n",num_evaluations);
       printf("num_unique_evaluations %10d\n",num_unique_evaluations);

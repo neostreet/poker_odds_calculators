@@ -26,6 +26,7 @@ PokerHand::PokerHand()
   _hand_evaluated = false;
   _verbose = false;
   _plain = false;
+  _debug_level = 0;
 }
 
 // copy constructor
@@ -49,6 +50,10 @@ PokerHand::PokerHand(const PokerHand& hand)
   _plain = hand._plain;
 
   _hand_type = hand._hand_type;
+  _hand_ix = hand._hand_ix;
+  _quick_ix = hand._quick_ix;
+
+  _debug_level = hand._debug_level;
 }
 
 // assignment operator
@@ -74,6 +79,8 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _hand_type = hand._hand_type;
   _hand_ix = hand._hand_ix;
   _quick_ix = hand._quick_ix;
+
+  _debug_level = hand._debug_level;
 
   return *this;
 }
@@ -191,8 +198,21 @@ void PokerHand::Sort()
   _hand_sorted = true;
 }
 
+int compare1(const void *elem1,const void *elem2)
+{
+  int int1;
+  int int2;
+
+  int1 = *(int *)elem1;
+  int2 = *(int *)elem2;
+
+  return int1 - int2;
+}
+
 HandType PokerHand::Evaluate()
 {
+  hand sorted_hand;
+
   num_evaluations++;
 
   if (!_have_cards)
@@ -211,6 +231,11 @@ HandType PokerHand::Evaluate()
     return _hand_type;
 
   num_unique_evaluations++;
+
+  if (_debug_level == 10) {
+    sorted_hand = _card;
+    qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
+  }
 
   if (RoyalFlush())
     _hand_type = ROYAL_FLUSH;
@@ -275,17 +300,6 @@ HandType PokerHand::EvaluateLow()
   _hand_evaluated = true;
 
   return _hand_type;
-}
-
-int compare1(const void *elem1,const void *elem2)
-{
-  int int1;
-  int int2;
-
-  int1 = *(int *)elem1;
-  int2 = *(int *)elem2;
-
-  return int1 - int2;
 }
 
 HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
@@ -506,7 +520,7 @@ HandType PokerHand::GetHandType()
   return _hand_type;
 }
 
-int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug)
+int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
 {
   int n;
   HandType hand_type;
@@ -520,7 +534,7 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,boo
     num_holdem_best_poker_hand_comparisons++;
 
   if (!_hand_evaluated) {
-    if (bDebug)
+    if (_debug_level == 1)
       cout << "dbg: PokerHand::Compare(): calling Evaluate() 1" << endl;
 
     hand_type = Evaluate();
@@ -529,7 +543,7 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand,boo
     hand_type = _hand_type;
 
   if (!compare_hand.Evaluated()) {
-    if (bDebug)
+    if (_debug_level == 1)
       cout << "dbg: PokerHand::Compare(): calling Evaluate() 2" << endl;
 
     compare_hand_type = compare_hand.Evaluate();
@@ -822,7 +836,7 @@ int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   return 0;
 }
 
-int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,bool bDebug,struct hand_and_type *hands_and_types)
+int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,struct hand_and_type *hands_and_types)
 {
   int compare_hand_ix;
   int compare_quick_ix;
@@ -833,14 +847,14 @@ int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_han
     num_holdem_best_poker_hand_comparisons++;
 
   if (!_hand_evaluated) {
-    if (bDebug)
+    if (_debug_level == 1)
       cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 1" << endl;
 
     EvaluateQuick(hands_and_types);
   }
 
   if (!compare_hand.Evaluated()) {
-    if (bDebug)
+    if (_debug_level == 1)
       cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 2" << endl;
 
     compare_hand.EvaluateQuick(hands_and_types);
@@ -849,7 +863,7 @@ int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_han
   compare_hand_ix = compare_hand.GetHandIx();
   compare_quick_ix = compare_hand.GetQuickIx();
 
-  if (bDebug)
+  if (_debug_level == 1)
     cout << "dbg: PokerHand::CompareQuick(): _hand_ix = " << _hand_ix <<
       ", _quick_ix = " << _quick_ix <<
       ", compare_hand_ix = " << compare_hand_ix <<
@@ -1032,11 +1046,17 @@ int *PokerHand::GetCards()
   return &_card.cards[0];
 }
 
+void PokerHand::SetDebugLevel(int debug_level)
+{
+  _debug_level = debug_level;
+}
+
 // default constructor
 
 HoldemPokerHand::HoldemPokerHand()
 {
   _have_cards = false;
+  _debug_level = 0;
 }
 
 // copy constructor
@@ -1061,6 +1081,7 @@ HoldemPokerHand& HoldemPokerHand::operator=(const HoldemPokerHand& hand)
     _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
+  _debug_level = hand._debug_level;
 
   return *this;
 }
@@ -1097,7 +1118,7 @@ void HoldemPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5
   _have_cards = true;
 }
 
-PokerHand& HoldemPokerHand::BestPokerHand(bool bDebug)
+PokerHand& HoldemPokerHand::BestPokerHand()
 {
   int m;
   int n;
@@ -1118,9 +1139,9 @@ PokerHand& HoldemPokerHand::BestPokerHand(bool bDebug)
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.Compare(_best_poker_hand,1,bDebug);
+      ret_compare = hand.Compare(_best_poker_hand,1);
 
-      if (bDebug) {
+      if (_debug_level == 1) {
         cout << "dbg: HoldemPokerHand::BestPokerHand(): hand             = " << hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHand(): _best_poker_hand = " << _best_poker_hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHand(): ret_compare = " <<
@@ -1135,7 +1156,7 @@ PokerHand& HoldemPokerHand::BestPokerHand(bool bDebug)
   return _best_poker_hand;
 }
 
-PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_types,bool bDebug)
+PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_types)
 {
   int m;
   int n;
@@ -1161,9 +1182,9 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.CompareQuick(_best_poker_hand,1,bDebug,hands_and_types);
+      ret_compare = hand.CompareQuick(_best_poker_hand,1,hands_and_types);
 
-      if (bDebug) {
+      if (_debug_level == 1) {
         cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): hand             = " << hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): _best_poker_hand = " << _best_poker_hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): ret_compare = " <<
@@ -1210,6 +1231,7 @@ ostream& operator<<(ostream& out,const HoldemPokerHand& holdem_hand)
 HoldemTurnHand::HoldemTurnHand()
 {
   _have_cards = false;
+  _debug_level = 0;
 }
 
 // copy constructor
@@ -1234,6 +1256,7 @@ HoldemTurnHand& HoldemTurnHand::operator=(const HoldemTurnHand& hand)
     _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
+  _debug_level = hand._debug_level;
 
   return *this;
 }
@@ -1289,7 +1312,7 @@ PokerHand& HoldemTurnHand::BestPokerHand()
     if (!r)
       _best_poker_hand = hand;
     else {
-      ret_compare = hand.Compare(_best_poker_hand,1,false);
+      ret_compare = hand.Compare(_best_poker_hand,1);
 
       if (ret_compare == 1)
         _best_poker_hand = hand;
@@ -1335,6 +1358,7 @@ Flop::Flop()
   _flop_evaluated = false;
   _verbose = false;
   _plain = false;
+  _debug_level = 0;
 }
 
 // copy constructor
@@ -1381,6 +1405,8 @@ Flop& Flop::operator=(const Flop& flop)
   _plain = flop._plain;
 
   _flop_type = flop._flop_type;
+
+  _debug_level = flop._debug_level;
 
   return *this;
 }
@@ -1642,6 +1668,7 @@ void Flop::Fancy()
 OmahaPokerHand::OmahaPokerHand()
 {
   _have_cards = false;
+  _debug_level = 0;
 }
 
 // copy constructor
@@ -1666,6 +1693,7 @@ OmahaPokerHand& OmahaPokerHand::operator=(const OmahaPokerHand& hand)
     _card.cards[n] = hand._card.cards[n];
 
   _have_cards = hand._have_cards;
+  _debug_level = hand._debug_level;
 
   return *this;
 }
@@ -1706,7 +1734,7 @@ void OmahaPokerHand::NewCards(int card1,int card2,int card3,int card4,int card5,
   _have_cards = true;
 }
 
-PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
+PokerHand& OmahaPokerHand::BestPokerHand()
 {
   int m;
   int n;
@@ -1729,7 +1757,7 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
         NUM_COMMUNITY_CARDS,
         &p,&q,&r,s);
 
-      if (bDebug) {
+      if (_debug_level == 1) {
         card_string_from_card_value(_card.cards[m],card_string);
         cout << card_string << " ";
         card_string_from_card_value(_card.cards[n],card_string);
@@ -1753,18 +1781,18 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
 
       hand.Evaluate();
 
-      if (bDebug)
+      if (_debug_level == 1)
         cout << hand << endl;
 
       if (!o && !s)
         _best_poker_hand = hand;
       else {
-        ret_compare = hand.Compare(_best_poker_hand,1,false);
+        ret_compare = hand.Compare(_best_poker_hand,1);
 
         if (ret_compare == 1) {
           _best_poker_hand = hand;
 
-          if (bDebug)
+          if (_debug_level == 1)
             cout << "new best poker hand" << endl;
         }
       }
@@ -1774,7 +1802,7 @@ PokerHand& OmahaPokerHand::BestPokerHand(bool bDebug)
   return _best_poker_hand;
 }
 
-PokerHand& OmahaPokerHand::BestLowPokerHand(bool bDebug)
+PokerHand& OmahaPokerHand::BestLowPokerHand()
 {
   int m;
   int n;
@@ -1797,7 +1825,7 @@ PokerHand& OmahaPokerHand::BestLowPokerHand(bool bDebug)
         NUM_COMMUNITY_CARDS,
         &p,&q,&r,s);
 
-      if (bDebug) {
+      if (_debug_level == 1) {
         card_string_from_card_value(_card.cards[m],card_string);
         cout << card_string << " ";
         card_string_from_card_value(_card.cards[n],card_string);
@@ -1821,7 +1849,7 @@ PokerHand& OmahaPokerHand::BestLowPokerHand(bool bDebug)
 
       hand.EvaluateLow();
 
-      if (bDebug)
+      if (_debug_level == 1)
         cout << hand << endl;
 
       if (!o && !s)
@@ -1832,7 +1860,7 @@ PokerHand& OmahaPokerHand::BestLowPokerHand(bool bDebug)
         if (ret_compare == 1) {
           _best_poker_hand = hand;
 
-          if (bDebug)
+          if (_debug_level == 1)
             cout << "new best poker hand" << endl;
         }
       }
