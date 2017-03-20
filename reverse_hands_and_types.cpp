@@ -22,8 +22,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: reverse_hands_and_types infile outfile\n"
-"  offset count\n";
+"usage: reverse_hands_and_types infile outfile\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 int main(int argc,char **argv)
