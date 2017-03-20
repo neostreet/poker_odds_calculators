@@ -102,7 +102,7 @@ int main(int argc,char **argv)
     else {
       printf("%s ",line);
 
-      ret_compare = hands[0].CompareQuick(hands[1],hands_and_types);
+      ret_compare = hands[0].CompareQuick(hands[1],0,hands_and_types);
 
       switch(ret_compare) {
         case -1:
