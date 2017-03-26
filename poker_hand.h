@@ -197,7 +197,7 @@ class PokerHand {
   void Sort();
   HandType Evaluate();
   HandType EvaluateLow();
-  HandType EvaluateQuick(struct hand_and_type *hands_and_types);
+  HandType EvaluateQuick(struct hand_and_type *hands_and_types,bool bBsearch);
   int GetHandIx();
   int GetQuickIx();
   void UnEvaluate();

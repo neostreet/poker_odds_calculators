@@ -91,8 +91,10 @@ int main(int argc,char **argv)
   line_no = 0;
 
   if (debug_level) {
-    for (n = 0; n < NUM_PLAYERS; n++)
+    for (n = 0; n < NUM_PLAYERS; n++) {
       hand[n].SetDebugLevel(debug_level);
+      holdem_hand[n].SetDebugLevel(debug_level);
+    }
   }
 
   for ( ; ; ) {

@@ -302,7 +302,7 @@ HandType PokerHand::EvaluateLow()
   return _hand_type;
 }
 
-HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
+HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types,bool bBsearch)
 {
   int retval;
   hand sorted_hand;
@@ -330,7 +330,7 @@ HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types)
   sorted_hand = _card;
   qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
 
-  retval = find_hand(&sorted_hand,hands_and_types,true,&found);
+  retval = find_hand(&sorted_hand,hands_and_types,bBsearch,&found);
 
   if (!retval)
     return HIGH_CARD;
@@ -850,14 +850,14 @@ int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_han
     if (_debug_level == 1)
       cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 1" << endl;
 
-    EvaluateQuick(hands_and_types);
+    EvaluateQuick(hands_and_types,(_debug_level != 2));
   }
 
   if (!compare_hand.Evaluated()) {
     if (_debug_level == 1)
       cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 2" << endl;
 
-    compare_hand.EvaluateQuick(hands_and_types);
+    compare_hand.EvaluateQuick(hands_and_types,(_debug_level != 2));
   }
 
   compare_hand_ix = compare_hand.GetHandIx();
@@ -1129,6 +1129,8 @@ PokerHand& HoldemPokerHand::BestPokerHand()
   PokerHand hand;
   int ret_compare;
 
+  hand.SetDebugLevel(_debug_level);
+
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
     get_permutation_instance_five(
       NUM_CARDS_IN_HOLDEM_POOL,
@@ -1168,6 +1170,8 @@ PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_t
   int ret_compare;
   int dbg_loop_count = -1;
   int dbg;
+
+  hand.SetDebugLevel(_debug_level);
 
   for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
     get_permutation_instance_five(
@@ -1224,6 +1228,11 @@ ostream& operator<<(ostream& out,const HoldemPokerHand& holdem_hand)
   holdem_hand.print(out);
 
   return out;
+}
+
+void HoldemPokerHand::SetDebugLevel(int debug_level)
+{
+  _debug_level = debug_level;
 }
 
 // default constructor
@@ -1347,6 +1356,11 @@ ostream& operator<<(ostream& out,const HoldemTurnHand& holdem_hand)
   holdem_hand.print(out);
 
   return out;
+}
+
+void HoldemTurnHand::SetDebugLevel(int debug_level)
+{
+  _debug_level = debug_level;
 }
 
 // default constructor
