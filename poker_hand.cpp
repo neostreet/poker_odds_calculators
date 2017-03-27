@@ -302,13 +302,18 @@ HandType PokerHand::EvaluateLow()
   return _hand_type;
 }
 
-HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types,bool bBsearch)
+HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types,int debug_level)
 {
   int retval;
   hand sorted_hand;
   struct hand_and_type *found;
+  static int dbg_num_evaluations;
+  int dbg;
 
   num_evaluations++;
+
+  if (num_evaluations >= dbg_num_evaluations)
+    dbg = 1;
 
   if (!_have_cards)
     return HIGH_CARD;
@@ -330,7 +335,7 @@ HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types,bool bBs
   sorted_hand = _card;
   qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
 
-  retval = find_hand(&sorted_hand,hands_and_types,bBsearch,&found);
+  retval = find_hand(&sorted_hand,hands_and_types,debug_level,&found);
 
   if (!retval)
     return HIGH_CARD;
@@ -850,14 +855,14 @@ int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_han
     if (_debug_level == 1)
       cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 1" << endl;
 
-    EvaluateQuick(hands_and_types,(_debug_level != 2));
+    EvaluateQuick(hands_and_types,_debug_level);
   }
 
   if (!compare_hand.Evaluated()) {
     if (_debug_level == 1)
       cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 2" << endl;
 
-    compare_hand.EvaluateQuick(hands_and_types,(_debug_level != 2));
+    compare_hand.EvaluateQuick(hands_and_types,_debug_level);
   }
 
   compare_hand_ix = compare_hand.GetHandIx();
@@ -2197,7 +2202,7 @@ int compare_key(const void *vkey,const void *velem)
 int find_hand(
   hand *in_hand,
   struct hand_and_type *hands_and_types,
-  bool bBsearch,
+  int debug_level,
   struct hand_and_type **out_hand
 )
 {
@@ -2205,27 +2210,36 @@ int find_hand(
   int p;
   struct hand_and_type *found;
 
-  if (!bBsearch) {
-    for (p = 0; p < POKER_52_5_PERMUTATIONS; p++) {
-      for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
-        if (hands_and_types[p].cards[m] != (char)in_hand->cards[m])
-          break;
+  switch (debug_level) {
+    case 2:
+      for (p = 0; p < POKER_52_5_PERMUTATIONS; p++) {
+        for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
+          if (hands_and_types[p].cards[m] != (char)in_hand->cards[m])
+            break;
+        }
+
+        if (m == NUM_CARDS_IN_HAND) {
+          *out_hand = &hands_and_types[p];
+          return 1;
+        }
       }
 
-      if (m == NUM_CARDS_IN_HAND) {
-        *out_hand = &hands_and_types[p];
+      break;
+
+    //case 3:
+
+      //break;
+
+    default:
+      found = (struct hand_and_type *)bsearch(in_hand,hands_and_types,POKER_52_5_PERMUTATIONS,
+        sizeof (struct hand_and_type),compare_key);
+
+      if (found) {
+        *out_hand = found;
         return 1;
       }
-    }
-  }
-  else {
-    found = (struct hand_and_type *)bsearch(in_hand,hands_and_types,POKER_52_5_PERMUTATIONS,
-      sizeof (struct hand_and_type),compare_key);
 
-    if (found) {
-      *out_hand = found;
-      return 1;
-    }
+     break;
   }
 
   return 0;

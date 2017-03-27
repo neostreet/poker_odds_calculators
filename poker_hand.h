@@ -197,7 +197,7 @@ class PokerHand {
   void Sort();
   HandType Evaluate();
   HandType EvaluateLow();
-  HandType EvaluateQuick(struct hand_and_type *hands_and_types,bool bBsearch);
+  HandType EvaluateQuick(struct hand_and_type *hands_and_types,int debug_level);
   int GetHandIx();
   int GetQuickIx();
   void UnEvaluate();
@@ -456,6 +456,6 @@ int compare_key(const void *elem1,const void *elem2);
 int find_hand(
   hand *in_hand,
   struct hand_and_type *hands_and_types,
-  bool bBsearch,
+  int debug_level,
   struct hand_and_type **out_hand
 );
