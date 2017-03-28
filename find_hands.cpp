@@ -9,7 +9,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: find_hands (-bsearch) (-validate) hands_and_types (count)\n";
+"usage: find_hands (-debug_levellevel) (-validate) hands_and_types (count)\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 int main(int argc,char **argv)
@@ -17,7 +17,7 @@ int main(int argc,char **argv)
   int m;
   int n;
   int curr_arg;
-  bool bBsearch;
+  int debug_level;
   bool bValidate;
   struct hand_and_type *hands_and_types;
   int retval;
@@ -32,12 +32,12 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bBsearch = false;
+  debug_level = 0;
   bValidate = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-bsearch"))
-      bBsearch = true;
+    if (!strncmp(argv[curr_arg],"-debug_level",12))
+      sscanf(&argv[curr_arg][12],"%d",&debug_level);
     else if (!strcmp(argv[curr_arg],"-validate"))
       bValidate = true;
     else
@@ -73,7 +73,7 @@ int main(int argc,char **argv)
       NUM_CARDS_IN_DECK,
       &work_hand.cards[0],&work_hand.cards[1],&work_hand.cards[2],&work_hand.cards[3],&work_hand.cards[4],n);
 
-    retval = find_hand(&work_hand,hands_and_types,bBsearch,&found);
+    retval = find_hand(&work_hand,hands_and_types,debug_level,&found);
 
     if (!retval) {
       printf("find_hand() failed: %d\n",retval);
@@ -81,7 +81,7 @@ int main(int argc,char **argv)
     }
 
     if (bValidate) {
-      if (found->quick_ix != n) {
+      if (found->hand_ix != n) {
         printf("linear search failed: %d != %d\n",found->quick_ix,n);
         return 6;
       }
