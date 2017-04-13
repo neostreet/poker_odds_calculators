@@ -50,7 +50,8 @@ static char usage[] =
 "  (-winning_hand_typehand_type (-delta_gevalue)\n"
 "  (-table_boss) (-show_table_boss) (-ace_on_the_river)\n"
 "  (-verbose_style2) (-only_knockout) (-only_double_up)\n"
-"  (-show_num_possible_checks) (-filter_percentage) player_name filename\n";
+"  (-show_num_possible_checks) (-filter_percentage)\n"
+"  (-show_running_total) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -139,7 +140,8 @@ enum quantum_typ {
   QUANTUM_TYPE_NUMDECISIONS,
   QUANTUM_TYPE_WAGERED,
   QUANTUM_TYPE_TABLE_BOSS,
-  QUANTUM_TYPE_NUM_POSSIBLE_CHECKS
+  QUANTUM_TYPE_NUM_POSSIBLE_CHECKS,
+  QUANTUM_TYPE_RUNNING_TOTAL
 };
 
 struct vars {
@@ -189,6 +191,8 @@ struct vars {
   int show_wagered;
   int show_table_boss;
   int show_num_possible_checks;
+  int show_running_total;
+  int running_total;
   bool bAceOnTheRiver;
   bool bOnlyWash;
   bool bNoDelta;
@@ -414,6 +418,8 @@ int main(int argc,char **argv)
   local_vars.show_wagered = 0;
   local_vars.show_table_boss = 0;
   local_vars.show_num_possible_checks = 0;
+  local_vars.show_running_total = 0;
+  local_vars.running_total = 0;
   local_vars.bAceOnTheRiver = false;
   local_vars.bOnlyWash = false;
   local_vars.sum_quantum = 0;
@@ -598,6 +604,10 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_num_possible_checks")) {
       local_vars.show_num_possible_checks = 1;
       local_vars.quantum_type = QUANTUM_TYPE_NUM_POSSIBLE_CHECKS;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_running_total")) {
+      local_vars.show_running_total = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_RUNNING_TOTAL;
     }
     else if (!strcmp(argv[curr_arg],"-ace_on_the_river"))
       local_vars.bAceOnTheRiver = true;
@@ -869,10 +879,11 @@ int main(int argc,char **argv)
 
   if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
     local_vars.show_num_decisions + local_vars.show_wagered +
-    local_vars.show_table_boss + local_vars.show_num_possible_checks > 1) {
+    local_vars.show_table_boss + local_vars.show_num_possible_checks +
+    local_vars.show_running_total > 1) {
     printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
       "  show_num_decisions, show_wagered, show_table_boss,\n"
-      "  and show_num_possible_checks\n");
+      "  show_num_possible_checks, and show_running_total\n");
     return 26;
   }
 
@@ -1106,6 +1117,9 @@ int main(int argc,char **argv)
 
     if (local_vars.show_num_possible_checks)
       local_vars.num_possible_checks = 0;
+
+    if (local_vars.show_running_total)
+      local_vars.running_total = 0;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -1788,7 +1802,7 @@ int main(int argc,char **argv)
               holdem_hand.NewCards(cards[0],cards[1],cards[2],
                 cards[3],cards[4],cards[5],cards[6]);
 
-              local_vars.poker_hand = holdem_hand.BestPokerHand(false);
+              local_vars.poker_hand = holdem_hand.BestPokerHand();
 
               if (!local_vars.bFolded)
                 local_vars.bHaveRiver = true;
@@ -2426,6 +2440,7 @@ void run_filter(struct vars *varspt)
                                                                                                                   case QUANTUM_TYPE_WAGERED:
                                                                                                                   case QUANTUM_TYPE_TABLE_BOSS:
                                                                                                                   case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
+                                                                                                                  case QUANTUM_TYPE_RUNNING_TOTAL:
                                                                                                                     printf("%10d %s",varspt->quantum,varspt->hole_cards);
 
                                                                                                                     break;
@@ -2534,6 +2549,9 @@ static void do_balance_processing(struct vars *varspt)
   varspt->delta = varspt->ending_balance - varspt->starting_balance;
   varspt->wagered_amount = varspt->spent_this_hand + varspt->uncalled_bet_amount;
 
+  if (varspt->show_running_total)
+    varspt->running_total += varspt->delta;
+
   switch(varspt->quantum_type) {
     case QUANTUM_TYPE_DELTA:
       varspt->quantum = varspt->delta;
@@ -2565,6 +2583,8 @@ static void do_balance_processing(struct vars *varspt)
       break;
     case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
       varspt->quantum = varspt->num_possible_checks;
+    case QUANTUM_TYPE_RUNNING_TOTAL:
+      varspt->quantum = varspt->running_total;
 
       break;
   }
