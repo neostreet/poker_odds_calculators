@@ -14,7 +14,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: heads_up_turn (-debuglevel) (-compare_low) filename";
+static char usage[] =
+"usage: heads_up_turn (-debug_levellevel) (-verbose) (-compare_low) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -23,8 +24,8 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bDebug;
   int debug_level;
+  bool bVerbose;
   bool bCompareLow;
   int m;
   int n;
@@ -45,23 +46,20 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     cout << usage << endl;
     return 1;
   }
 
-  bDebug = false;
+  debug_level = 0;
+  bVerbose = false;
   bCompareLow = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strncmp(argv[curr_arg],"-debug",6)) {
-      bDebug = true;
-
-      if (strlen(argv[curr_arg]) == 6)
-        debug_level = 0;
-      else
-        sscanf(&argv[curr_arg][6],"%d",&debug_level);
-    }
+    if (!strncmp(argv[curr_arg],"-debug_level",12))
+      sscanf(&argv[curr_arg][12],"%d",&debug_level);
+    else if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
     else
@@ -148,7 +146,7 @@ int main(int argc,char **argv)
       outcomes[n].losses = 0;
       outcomes[n].ties = 0;
 
-      if (bDebug) {
+      if (bVerbose) {
         for (m = 0; m < NUM_HAND_TYPES; m++) {
           outcomes[n].wins_hand_counts[m] = 0;
           outcomes[n].losses_hand_counts[m] = 0;
@@ -167,10 +165,10 @@ int main(int argc,char **argv)
         remaining_cards[m]);
 
       for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = holdem_hand[p].BestPokerHand((debug_level > 1));
+        hand[p] = holdem_hand[p].BestPokerHand();
 
       if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0,(debug_level > 1));
+        ret_compare = hand[0].Compare(hand[1],0);
       else
         ret_compare = hand[0].CompareLow(hand[1],0);
 
@@ -178,7 +176,7 @@ int main(int argc,char **argv)
         outcomes[0].wins++;
         outcomes[1].losses++;
 
-        if (bDebug) {
+        if (bVerbose) {
           outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
           outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
         }
@@ -187,7 +185,7 @@ int main(int argc,char **argv)
         outcomes[0].losses++;
         outcomes[1].wins++;
 
-        if (bDebug) {
+        if (bVerbose) {
           outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
           outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
         }
@@ -196,7 +194,7 @@ int main(int argc,char **argv)
         outcomes[0].ties++;
         outcomes[1].ties++;
 
-        if (bDebug) {
+        if (bVerbose) {
           outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
           outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
         }
@@ -212,7 +210,7 @@ int main(int argc,char **argv)
       pct = (double)outcomes[n].wins * (double)100 / (double)total;
       printf("  wins      %7d (%5.2lf)\n",outcomes[n].wins,pct);
 
-      if (bDebug) {
+      if (bVerbose) {
         for (m = 0; m < NUM_HAND_TYPES; m++) {
           if (outcomes[n].wins_hand_counts[m]) {
             printf("    %s      %7d\n",
@@ -225,7 +223,7 @@ int main(int argc,char **argv)
       pct = (double)outcomes[n].losses * (double)100 / (double)total;
       printf("  losses    %7d (%5.2lf)\n",outcomes[n].losses,pct);
 
-      if (bDebug) {
+      if (bVerbose) {
         for (m = 0; m < NUM_HAND_TYPES; m++) {
           if (outcomes[n].losses_hand_counts[m]) {
             printf("    %s      %7d\n",
@@ -238,7 +236,7 @@ int main(int argc,char **argv)
       pct = (double)outcomes[n].ties * (double)100 / (double)total;
       printf("  ties      %7d (%5.2lf)\n",outcomes[n].ties,pct);
 
-      if (bDebug) {
+      if (bVerbose) {
         for (m = 0; m < NUM_HAND_TYPES; m++) {
           if (outcomes[n].ties_hand_counts[m]) {
             printf("    %s      %7d\n",
@@ -251,7 +249,7 @@ int main(int argc,char **argv)
       printf("  total     %7d\n",total);
     }
 
-    if (bDebug) {
+    if (bVerbose) {
       putchar(0x0a);
       printf("num_evaluations        %10d\n",num_evaluations);
       printf("num_unique_evaluations %10d\n",num_unique_evaluations);
