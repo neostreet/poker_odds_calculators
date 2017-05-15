@@ -51,7 +51,7 @@ static char usage[] =
 "  (-table_boss) (-show_table_boss) (-ace_on_the_river)\n"
 "  (-verbose_style2) (-only_knockout) (-only_double_up)\n"
 "  (-show_num_possible_checks) (-filter_percentage)\n"
-"  (-show_running_total) player_name filename\n";
+"  (-show_running_total) (-show_num_positive_deltas) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -141,7 +141,8 @@ enum quantum_typ {
   QUANTUM_TYPE_WAGERED,
   QUANTUM_TYPE_TABLE_BOSS,
   QUANTUM_TYPE_NUM_POSSIBLE_CHECKS,
-  QUANTUM_TYPE_RUNNING_TOTAL
+  QUANTUM_TYPE_RUNNING_TOTAL,
+  QUANTUM_TYPE_NUM_POSITIVE_DELTAS,
 };
 
 struct vars {
@@ -191,8 +192,11 @@ struct vars {
   int show_wagered;
   int show_table_boss;
   int show_num_possible_checks;
+  int num_possible_checks;
   int show_running_total;
   int running_total;
+  int show_num_positive_deltas;
+  int num_positive_deltas;
   bool bAceOnTheRiver;
   bool bOnlyWash;
   bool bNoDelta;
@@ -317,7 +321,6 @@ struct vars {
   quantum_typ quantum_type;
   int quantum;
   int hit_felt_in_session_count;
-  int num_possible_checks;
 };
 
 int main(int argc,char **argv)
@@ -364,7 +367,7 @@ int main(int argc,char **argv)
   int boss_seat_ix;
   int my_seat_ix;
 
-  if ((argc < 3) || (argc > 100)) {
+  if ((argc < 3) || (argc > 101)) {
     printf(usage);
     return 1;
   }
@@ -420,6 +423,7 @@ int main(int argc,char **argv)
   local_vars.show_num_possible_checks = 0;
   local_vars.show_running_total = 0;
   local_vars.running_total = 0;
+  local_vars.show_num_positive_deltas = 0;
   local_vars.bAceOnTheRiver = false;
   local_vars.bOnlyWash = false;
   local_vars.sum_quantum = 0;
@@ -608,6 +612,10 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_running_total")) {
       local_vars.show_running_total = 1;
       local_vars.quantum_type = QUANTUM_TYPE_RUNNING_TOTAL;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_num_positive_deltas")) {
+      local_vars.show_num_positive_deltas = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_NUM_POSITIVE_DELTAS;
     }
     else if (!strcmp(argv[curr_arg],"-ace_on_the_river"))
       local_vars.bAceOnTheRiver = true;
@@ -880,10 +888,10 @@ int main(int argc,char **argv)
   if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
     local_vars.show_num_decisions + local_vars.show_wagered +
     local_vars.show_table_boss + local_vars.show_num_possible_checks +
-    local_vars.show_running_total > 1) {
+    local_vars.show_running_total + local_vars.show_num_positive_deltas > 1) {
     printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
       "  show_num_decisions, show_wagered, show_table_boss,\n"
-      "  show_num_possible_checks, and show_running_total\n");
+      "  show_num_possible_checks, show_running_total, and show_num_positive_deltas\n");
     return 26;
   }
 
@@ -1121,6 +1129,9 @@ int main(int argc,char **argv)
     if (local_vars.show_running_total)
       local_vars.running_total = 0;
 
+    if (local_vars.show_num_positive_deltas)
+      local_vars.num_positive_deltas = 0;
+
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
@@ -1294,6 +1305,9 @@ int main(int argc,char **argv)
 
                 if (local_vars.show_num_possible_checks)
                   local_vars.num_possible_checks = 0;
+
+                if (local_vars.show_num_positive_deltas)
+                  local_vars.num_positive_deltas = 0;
 
                 street = 0;
                 num_street_markers = 0;
@@ -2441,6 +2455,7 @@ void run_filter(struct vars *varspt)
                                                                                                                   case QUANTUM_TYPE_TABLE_BOSS:
                                                                                                                   case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
                                                                                                                   case QUANTUM_TYPE_RUNNING_TOTAL:
+                                                                                                                  case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
                                                                                                                     printf("%10d %s",varspt->quantum,varspt->hole_cards);
 
                                                                                                                     break;
@@ -2552,6 +2567,11 @@ static void do_balance_processing(struct vars *varspt)
   if (varspt->show_running_total)
     varspt->running_total += varspt->delta;
 
+  if (varspt->show_num_positive_deltas) {
+    if (varspt->delta > 0)
+      varspt->num_positive_deltas += 1;
+  }
+
   switch(varspt->quantum_type) {
     case QUANTUM_TYPE_DELTA:
       varspt->quantum = varspt->delta;
@@ -2585,6 +2605,10 @@ static void do_balance_processing(struct vars *varspt)
       varspt->quantum = varspt->num_possible_checks;
     case QUANTUM_TYPE_RUNNING_TOTAL:
       varspt->quantum = varspt->running_total;
+
+      break;
+    case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
+      varspt->quantum = varspt->num_positive_deltas;
 
       break;
   }
