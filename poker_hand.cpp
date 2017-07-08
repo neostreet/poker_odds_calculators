@@ -2322,3 +2322,47 @@ int index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2)
 
   return index;
 }
+
+int index_of_hand_abbrev(char *hand_abbrev,int *index_pt)
+{
+  int n;
+  int retval;
+  int rank_ix[2];
+  int suit_ix[2];
+  int len;
+
+  for (n = 0; n < 2; n++) {
+    retval = get_rank_index(hand_abbrev[n],&rank_ix[n]);
+
+    if (retval)
+      return 1;
+  }
+
+  len = strlen(hand_abbrev);
+
+  if (len == 2) {
+    if (rank_ix[0] != rank_ix[1])
+      return 2;
+
+    suit_ix[0] = 0;
+    suit_ix[1] = 1;
+  }
+  else if (len == 3) {
+    if (hand_abbrev[2] == 's') {
+      suit_ix[0] = 0;
+      suit_ix[1] = 0;
+    }
+    else if (hand_abbrev[2] == 'o') {
+      suit_ix[0] = 0;
+      suit_ix[1] = 1;
+    }
+    else
+      return 3;
+  }
+  else
+    return 4;
+
+  *index_pt = index_of_hand(rank_ix[0],suit_ix[0],rank_ix[1],suit_ix[1]);
+
+  return 0;
+}
