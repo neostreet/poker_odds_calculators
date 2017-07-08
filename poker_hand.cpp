@@ -2289,3 +2289,36 @@ int find_hand(
 
   return 0;
 }
+
+int index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2)
+{
+  int n;
+  int work;
+  int index;
+  int num_other_cards;
+
+  if (rank_ix1 == rank_ix2)
+    return rank_ix1;
+
+  if (suit_ix1 == suit_ix2)
+    index = NUM_CARDS_IN_SUIT;
+  else
+    index = NUM_CARDS_IN_SUIT + NUM_SUITED_NONPAIRS;
+
+  if (rank_ix1 > rank_ix2) {
+    work = rank_ix1;
+    rank_ix1 = rank_ix2;
+    rank_ix2 = work;
+  }
+
+  num_other_cards = NUM_CARDS_IN_SUIT - 1;
+
+  for (n = 0; n < rank_ix1; n++) {
+    index += num_other_cards;
+    num_other_cards--;
+  }
+
+  index += rank_ix2 - rank_ix1 - 1;
+
+  return index;
+}

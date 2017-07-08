@@ -48,6 +48,9 @@ enum FlopType {
 #define suit_of(card) (card / NUM_CARDS_IN_SUIT)
 #define rank_of(card) (card % NUM_CARDS_IN_SUIT)
 
+#define NUM_SUITED_NONPAIRS ((NUM_CARDS_IN_SUIT * (NUM_CARDS_IN_SUIT - 1)) / 2)
+#define NUM_NONSUITED_NONPAIRS NUM_SUITED_NONPAIRS
+
 #ifdef MAIN_MODULE
 char suit_chars[] = "cdhs";
 char rank_chars[] = "23456789TJQKA";
@@ -459,3 +462,5 @@ int find_hand(
   int debug_level,
   struct hand_and_type **out_hand
 );
+
+int index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2);
