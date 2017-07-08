@@ -2207,8 +2207,13 @@ int find_hand(
 )
 {
   int m;
+  int n;
   int p;
   struct hand_and_type *found;
+  int ix;
+  int lo;
+  int hi;
+  int compare;
 
   switch (debug_level) {
     case 2:
@@ -2226,9 +2231,49 @@ int find_hand(
 
       break;
 
-    //case 3:
+    case 3:
+      lo = 0;
+      hi = POKER_52_5_PERMUTATIONS - 1;
 
-      //break;
+      ix = (hi - lo + 1) / 2;
+
+      for ( ; ; ) {
+        compare = 0;
+
+        for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+          if (in_hand->cards[n] < hands_and_types[ix].cards[n]) {
+            compare = -1;
+            break;
+          }
+
+          if (in_hand->cards[n] > hands_and_types[ix].cards[n]) {
+            compare = 1;
+            break;
+          }
+        }
+
+        if (!compare) {
+          *out_hand = &hands_and_types[ix];
+          return 1;
+        }
+
+        if (compare == -1) {
+          if (ix == lo)
+            break;
+
+          hi = ix;
+          ix = lo + (hi - lo + 1) / 2;
+        }
+        else {
+          if (ix == hi)
+            break;
+
+          lo = ix;
+          ix = lo + (hi - lo + 1) / 2;
+        }
+      }
+
+      break;
 
     default:
       found = (struct hand_and_type *)bsearch(in_hand,hands_and_types,POKER_52_5_PERMUTATIONS,
