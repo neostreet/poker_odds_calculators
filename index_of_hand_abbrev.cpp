@@ -9,8 +9,6 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] = "usage: index_of_hand_abbrev hand_abbrev\n";
-static char bad_rank[] = "bad rank in card%d: %s\n";
-static char bad_suit[] = "bad suit in card%d: %s\n";
 
 int main(int argc,char **argv)
 {
@@ -25,7 +23,7 @@ int main(int argc,char **argv)
   retval = index_of_hand_abbrev(argv[1],&ix);
 
   if (retval)
-    printf("index_of_hand() failed: %d\n",retval);
+    printf("index_of_hand_abbrev() failed: %d\n",retval);
   else
     printf("%d %s\n",ix,argv[1]);
 

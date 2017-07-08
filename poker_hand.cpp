@@ -2290,7 +2290,7 @@ int find_hand(
   return 0;
 }
 
-int index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2)
+int get_index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2)
 {
   int n;
   int work;
@@ -2321,6 +2321,30 @@ int index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2)
   index += rank_ix2 - rank_ix1 - 1;
 
   return index;
+}
+
+int index_of_hand(char *hand,int *index_pt)
+{
+  int n;
+  int retval;
+  int rank_ix[2];
+  int suit_ix[2];
+
+  for (n = 0; n < 2; n++) {
+    retval = get_rank_index(hand[3*n],&rank_ix[n]);
+
+    if (retval)
+      return 1;
+
+    retval = get_suit_index(hand[3*n+1],&suit_ix[n]);
+
+    if (retval)
+      return 2;
+  }
+
+  *index_pt = get_index_of_hand(rank_ix[0],suit_ix[0],rank_ix[1],suit_ix[1]);
+
+  return 0;
 }
 
 int index_of_hand_abbrev(char *hand_abbrev,int *index_pt)
@@ -2362,7 +2386,7 @@ int index_of_hand_abbrev(char *hand_abbrev,int *index_pt)
   else
     return 4;
 
-  *index_pt = index_of_hand(rank_ix[0],suit_ix[0],rank_ix[1],suit_ix[1]);
+  *index_pt = get_index_of_hand(rank_ix[0],suit_ix[0],rank_ix[1],suit_ix[1]);
 
   return 0;
 }
