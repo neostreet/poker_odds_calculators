@@ -763,7 +763,7 @@ int main(int argc,char **argv)
       local_vars.bSmallOrBigBlind = true;
       local_vars.small_or_big_blind = 1;
     }
-    else if (!strcmp(argv[curr_arg],"-local_vars.no_blind")) {
+    else if (!strcmp(argv[curr_arg],"-no_blind")) {
       local_vars.bNoBlind = true;
       local_vars.no_blind = 1;
     }
