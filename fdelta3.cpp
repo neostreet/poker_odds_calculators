@@ -751,7 +751,7 @@ int main(int argc,char **argv)
       local_vars.bGetDateFromFilename = true;
     else if (!strcmp(argv[curr_arg],"-no_hole_cards"))
       local_vars.bNoHoleCards = true;
-    else if (!strcmp(argv[curr_arg],"-local_vars.small_blind")) {
+    else if (!strcmp(argv[curr_arg],"-small_blind")) {
       local_vars.bSmallBlind = true;
       local_vars.small_blind = 0;
     }
@@ -759,7 +759,7 @@ int main(int argc,char **argv)
       local_vars.bBigBlind = true;
       local_vars.big_blind = 1;
     }
-    else if (!strcmp(argv[curr_arg],"-local_vars.small_or_big_blind")) {
+    else if (!strcmp(argv[curr_arg],"-small_or_big_blind")) {
       local_vars.bSmallOrBigBlind = true;
       local_vars.small_or_big_blind = 1;
     }
