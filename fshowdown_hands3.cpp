@@ -28,6 +28,7 @@ static char couldnt_open[] = "couldn't open %s\n";
 static char summary[] = "*** SUMMARY ***";
 #define SUMMARY_LEN (sizeof (summary) - 1)
 
+static char space[] = " ";
 static char indent[] = "  ";
 static char linefeed[] = "\n";
 
@@ -38,9 +39,7 @@ static char *get_bracketed_string(char *line,int line_len);
 
 int main(int argc,char **argv)
 {
-  int m;
   int n;
-  int p;
   int curr_arg;
   bool bVerbose;
   bool bDebug;
@@ -57,6 +56,11 @@ int main(int argc,char **argv)
   int dbg;
   char *cpt;
   int showdown_hands;
+  int cards[NUM_CARDS_IN_HOLDEM_POOL];
+  PokerHand poker_hand;
+  HoldemPokerHand holdem_hand;
+  char card_string[3];
+  int retval;
 
   if ((argc < 2) || (argc > 4)) {
     printf(usage);
@@ -156,6 +160,20 @@ int main(int argc,char **argv)
               }
 
               strcat(buf,linefeed);
+
+              for (n = 0; n < NUM_COMMUNITY_CARDS; n++) {
+                card_string[0] = cpt[1 + n*3 + 0];
+                card_string[1] = cpt[1 + n*3 + 1];
+
+                retval = card_value_from_card_string(
+                  card_string,&cards[n]);
+
+                if (retval) {
+                  printf("invalid card string %s on line %d\n",
+                    card_string,line_no);
+                  return 4;
+                }
+              }
             }
           }
           else if (!strncmp(line,"Seat ",5)) {
@@ -164,9 +182,31 @@ int main(int argc,char **argv)
             if (cpt != NULL) {
               strcat(buf,indent);
               strcat(buf,cpt);
-              strcat(buf,linefeed);
 
               showdown_hands++;
+
+              for (n = 0; n < NUM_HOLE_CARDS_IN_HOLDEM_HAND; n++) {
+                card_string[0] = cpt[1 + n*3 + 0];
+                card_string[1] = cpt[1 + n*3 + 1];
+
+                retval = card_value_from_card_string(
+                  card_string,&cards[NUM_COMMUNITY_CARDS+n]);
+
+                if (retval) {
+                  printf("invalid card string %s on line %d\n",
+                    card_string,line_no);
+                  return 4;
+                }
+              }
+
+              holdem_hand.NewCards(cards[0],cards[1],cards[2],
+                cards[3],cards[4],cards[5],cards[6]);
+
+              poker_hand = holdem_hand.BestPokerHand();
+
+              strcat(buf,space);
+              strcat(buf,plain_hand_types[poker_hand.GetHandType()]);
+              strcat(buf,linefeed);
             }
           }
         }
