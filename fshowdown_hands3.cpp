@@ -25,6 +25,8 @@ static char usage[] =
 "usage: fshowdown_hands3 (-verbose) (-debug) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
+static char show_down[] = "*** SHOW DOWN ***";
+#define SHOW_DOWN_LEN (sizeof (show_down) - 1)
 static char summary[] = "*** SUMMARY ***";
 #define SUMMARY_LEN (sizeof (summary) - 1)
 
@@ -61,6 +63,7 @@ int main(int argc,char **argv)
   HoldemPokerHand holdem_hand;
   char card_string[3];
   int retval;
+  bool bHaveShowdown;
 
   if ((argc < 2) || (argc > 4)) {
     printf(usage);
@@ -110,6 +113,7 @@ int main(int argc,char **argv)
 
     line_no = 0;
     num_hands = 0;
+    bHaveShowdown = false;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -125,7 +129,9 @@ int main(int argc,char **argv)
       if (bDebug)
         printf("line %d %s\n",line_no,line);
 
-      if (!strncmp(line,summary,SUMMARY_LEN)) {
+      if (!strncmp(line,show_down,SHOW_DOWN_LEN))
+        bHaveShowdown = true;
+      else if (bHaveShowdown && !strncmp(line,summary,SUMMARY_LEN)) {
         num_hands++;
         showdown_hands = 0;
         buf[0] = 0;
