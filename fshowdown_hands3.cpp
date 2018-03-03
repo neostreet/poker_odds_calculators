@@ -25,6 +25,8 @@ static char usage[] =
 "usage: fshowdown_hands3 (-verbose) (-debug) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
+static char pokerstars[] = "PokerStars";
+#define POKERSTARS_LEN (sizeof (pokerstars) - 1)
 static char show_down[] = "*** SHOW DOWN ***";
 #define SHOW_DOWN_LEN (sizeof (show_down) - 1)
 static char summary[] = "*** SUMMARY ***";
@@ -55,6 +57,7 @@ int main(int argc,char **argv)
   int file_no;
   int dbg_file_no;
   int num_hands;
+  int num_qualifying_hands;
   int dbg;
   char *cpt;
   int showdown_hands;
@@ -64,6 +67,8 @@ int main(int argc,char **argv)
   char card_string[3];
   int retval;
   bool bHaveShowdown;
+  int opened_count;
+  int closed_count;
 
   if ((argc < 2) || (argc > 4)) {
     printf(usage);
@@ -95,6 +100,11 @@ int main(int argc,char **argv)
   file_no = 0;
   dbg_file_no = -1;
 
+  if (bDebug) {
+    opened_count = 0;
+    closed_count = 0;
+  }
+
   for ( ; ; ) {
     GetLine(fptr0,filename,&filename_len,MAX_FILENAME_LEN);
 
@@ -111,8 +121,15 @@ int main(int argc,char **argv)
       continue;
     }
 
+    if (bDebug) {
+      opened_count++;
+      printf("opened_count = %d\n",opened_count);
+      printf("closed_count = %d\n",closed_count);
+    }
+
     line_no = 0;
     num_hands = 0;
+    num_qualifying_hands = 0;
     bHaveShowdown = false;
 
     for ( ; ; ) {
@@ -127,12 +144,24 @@ int main(int argc,char **argv)
         dbg = 1;
 
       if (bDebug)
-        printf("line %d %s\n",line_no,line);
+        printf("line %d of %s read in outer GetLine() loop\n",line_no,filename);
 
-      if (!strncmp(line,show_down,SHOW_DOWN_LEN))
+      if (Contains(true,
+        line,line_len,
+        pokerstars,POKERSTARS_LEN,
+        &ix)) {
+        num_hands++;
+        bHaveShowdown = false;
+
+        if (bDebug) {
+          printf("new hand %d started at line %d of %s\n",
+            num_hands,line_no,filename);
+        }
+      }
+      else if (!strncmp(line,show_down,SHOW_DOWN_LEN))
         bHaveShowdown = true;
       else if (bHaveShowdown && !strncmp(line,summary,SUMMARY_LEN)) {
-        num_hands++;
+        num_qualifying_hands++;
         showdown_hands = 0;
         buf[0] = 0;
 
@@ -147,7 +176,10 @@ int main(int argc,char **argv)
           if (line_no == dbg_line_no)
             dbg = 1;
 
-          if ((line_len == 1) && (line[0] == '\r')) {
+          if (bDebug)
+            printf("line %d of %s read in inner GetLine() loop\n",line_no,filename);
+
+          if (!line_len || ((line_len == 1) && (line[0] == '\r'))) {
             if (showdown_hands)
               printf("%s",buf);
 
@@ -175,8 +207,8 @@ int main(int argc,char **argv)
                   card_string,&cards[n]);
 
                 if (retval) {
-                  printf("invalid card string %s on line %d\n",
-                    card_string,line_no);
+                  printf("invalid card string %s on line %d of file %s\n",
+                    card_string,line_no,filename);
                   return 4;
                 }
               }
@@ -201,6 +233,8 @@ int main(int argc,char **argv)
                 if (retval) {
                   printf("invalid card string %s on line %d\n",
                     card_string,line_no);
+                  printf("opened_count = %d\n",opened_count);
+                  printf("closed_count = %d\n",closed_count);
                   return 4;
                 }
               }
@@ -220,6 +254,12 @@ int main(int argc,char **argv)
     }
 
     fclose(fptr);
+
+    if (bDebug) {
+      closed_count++;
+      printf("opened_count = %d\n",opened_count);
+      printf("closed_count = %d\n",closed_count);
+    }
   }
 
   fclose(fptr0);
