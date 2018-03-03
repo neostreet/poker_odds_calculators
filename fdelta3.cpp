@@ -27,7 +27,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize) (-only_lost)\n"
-"  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown) (-only_heads_up_showdown)\n"
+"  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown) (-only_showdown_count)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-fall_in)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
@@ -196,7 +196,8 @@ struct vars {
   bool bOnlyWon;
   bool bOnlyShowdown;
   bool bOnlyNoShowdown;
-  bool bOnlyHeadsUpShowdown;
+  bool bOnlyShowdownCount;
+  int showdown_count;
   bool bVeryBestHand;
   bool bTableCount;
   bool bAllIn;
@@ -285,7 +286,7 @@ struct vars {
   bool bHaveBottomTwo;
   bool bSpentRiverMoney;
   bool bHaveShowdown;
-  bool bHaveHeadsUpShowdown;
+  bool bHaveShowdownCount;
   bool bHaveAllIn;
   bool bHaveAllInPreflop;
   bool bHaveAllInPostflop;
@@ -436,7 +437,7 @@ int main(int argc,char **argv)
   local_vars.bOnlyWon = false;
   local_vars.bOnlyShowdown = false;
   local_vars.bOnlyNoShowdown = false;
-  local_vars.bOnlyHeadsUpShowdown = false;
+  local_vars.bOnlyShowdownCount = false;
   local_vars.bVeryBestHand = false;
   local_vars.bTableCount = false;
   local_vars.bAllIn = false;
@@ -613,8 +614,10 @@ int main(int argc,char **argv)
       local_vars.bOnlyShowdown = true;
     else if (!strcmp(argv[curr_arg],"-only_no_showdown"))
       local_vars.bOnlyNoShowdown = true;
-    else if (!strcmp(argv[curr_arg],"-only_heads_up_showdown"))
-      local_vars.bOnlyHeadsUpShowdown = true;
+    else if (!strncmp(argv[curr_arg],"-only_showdown_count",20)) {
+      local_vars.bOnlyShowdownCount = true;
+      sscanf(&argv[curr_arg][20],"%d",&local_vars.showdown_count);
+    }
     else if (!strcmp(argv[curr_arg],"-very_best_hand"))
       local_vars.bVeryBestHand = true;
     else if (!strncmp(argv[curr_arg],"-table_count",12)) {
@@ -922,13 +925,13 @@ int main(int argc,char **argv)
     return 20;
   }
 
-  if (local_vars.bOnlyShowdown && local_vars.bOnlyHeadsUpShowdown) {
-    printf("can't specify both -only_showdown and -only_heads_up_showdown\n");
+  if (local_vars.bOnlyShowdown && local_vars.bOnlyShowdownCount) {
+    printf("can't specify both -only_showdown and -only_showdown_count\n");
     return 21;
   }
 
-  if (local_vars.bOnlyNoShowdown && local_vars.bOnlyHeadsUpShowdown) {
-    printf("can't specify both -only_no_showdown and -only_heads_up_showdown\n");
+  if (local_vars.bOnlyNoShowdown && local_vars.bOnlyShowdownCount) {
+    printf("can't specify both -only_no_showdown and -only_showdown_count\n");
     return 22;
   }
 
@@ -1165,7 +1168,7 @@ int main(int argc,char **argv)
     local_vars.bHaveBottomTwo = false;
     local_vars.bHaveShowdown = false;
     showdown_count = 0;
-    local_vars.bHaveHeadsUpShowdown = false;
+    local_vars.bHaveShowdownCount = false;
     local_vars.bHaveAllIn = false;
     local_vars.bHaveAllInPreflop = false;
     local_vars.bHaveAllInPostflop = false;
@@ -1351,7 +1354,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveBottomTwo = false;
                 local_vars.bHaveShowdown = false;
                 showdown_count = 0;
-                local_vars.bHaveHeadsUpShowdown = false;
+                local_vars.bHaveShowdownCount = false;
                 local_vars.bHaveAllIn = false;
                 local_vars.bHaveAllInPreflop = false;
                 local_vars.bHaveAllInPostflop = false;
@@ -1812,14 +1815,14 @@ int main(int argc,char **argv)
           spent_this_street += bring_in;
           continue;
         }
-        else if (local_vars.bOnlyHeadsUpShowdown && Contains(true,
+        else if (local_vars.bOnlyShowdownCount && Contains(true,
           line,line_len,
           ": shows",7,
           &ix)) {
 
           showdown_count++;
         }
-        else if (local_vars.bOnlyHeadsUpShowdown && Contains(true,
+        else if (local_vars.bOnlyShowdownCount && Contains(true,
           line,line_len,
           ": mucks",7,
           &ix)) {
@@ -1963,14 +1966,14 @@ int main(int argc,char **argv)
           if (!local_vars.bFolded)
             local_vars.bHaveShowdown = true;
         }
-        else if (local_vars.bOnlyHeadsUpShowdown && Contains(true,
+        else if (local_vars.bOnlyShowdownCount && Contains(true,
           line,line_len,
           ": shows",7,
           &ix)) {
 
           showdown_count++;
         }
-        else if (local_vars.bOnlyHeadsUpShowdown && Contains(true,
+        else if (local_vars.bOnlyShowdownCount && Contains(true,
           line,line_len,
           ": mucks",7,
           &ix)) {
@@ -2029,8 +2032,8 @@ int main(int argc,char **argv)
             }
           }
 
-          if (local_vars.bOnlyHeadsUpShowdown && local_vars.bHaveShowdown && (showdown_count == 2))
-            local_vars.bHaveHeadsUpShowdown = true;
+          if (local_vars.bOnlyShowdownCount && local_vars.bHaveShowdown && (showdown_count == local_vars.showdown_count))
+            local_vars.bHaveShowdownCount = true;
 
           continue;
         }
@@ -2443,7 +2446,7 @@ void run_filter(struct vars *varspt)
                                           if (!varspt->bOnlyWon || (varspt->delta > 0)) {
                                             if (!varspt->bOnlyWash || (varspt->delta == 0)) {
                                               if (!varspt->bOnlyShowdown || varspt->bHaveShowdown) {
-                                                if (!varspt->bOnlyHeadsUpShowdown || varspt->bHaveHeadsUpShowdown) {
+                                                if (!varspt->bOnlyShowdownCount || varspt->bHaveShowdownCount) {
                                                   if (!varspt->bOnlyNoShowdown || !varspt->bHaveShowdown) {
                                                     if (!varspt->bTableCount || (varspt->table_count == varspt->table_count_to_match)) {
                                                       if (!varspt->bAllIn || varspt->bHaveAllIn) {
