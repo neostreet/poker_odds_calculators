@@ -13,6 +13,11 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
+struct hand_ixs {
+  int num_hand_ixs;
+  int ix[2];
+};
+
 #define MAX_FILENAME_LEN 1024
 static char filename[MAX_FILENAME_LEN];
 
@@ -137,6 +142,7 @@ static HandType get_winning_hand_typ_id(char *line,int line_len);
 static void run_filter(struct vars *varspt);
 static void do_balance_processing(struct vars *varspt);
 static char *style2(char *filename);
+int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -170,7 +176,7 @@ struct vars {
   bool bHandTypIdSpecified;
   bool bHandSpecified;
   bool bOnlyPremiumHands;
-  int specified_hand_index;
+  struct hand_ixs specified_hand_ixs;
   bool bShowdownHandSpecified;
   int specified_showdown_hand_index;
   bool bShowdownHand2Specified;
@@ -398,6 +404,7 @@ int main(int argc,char **argv)
   int boss_seat_ix;
   int my_seat_ix;
   int work_hand_index;
+  char specified_hand[4];
 
   if ((argc < 3) || (argc > 106)) {
     printf(usage);
@@ -516,6 +523,7 @@ int main(int argc,char **argv)
   local_vars.bOnlyKnockout = false;
   local_vars.bOnlyDoubleUp = false;
   local_vars.hand_number = -1;
+  specified_hand[3] = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -547,10 +555,28 @@ int main(int argc,char **argv)
     }
     else if (!strncmp(argv[curr_arg],"-hand",5)) {
       local_vars.bHandSpecified = true;
-      retval = index_of_hand_abbrev(&argv[curr_arg][5],&local_vars.specified_hand_index);
 
-      if (retval)
-        local_vars.specified_hand_index = -1;
+      if ((strlen(&argv[curr_arg][5]) == 3) && (argv[curr_arg][7] == 'x')) {
+        local_vars.specified_hand_ixs.num_hand_ixs = 2;
+
+        for (n = 0; n < 2; n++)
+          specified_hand[n] = argv[curr_arg][5+n];
+
+        for (n = 0; n < 2; n++) {
+          specified_hand[2] = (n ? 's' : 'o');
+          retval = index_of_hand_abbrev(specified_hand,&local_vars.specified_hand_ixs.ix[n]);
+
+          if (retval)
+            local_vars.specified_hand_ixs.ix[n] = -1;
+        }
+      }
+      else {
+        local_vars.specified_hand_ixs.num_hand_ixs = 1;
+        retval = index_of_hand_abbrev(&argv[curr_arg][5],&local_vars.specified_hand_ixs.ix[0]);
+
+        if (retval)
+          local_vars.specified_hand_ixs.ix[0] = -1;
+      }
     }
     else if (!strcmp(argv[curr_arg],"-only_premium_hands")) {
       local_vars.bOnlyPremiumHands = true;
@@ -1632,7 +1658,7 @@ int main(int argc,char **argv)
               retval = index_of_hand(&line[n],&work_hand_index);
 
               if (!retval) {
-                if (work_hand_index == local_vars.specified_hand_index)
+                if (hand_ix_match(work_hand_index,&local_vars.specified_hand_ixs))
                   local_vars.bHaveSpecifiedHand = true;
               }
             }
@@ -2788,4 +2814,16 @@ static char *style2(char *filename)
   sprintf(&style2_buf[n],"hand");
 
   return style2_buf;
+}
+
+int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs)
+{
+  int n;
+
+  for (n = 0; n < specified_hand_ixs->num_hand_ixs; n++) {
+    if (specified_hand_ixs->ix[n] == hand_ix)
+      return 1;
+  }
+
+  return 0;
 }
