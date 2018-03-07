@@ -80,6 +80,7 @@ extern int plain_hand_type_lens[];
 #define POKER_3_2_PERMUTATIONS          3
 #define POKER_4_2_PERMUTATIONS          6
 #define POKER_6_5_PERMUTATIONS          6
+#define POKER_5_2_PERMUTATIONS         10
 #define POKER_5_3_PERMUTATIONS         10
 #define POKER_7_5_PERMUTATIONS         21
 #define POKER_33_2_PERMUTATIONS       528
@@ -95,6 +96,7 @@ extern int plain_hand_type_lens[];
 #define POKER_52_4_PERMUTATIONS    270725
 #define POKER_36_5_PERMUTATIONS    376992
 #define POKER_40_5_PERMUTATIONS    658008
+#define POKER_42_5_PERMUTATIONS    850668
 #define POKER_44_5_PERMUTATIONS   1086008
 #define POKER_46_5_PERMUTATIONS   1370754
 #define POKER_48_5_PERMUTATIONS   1712304
