@@ -31,7 +31,7 @@ static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
-"  (-spent_money_on_the_river) (-stealth_two_pair) (-normalize) (-only_lost)\n"
+"  (-river_money) (-stealth_two_pair) (-normalize) (-only_lost)\n"
 "  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown) (-only_showdown_count)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-fall_in)\n"
@@ -194,7 +194,7 @@ struct vars {
   bool bSawFlop;
   bool bSawRiver;
   bool bOnlyFolded;
-  bool bSpentMoneyOnTheRiver;
+  bool bRiverMoney;
   bool bStealthTwoPair;
   bool bNormalize;
   bool bOnlyLost;
@@ -436,7 +436,7 @@ int main(int argc,char **argv)
   local_vars.bSawFlop = false;
   local_vars.bSawRiver = false;
   local_vars.bOnlyFolded = false;
-  local_vars.bSpentMoneyOnTheRiver = false;
+  local_vars.bRiverMoney = false;
   local_vars.bStealthTwoPair = false;
   local_vars.bNormalize = false;
   local_vars.bOnlyLost = false;
@@ -624,8 +624,8 @@ int main(int argc,char **argv)
       local_vars.bSawRiver = true;
     else if (!strcmp(argv[curr_arg],"-only_folded"))
       local_vars.bOnlyFolded = true;
-    else if (!strcmp(argv[curr_arg],"-spent_money_on_the_river"))
-      local_vars.bSpentMoneyOnTheRiver = true;
+    else if (!strcmp(argv[curr_arg],"-river_money"))
+      local_vars.bRiverMoney = true;
     else if (!strcmp(argv[curr_arg],"-stealth_two_pair"))
       local_vars.bStealthTwoPair = true;
     else if (!strcmp(argv[curr_arg],"-normalize"))
@@ -882,7 +882,7 @@ int main(int argc,char **argv)
     return 11;
   }
 
-  if (!local_vars.bSawRiver && local_vars.bSpentMoneyOnTheRiver)
+  if (!local_vars.bSawRiver && local_vars.bRiverMoney)
     local_vars.bSawRiver = true;
 
   if (local_vars.bStealthTwoPair && local_vars.bBottomTwo) {
@@ -2459,7 +2459,7 @@ void run_filter(struct vars *varspt)
                 if (!varspt->bBottomTwo || varspt->bHaveBottomTwo) {
                   if (!varspt->bSawRiver || varspt->bHaveRiver) {
                     if (!varspt->bAceOnTheRiver || varspt->bHaveAceOnTheRiver) {
-                      if (!varspt->bSpentMoneyOnTheRiver || varspt->bSpentRiverMoney) {
+                      if (!varspt->bRiverMoney || varspt->bSpentRiverMoney) {
                         if (!varspt->bHandTypeSpecified || (varspt->hand_typ_id == varspt->poker_hand.GetHandType())) {
                           if (!varspt->bWinningHandTypeSpecified || (varspt->curr_winning_hand_typ_id == varspt->winning_hand_typ_id)) {
                             if (!varspt->bHandTypIdSpecified || (varspt->poker_hand.GetHandType() == varspt->hand_typ_id)) {
