@@ -15,7 +15,8 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up_turn (-debug_levellevel) (-verbose) (-compare_low) filename";
+"usage: heads_up_turn (-debug_levellevel) (-verbose) (-compare_low)\n"
+"  (-only_player1) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -27,6 +28,7 @@ int main(int argc,char **argv)
   int debug_level;
   bool bVerbose;
   bool bCompareLow;
+  bool bOnlyPlayer1;
   int m;
   int n;
   int o;
@@ -46,7 +48,7 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 6)) {
     cout << usage << endl;
     return 1;
   }
@@ -54,6 +56,7 @@ int main(int argc,char **argv)
   debug_level = 0;
   bVerbose = false;
   bCompareLow = false;
+  bOnlyPlayer1 = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strncmp(argv[curr_arg],"-debug_level",12))
@@ -62,6 +65,8 @@ int main(int argc,char **argv)
       bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-compare_low"))
       bCompareLow = true;
+    else if (!strcmp(argv[curr_arg],"-only_player1"))
+      bOnlyPlayer1 = true;
     else
       break;
   }
@@ -204,6 +209,9 @@ int main(int argc,char **argv)
     putchar(0x0a);
 
     for (n = 0; n < NUM_PLAYERS; n++) {
+      if (bOnlyPlayer1 && n)
+        break;
+
       printf("player %d\n",n+1);
       total = outcomes[n].wins + outcomes[n].losses + outcomes[n].ties;
 
