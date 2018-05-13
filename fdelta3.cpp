@@ -58,7 +58,8 @@ static char usage[] =
 "  (-show_num_possible_checks) (-filter_percentage)\n"
 "  (-show_running_total) (-show_num_positive_deltas)\n"
 "  (-only_discrepancy) (-showdown_handhand) (-showdown_hand2hand)\n"
-"  (-winning_handhand) (-only_premium_hands) player_name filename\n";
+"  (-winning_handhand) (-only_premium_hands) (-show_winning_hand_hole_cards)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -176,6 +177,7 @@ struct vars {
   bool bHandTypIdSpecified;
   bool bHandSpecified;
   bool bOnlyPremiumHands;
+  bool bShowWinningHandHoleCards;
   struct hand_ixs specified_hand_ixs;
   bool bShowdownHandSpecified;
   int specified_showdown_hand_index;
@@ -285,6 +287,7 @@ struct vars {
   bool bHaveSpecifiedShowdownHand;
   bool bHaveSpecifiedShowdownHand2;
   bool bHaveSpecifiedWinningHand;
+  bool bHaveWinningHandHoleCards;
   bool bHaveFlop;
   bool bHaveFlop2;
   bool bHaveRiver;
@@ -331,6 +334,7 @@ struct vars {
   int collected_from_pot;
   int collected_from_pot_count;
   char hole_cards[12];
+  char winning_hand_hole_cards[6];
   int hole_cards_used;
   int num_hands;
   int num_hands_in_file;
@@ -407,7 +411,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 107)) {
+  if ((argc < 3) || (argc > 108)) {
     printf(usage);
     return 1;
   }
@@ -423,6 +427,7 @@ int main(int argc,char **argv)
   local_vars.bHandTypIdSpecified = false;
   local_vars.bHandSpecified = false;
   local_vars.bOnlyPremiumHands = false;
+  local_vars.bShowWinningHandHoleCards = false;
   local_vars.bShowdownHandSpecified = false;
   local_vars.bShowdownHand2Specified = false;
   local_vars.bWinningHandSpecified = false;
@@ -582,6 +587,9 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-only_premium_hands")) {
       local_vars.bOnlyPremiumHands = true;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_winning_hand_hole_cards")) {
+      local_vars.bShowWinningHandHoleCards = true;
     }
     else if (!strncmp(argv[curr_arg],"-showdown_hand2",15)) {
       local_vars.bShowdownHand2Specified = true;
@@ -1142,6 +1150,8 @@ int main(int argc,char **argv)
   else
     local_vars.hole_cards[3] = 0;
 
+  local_vars.winning_hand_hole_cards[5] = 0;
+
   if (local_vars.bSumByTableCount) {
     for (n = 0; n < MAX_TABLE_COUNT - 1; n++) {
       local_vars.sum_by_table_count[n] = 0;
@@ -1194,6 +1204,7 @@ int main(int argc,char **argv)
     local_vars.bHaveSpecifiedShowdownHand = false;
     local_vars.bHaveSpecifiedShowdownHand2 = false;
     local_vars.bHaveSpecifiedWinningHand = false;
+    local_vars.bHaveWinningHandHoleCards = false;
     local_vars.bHaveFlop = false;
     local_vars.bHaveFlop2 = false;
     local_vars.bHaveRiver = false;
@@ -1380,6 +1391,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveSpecifiedShowdownHand = false;
                 local_vars.bHaveSpecifiedShowdownHand2 = false;
                 local_vars.bHaveSpecifiedWinningHand = false;
+                local_vars.bHaveWinningHandHoleCards = false;
                 local_vars.bHaveFlop = false;
                 local_vars.bHaveFlop2 = false;
                 local_vars.bHaveRiver = false;
@@ -1555,6 +1567,24 @@ int main(int argc,char **argv)
                 if (work_hand_index == local_vars.specified_winning_hand_index)
                   local_vars.bHaveSpecifiedWinningHand = true;
               }
+            }
+          }
+        }
+        else if (local_vars.bShowWinningHandHoleCards && !local_vars.bHaveWinningHandHoleCards) {
+          if (Contains(true,
+            line,line_len,
+            showed,SHOWED_LEN,
+            &showed_ix)) {
+
+            if (Contains(true,
+              line,line_len,
+              and_won,AND_WON_LEN,
+              &ix)) {
+
+              for (n = 0; n < 5; n++)
+                local_vars.winning_hand_hole_cards[n] = line[showed_ix + SHOWED_LEN + n];
+
+              local_vars.bHaveWinningHandHoleCards = true;
             }
           }
         }
@@ -2596,8 +2626,12 @@ void run_filter(struct vars *varspt)
                                                                                                                                 case QUANTUM_TYPE_DELTA:
                                                                                                                                   if (!varspt->bNoDelta) {
                                                                                                                                     if (!varspt->bHoleCardsUsed) {
-                                                                                                                                      if (!varspt->bNoHoleCards)
-                                                                                                                                        printf("%10d %s",varspt->delta,varspt->hole_cards);
+                                                                                                                                      if (!varspt->bNoHoleCards) {
+                                                                                                                                        if (!varspt->bShowWinningHandHoleCards)
+                                                                                                                                          printf("%10d %s",varspt->delta,varspt->hole_cards);
+                                                                                                                                        else
+                                                                                                                                          printf("%10d %s %s",varspt->delta,varspt->hole_cards,varspt->winning_hand_hole_cards);
+                                                                                                                                      }
                                                                                                                                       else
                                                                                                                                         printf("%10d",varspt->delta);
                                                                                                                                     }
