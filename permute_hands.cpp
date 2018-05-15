@@ -15,7 +15,7 @@ int main(int argc,char **argv)
   int p;
   int q;
   int r;
-  PokerHand hand;
+  PokerHand hand(NUM_CARDS_IN_DECK);
   int hand_counts[NUM_HAND_TYPES];
   double pct;
   time_t start_time;

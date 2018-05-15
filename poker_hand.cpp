@@ -27,6 +27,7 @@ PokerHand::PokerHand()
   _verbose = false;
   _plain = false;
   _debug_level = 0;
+  _num_cards_in_deck = NUM_CARDS_IN_DECK;
 }
 
 // copy constructor
@@ -54,6 +55,7 @@ PokerHand::PokerHand(const PokerHand& hand)
   _quick_ix = hand._quick_ix;
 
   _debug_level = hand._debug_level;
+  _num_cards_in_deck = hand._num_cards_in_deck;
 }
 
 // assignment operator
@@ -81,6 +83,7 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _quick_ix = hand._quick_ix;
 
   _debug_level = hand._debug_level;
+  _num_cards_in_deck = hand._num_cards_in_deck;
 
   return *this;
 }
@@ -91,15 +94,15 @@ PokerHand::~PokerHand()
 {
 }
 
-PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
+PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5, int num_cards_in_deck)
 {
   int n;
 
-  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
-  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
-  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
-  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
-  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % _num_cards_in_deck;
+  _card.cards[1] = card2 % _num_cards_in_deck;
+  _card.cards[2] = card3 % _num_cards_in_deck;
+  _card.cards[3] = card4 % _num_cards_in_deck;
+  _card.cards[4] = card5 % _num_cards_in_deck;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     _suit.cards[n] = suit_of(_card.cards[n]);
@@ -111,17 +114,28 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5)
   _hand_evaluated = false;
   _verbose = false;
   _plain = false;
+  _num_cards_in_deck = num_cards_in_deck;
+}
+
+PokerHand::PokerHand(int num_cards_in_deck)
+{
+  _have_cards = false;
+  _hand_sorted = false;
+  _hand_evaluated = false;
+  _verbose = false;
+  _plain = false;
+  _num_cards_in_deck = num_cards_in_deck;
 }
 
 void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
 {
   int n;
 
-  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
-  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
-  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
-  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
-  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _card.cards[0] = card1 % _num_cards_in_deck;
+  _card.cards[1] = card2 % _num_cards_in_deck;
+  _card.cards[2] = card3 % _num_cards_in_deck;
+  _card.cards[3] = card4 % _num_cards_in_deck;
+  _card.cards[4] = card5 % _num_cards_in_deck;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     _suit.cards[n] = suit_of(_card.cards[n]);
@@ -1054,6 +1068,11 @@ int *PokerHand::GetCards()
 void PokerHand::SetDebugLevel(int debug_level)
 {
   _debug_level = debug_level;
+}
+
+int PokerHand::GetNumCardsInDeck()
+{
+  return _num_cards_in_deck;
 }
 
 // default constructor

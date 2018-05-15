@@ -195,7 +195,8 @@ class PokerHand {
   // destructor
   ~PokerHand();
 
-  PokerHand(int card1,int card2,int card3,int card4, int card5);
+  PokerHand(int card1,int card2,int card3,int card4, int card5, int num_cards_in_deck);
+  PokerHand(int num_cards_in_deck);
   void NewCards(int card1,int card2,int card3,int card4, int card5);
 
   int GetRank(int card_ix);
@@ -233,6 +234,8 @@ class PokerHand {
 
   void SetDebugLevel(int debug_level);
 
+  int GetNumCardsInDeck();
+
   private:
 
   hand _card;
@@ -252,6 +255,7 @@ class PokerHand {
   int _quick_ix;
 
   int _debug_level;
+  int _num_cards_in_deck;
 };
 
 ostream& operator<<(ostream& out,const PokerHand& hand);
