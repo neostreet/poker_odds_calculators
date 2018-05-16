@@ -7,6 +7,8 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
+int card_values[NUM_CARDS_IN_DECK];
+
 int main(int argc,char **argv)
 {
   int m;
@@ -21,6 +23,9 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
+  for (n = 0; n < NUM_CARDS_IN_DECK; n++)
+    card_values[n] = n;
+
   time(&start_time);
 
   for (n = 0; n < NUM_HAND_TYPES; n++)
@@ -31,7 +36,7 @@ int main(int argc,char **argv)
       NUM_CARDS_IN_DECK,
       &m,&n,&o,&p,&q,r);
 
-    hand.NewCards(m,n,o,p,q);
+    hand.NewCards(card_values[m],card_values[n],card_values[o],card_values[p],card_values[q]);
     hand.Evaluate();
     hand_counts[hand.GetHandType()]++;
   }
