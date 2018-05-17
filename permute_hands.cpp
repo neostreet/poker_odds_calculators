@@ -7,10 +7,14 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
+static char usage[] = "usage: permute_hands (-verbose)\n";
+
 int card_values[NUM_CARDS_IN_DECK];
 
 int main(int argc,char **argv)
 {
+  int curr_arg;
+  bool bVerbose;
   int m;
   int n;
   int o;
@@ -22,6 +26,25 @@ int main(int argc,char **argv)
   double pct;
   time_t start_time;
   time_t end_time;
+
+  if (argc > 2) {
+    printf(usage);
+    return 1;
+  }
+
+  bVerbose = false;
+
+  for (curr_arg = 1; curr_arg < argc; curr_arg++) {
+    if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
+    else
+      break;
+  }
+
+  if (argc - curr_arg != 0) {
+    printf(usage);
+    return 2;
+  }
 
   for (n = 0; n < NUM_CARDS_IN_DECK; n++)
     card_values[n] = n;
@@ -39,7 +62,13 @@ int main(int argc,char **argv)
     hand.NewCards(card_values[m],card_values[n],card_values[o],card_values[p],card_values[q]);
     hand.Evaluate();
     hand_counts[hand.GetHandType()]++;
+
+    if (bVerbose)
+      cout << hand << endl;
   }
+
+  if (bVerbose)
+    cout << endl;
 
   time(&end_time);
 
