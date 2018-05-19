@@ -98,11 +98,11 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5, int num
 {
   int n;
 
-  _card.cards[0] = card1 % _num_cards_in_deck;
-  _card.cards[1] = card2 % _num_cards_in_deck;
-  _card.cards[2] = card3 % _num_cards_in_deck;
-  _card.cards[3] = card4 % _num_cards_in_deck;
-  _card.cards[4] = card5 % _num_cards_in_deck;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     _suit.cards[n] = suit_of(_card.cards[n]);
@@ -131,11 +131,11 @@ void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
 {
   int n;
 
-  _card.cards[0] = card1 % _num_cards_in_deck;
-  _card.cards[1] = card2 % _num_cards_in_deck;
-  _card.cards[2] = card3 % _num_cards_in_deck;
-  _card.cards[3] = card4 % _num_cards_in_deck;
-  _card.cards[4] = card5 % _num_cards_in_deck;
+  _card.cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _card.cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _card.cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _card.cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _card.cards[4] = card5 % NUM_CARDS_IN_DECK;
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     _suit.cards[n] = suit_of(_card.cards[n]);
