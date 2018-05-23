@@ -7,8 +7,7 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
-static char usage[] =
-"usage: permute_hands_short_deck (-debug) (-verbose)\n";
+static char usage[] = "usage: permute_hands_short_deck (-verbose)\n";
 
 int card_values[NUM_CARDS_IN_SHORT_DECK] = {
    4,  5,  6,  7,  8,  9, 10, 11, 12,
@@ -24,7 +23,6 @@ int compare(const void *elem1,const void *elem2);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bDebug;
   bool bVerbose;
   int m;
   int n;
@@ -36,21 +34,17 @@ int main(int argc,char **argv)
   double pct;
   time_t start_time;
   time_t end_time;
-  HandType hand_type;
   int hand_type_ixs[NUM_HAND_TYPES];
 
-  if (argc > 3) {
+  if (argc > 2) {
     printf(usage);
     return 1;
   }
 
-  bDebug = false;
   bVerbose = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug"))
-      bDebug = true;
-    else if (!strcmp(argv[curr_arg],"-verbose"))
+    if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
     else
       break;
@@ -73,37 +67,15 @@ int main(int argc,char **argv)
       NUM_CARDS_IN_SHORT_DECK,
       &m,&n,&o,&p,&q,r);
 
-    if (bDebug) {
-      printf("%6d: %2d (%2d) %2d (%2d) %2d (%2d) %2d (%2d) %2d (%2d)\n",
-        r,
-        card_values[m],m,
-        card_values[n],n,
-        card_values[o],o,
-        card_values[p],p,
-        card_values[q],q);
-    }
-
     hand.NewCards(card_values[m],card_values[n],card_values[o],card_values[p],card_values[q]);
-
     hand.Evaluate();
+    hand_counts[hand.GetHandType()]++;
 
-    hand_type = hand.GetHandType();
-
-    if (bVerbose && (hand_type == ROYAL_FLUSH)) {
+    if (bVerbose)
       cout << hand << endl;
-      printf("%6d: %2d (%2d) %2d (%2d) %2d (%2d) %2d (%2d) %2d (%2d)\n",
-        r,
-        card_values[m],m,
-        card_values[n],n,
-        card_values[o],o,
-        card_values[p],p,
-        card_values[q],q);
-    }
-
-    hand_counts[hand_type]++;
   }
 
-  if (bDebug || bVerbose)
+  if (bVerbose)
     cout << endl;
 
   time(&end_time);
