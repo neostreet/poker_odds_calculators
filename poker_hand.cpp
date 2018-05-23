@@ -440,14 +440,25 @@ bool PokerHand::Straight()
 {
   int n;
 
-  // first, handle the special case of a wheel (A, 2, 3, 4, 5)
+  // first, handle the special case of a wheel ({A, 2, 3, 4, 5} in a regular deck
+  // and {A, 6, 7, 8, 9} in a short deck)
 
-  if ((_rank.cards[_order.cards[0]] == ACE) &&
-      (_rank.cards[_order.cards[1]] == FIVE) &&
-      (_rank.cards[_order.cards[2]] == FOUR) &&
-      (_rank.cards[_order.cards[3]] == THREE) &&
-      (_rank.cards[_order.cards[4]] == TWO))
-    return 1;
+  if (_num_cards_in_deck == NUM_CARDS_IN_DECK) {
+    if ((_rank.cards[_order.cards[0]] == ACE) &&
+        (_rank.cards[_order.cards[1]] == FIVE) &&
+        (_rank.cards[_order.cards[2]] == FOUR) &&
+        (_rank.cards[_order.cards[3]] == THREE) &&
+        (_rank.cards[_order.cards[4]] == TWO))
+      return 1;
+  }
+  else if (_num_cards_in_deck == NUM_CARDS_IN_SHORT_DECK) {
+    if ((_rank.cards[_order.cards[0]] == ACE) &&
+        (_rank.cards[_order.cards[1]] == NINE) &&
+        (_rank.cards[_order.cards[2]] == EIGHT) &&
+        (_rank.cards[_order.cards[3]] == SEVEN) &&
+        (_rank.cards[_order.cards[4]] == SIX))
+      return 1;
+  }
 
   for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
     if (_rank.cards[_order.cards[n-1]] != _rank.cards[_order.cards[n]] + 1)

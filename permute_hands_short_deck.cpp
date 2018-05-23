@@ -10,15 +10,16 @@ using namespace std;
 static char usage[] =
 "usage: permute_hands_short_deck (-debug) (-verbose)\n";
 
-#define POKER_36_5_PERMUTATIONS 376992
-#define NUM_CARDS_IN_SHORT_DECK 36
-
 int card_values[NUM_CARDS_IN_SHORT_DECK] = {
    4,  5,  6,  7,  8,  9, 10, 11, 12,
   17, 18, 19, 20, 21, 22, 23, 24, 25,
   30, 31, 32, 33, 34, 35, 36, 37, 38,
   43, 44, 45, 46, 47, 48, 49, 50, 51
 };
+
+static int hand_counts[NUM_HAND_TYPES];
+
+int compare(const void *elem1,const void *elem2);
 
 int main(int argc,char **argv)
 {
@@ -32,11 +33,11 @@ int main(int argc,char **argv)
   int q;
   int r;
   PokerHand hand(NUM_CARDS_IN_SHORT_DECK);
-  int hand_counts[NUM_HAND_TYPES];
   double pct;
   time_t start_time;
   time_t end_time;
   HandType hand_type;
+  int hand_type_ixs[NUM_HAND_TYPES];
 
   if (argc > 3) {
     printf(usage);
@@ -62,8 +63,10 @@ int main(int argc,char **argv)
 
   time(&start_time);
 
-  for (n = 0; n < NUM_HAND_TYPES; n++)
+  for (n = 0; n < NUM_HAND_TYPES; n++) {
     hand_counts[n] = 0;
+    hand_type_ixs[n] = n;
+  }
 
   for (r = 0; r < POKER_36_5_PERMUTATIONS; r++) {
     get_permutation_instance_five(
@@ -105,9 +108,11 @@ int main(int argc,char **argv)
 
   time(&end_time);
 
-  for (n = NUM_HAND_TYPES - 1; (n >= 0); n--) {
-    pct = (double)hand_counts[n] / (double)POKER_36_5_PERMUTATIONS;
-    printf("%s %9d %9.6lf\n",hand_type_abbrevs[n],hand_counts[n],pct);
+  qsort(hand_type_ixs,NUM_HAND_TYPES,sizeof (int),compare);
+
+  for (n = 0; n < NUM_HAND_TYPES; n++) {
+    pct = (double)hand_counts[hand_type_ixs[n]] / (double)POKER_36_5_PERMUTATIONS;
+    printf("%s %9d %9.6lf\n",hand_type_abbrevs[hand_type_ixs[n]],hand_counts[hand_type_ixs[n]],pct);
   }
 
   printf("============\n");
@@ -116,4 +121,15 @@ int main(int argc,char **argv)
   printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
   return 0;
+}
+
+int compare(const void *elem1,const void *elem2)
+{
+  int int1;
+  int int2;
+
+  int1 = *(int *)elem1;
+  int2 = *(int *)elem2;
+
+  return hand_counts[int1] - hand_counts[int2];
 }

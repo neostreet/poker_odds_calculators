@@ -44,6 +44,7 @@ enum FlopType {
 };
 
 #define NUM_CARDS_IN_DECK (NUM_SUITS * NUM_CARDS_IN_SUIT)
+#define NUM_CARDS_IN_SHORT_DECK 36
 
 #define suit_of(card) (card / NUM_CARDS_IN_SUIT)
 #define rank_of(card) (card % NUM_CARDS_IN_SUIT)
