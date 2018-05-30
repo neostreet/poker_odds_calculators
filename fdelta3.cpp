@@ -59,7 +59,7 @@ static char usage[] =
 "  (-show_running_total) (-show_num_positive_deltas)\n"
 "  (-only_discrepancy) (-showdown_handhand) (-showdown_hand2hand)\n"
 "  (-winning_handhand) (-only_premium_hands) (-show_winning_hand_hole_cards)\n"
-"  (-only_folded_preflop) player_name filename\n";
+"  (-only_folded_preflop) (-show_roi) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -156,7 +156,8 @@ enum quantum_typ {
   QUANTUM_TYPE_NUM_POSSIBLE_CHECKS,
   QUANTUM_TYPE_RUNNING_TOTAL,
   QUANTUM_TYPE_NUM_POSITIVE_DELTAS,
-  QUANTUM_TYPE_DISCREPANCY
+  QUANTUM_TYPE_DISCREPANCY,
+  QUANTUM_TYPE_ROI
 };
 
 int premium_hand_abbrev_ixs[] = {
@@ -229,6 +230,7 @@ struct vars {
   int num_possible_checks;
   int show_running_total;
   int running_total;
+  int show_roi;
   int show_num_positive_deltas;
   int num_positive_deltas;
   bool bAceOnTheRiver;
@@ -413,7 +415,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 109)) {
+  if ((argc < 3) || (argc > 110)) {
     printf(usage);
     return 1;
   }
@@ -475,6 +477,7 @@ int main(int argc,char **argv)
   local_vars.show_table_boss = 0;
   local_vars.show_num_possible_checks = 0;
   local_vars.show_running_total = 0;
+  local_vars.show_roi = 0;
   local_vars.running_total = 0;
   local_vars.show_num_positive_deltas = 0;
   local_vars.bAceOnTheRiver = false;
@@ -845,6 +848,10 @@ int main(int argc,char **argv)
       local_vars.bOnlyDiscrepancy = true;
       local_vars.quantum_type = QUANTUM_TYPE_DISCREPANCY;
     }
+    else if (!strcmp(argv[curr_arg],"-show_roi")) {
+      local_vars.show_roi = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_ROI;
+    }
     else
       break;
   }
@@ -1001,10 +1008,12 @@ int main(int argc,char **argv)
   if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
     local_vars.show_num_decisions + local_vars.show_wagered +
     local_vars.show_table_boss + local_vars.show_num_possible_checks +
-    local_vars.show_running_total + local_vars.show_num_positive_deltas > 1) {
+    local_vars.show_running_total + local_vars.show_num_positive_deltas +
+    local_vars.show_roi > 1) {
     printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
       "  show_num_decisions, show_wagered, show_table_boss,\n"
-      "  show_num_possible_checks, show_running_total, and show_num_positive_deltas\n");
+      "  show_num_possible_checks, show_running_total, show_num_positive_deltas\n"
+      "  show_roi\n");
     return 27;
   }
 
@@ -2495,6 +2504,8 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
 
 void run_filter(struct vars *varspt)
 {
+  double dwork;
+
   if (varspt->filter_percentage)
     varspt->summary_val++;
 
@@ -2672,6 +2683,16 @@ void run_filter(struct vars *varspt)
                                                                                                                                   case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
                                                                                                                                   case QUANTUM_TYPE_DISCREPANCY:
                                                                                                                                     printf("%10d %s",varspt->quantum,varspt->hole_cards);
+
+                                                                                                                                    break;
+                                                                                                                                  case QUANTUM_TYPE_ROI:
+                                                                                                                                    if (!varspt->wagered_amount)
+                                                                                                                                      dwork = (double)0;
+                                                                                                                                    else
+                                                                                                                                      dwork = (double)varspt->delta / (double)varspt->wagered_amount;
+
+                                                                                                                                    printf("%lf (%d %d) %s",dwork,
+                                                                                                                                      varspt->delta,varspt->wagered_amount,varspt->hole_cards);
 
                                                                                                                                     break;
                                                                                                                                 }
