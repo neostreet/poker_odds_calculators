@@ -60,7 +60,7 @@ static char usage[] =
 "  (-only_discrepancy) (-showdown_handhand) (-showdown_hand2hand)\n"
 "  (-winning_handhand) (-only_premium_hands) (-show_winning_hand_hole_cards)\n"
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
-"  (-hand_type_on_flophand_type) player_name filename\n";
+"  (-hand_type_on_flophand_type) (-exact_countcount) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -208,6 +208,8 @@ struct vars {
   bool bNormalize;
   bool bOnlyLost;
   int only_count;
+  bool bExactCount;
+  int exact_count;
   bool bOnlyWon;
   bool bOnlyShowdown;
   bool bOnlyNoShowdown;
@@ -424,7 +426,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 113)) {
+  if ((argc < 3) || (argc > 114)) {
     printf(usage);
     return 1;
   }
@@ -463,6 +465,7 @@ int main(int argc,char **argv)
   local_vars.bNormalize = false;
   local_vars.bOnlyLost = false;
   local_vars.only_count = 0;
+  local_vars.bExactCount = false;
   local_vars.bOnlyWon = false;
   local_vars.bOnlyShowdown = false;
   local_vars.bOnlyNoShowdown = false;
@@ -670,6 +673,11 @@ int main(int argc,char **argv)
       local_vars.bOnlyLost = true;
     else if (!strcmp(argv[curr_arg],"-only_count"))
       local_vars.only_count = 1;
+    else if (!strncmp(argv[curr_arg],"-exact_count",12)) {
+      local_vars.bExactCount = true;
+      sscanf(&argv[curr_arg][12],"%d",&local_vars.exact_count);
+      local_vars.only_count = 1;
+    }
     else if (!strcmp(argv[curr_arg],"-only_won"))
       local_vars.bOnlyWon = true;
     else if (!strcmp(argv[curr_arg],"-only_showdown"))
@@ -1302,26 +1310,28 @@ int main(int argc,char **argv)
             if (!local_vars.bOnlyWinningSession || (local_vars.total_delta > 0)) {
               if (!local_vars.bOnlyLosingSession || (local_vars.total_delta < 0)) {
                 if (!local_vars.bNeverHitFeltInSession || (!local_vars.hit_felt_in_session_count)) {
-                  if (!local_vars.max_delta_hand_type) {
-                    if (!local_vars.bShowHandCount)
-                      printf("%d\t%s\n",local_vars.summary_val,local_vars.date_string);
-                    else {
-                      if (local_vars.winning_percentage || local_vars.filter_percentage) {
-                        local_vars.dwork = (double)local_vars.summary_val2 / (double)local_vars.summary_val;
-                        printf("%lf\t%s\t(%d %d)\n",local_vars.dwork,local_vars.date_string,local_vars.summary_val2,local_vars.summary_val);
+                  if (!local_vars.bExactCount || (local_vars.summary_val == local_vars.exact_count)) {
+                    if (!local_vars.max_delta_hand_type) {
+                      if (!local_vars.bShowHandCount)
+                        printf("%d\t%s\n",local_vars.summary_val,local_vars.date_string);
+                      else {
+                        if (local_vars.winning_percentage || local_vars.filter_percentage) {
+                          local_vars.dwork = (double)local_vars.summary_val2 / (double)local_vars.summary_val;
+                          printf("%lf\t%s\t(%d %d)\n",local_vars.dwork,local_vars.date_string,local_vars.summary_val2,local_vars.summary_val);
+                        }
+                        else
+                          printf("%d\t%s\t(%d)\n",local_vars.summary_val,local_vars.date_string,local_vars.num_hands);
                       }
-                      else
-                        printf("%d\t%s\t(%d)\n",local_vars.summary_val,local_vars.date_string,local_vars.num_hands);
-                    }
-                  }
-                  else {
-                    if (!local_vars.bShowHandCount) {
-                      printf("%d\t%s\t%s\n",local_vars.summary_val,
-                        plain_hand_types[local_vars.max_delta_hand_typ],local_vars.date_string);
                     }
                     else {
-                      printf("%d\t%s\t%s\t(%d)\n",local_vars.summary_val,
-                        plain_hand_types[local_vars.max_delta_hand_typ],local_vars.date_string,local_vars.num_hands);
+                      if (!local_vars.bShowHandCount) {
+                        printf("%d\t%s\t%s\n",local_vars.summary_val,
+                          plain_hand_types[local_vars.max_delta_hand_typ],local_vars.date_string);
+                      }
+                      else {
+                        printf("%d\t%s\t%s\t(%d)\n",local_vars.summary_val,
+                          plain_hand_types[local_vars.max_delta_hand_typ],local_vars.date_string,local_vars.num_hands);
+                      }
                     }
                   }
                 }
