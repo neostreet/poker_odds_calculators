@@ -473,4 +473,5 @@ int find_hand(
 
 int get_index_of_hand(int rank_ix1,int suit_ix1,int rank_ix2,int suit_ix2);
 int index_of_hand(char *hand,int *index_pt);
+int abbrev_index_of_hand(char *hand,int *index_pt);
 int index_of_hand_abbrev(char *hand_abbrev,int *index_pt);

@@ -2377,6 +2377,27 @@ int index_of_hand(char *hand,int *index_pt)
   return 0;
 }
 
+int abbrev_index_of_hand(char *hand,int *index_pt)
+{
+  char hand_abbrev[4];
+
+  hand_abbrev[0] = hand[0];
+  hand_abbrev[1] = hand[3];
+
+  if (hand[0] == hand[3])
+    hand_abbrev[2] = 0;
+  else {
+    if (hand[1] == hand[4])
+      hand_abbrev[2] = 's';
+    else
+      hand_abbrev[2] = 'o';
+
+     hand_abbrev[3] = 0;
+  }
+
+  return index_of_hand_abbrev(hand_abbrev,index_pt);
+}
+
 int index_of_hand_abbrev(char *hand_abbrev,int *index_pt)
 {
   int n;
