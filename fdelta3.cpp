@@ -61,7 +61,7 @@ static char usage[] =
 "  (-winning_handhand) (-only_premium_hands) (-show_winning_hand_hole_cards)\n"
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
-"  (-twin_hands) player_name filename\n";
+"  (-twin_abbrevs) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -267,7 +267,7 @@ struct vars {
   bool bWonMainPot;
   bool bLastHandOnly;
   bool bFirstHandOnly;
-  bool bTwinHands;
+  bool bTwinAbbrevs;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -534,7 +534,7 @@ int main(int argc,char **argv)
   local_vars.bWonMainPot = false;
   local_vars.bLastHandOnly = false;
   local_vars.bFirstHandOnly = false;
-  local_vars.bTwinHands = false;
+  local_vars.bTwinAbbrevs = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -894,8 +894,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-sitting_out"))
       local_vars.bSittingOut = true;
-    else if (!strcmp(argv[curr_arg],"-twin_hands"))
-      local_vars.bTwinHands = true;
+    else if (!strcmp(argv[curr_arg],"-twin_abbrevs"))
+      local_vars.bTwinAbbrevs = true;
     else
       break;
   }
@@ -1402,7 +1402,7 @@ int main(int argc,char **argv)
         else
           run_filter(&local_vars);
 
-        if (local_vars.bTwinHands)
+        if (local_vars.bTwinAbbrevs)
           local_vars.prev_abbrev_index = local_vars.curr_abbrev_index;
 
         get_table_name(line,line_len,table_name,MAX_TABLE_NAME_LEN);
@@ -1799,7 +1799,7 @@ int main(int argc,char **argv)
               }
             }
 
-            if (local_vars.bTwinHands) {
+            if (local_vars.bTwinAbbrevs) {
               retval = abbrev_index_of_hand(&line[n],&local_vars.curr_abbrev_index);
             }
           }
@@ -2656,7 +2656,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                   if (!varspt->bOnlyDoubleUp || varspt->bHaveDoubleUp) {
                                                                                                                                     if (!varspt->bOnlyDiscrepancy || varspt->bHaveDiscrepancy) {
                                                                                                                                       if (!varspt->bSittingOut || varspt->bIsSittingOut) {
-                                                                                                                                        if (!varspt->bTwinHands || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
+                                                                                                                                        if (!varspt->bTwinAbbrevs || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
                                                                                                                                           if (varspt->bTerse) {
                                                                                                                                             if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
                                                                                                                                               if (varspt->quantum_type == QUANTUM_TYPE_OPM) {
