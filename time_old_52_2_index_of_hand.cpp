@@ -43,7 +43,7 @@ int main(int argc,char **argv)
       ix = index_of_hand(cards);
 
       if (ix != m) {
-        printf("bad index for %d: %d\n",m,ix);
+        printf("bad index for %d: %d (%d %d)\n",m,ix,cards[0],cards[1]);
         bad_count++;
         // return 2;
       }
@@ -67,8 +67,8 @@ static int index_of_hand(int *cards)
 
   o = 0;
 
-  for (m = 0; m < NUM_CARDS_IN_DECK - 2; m++) {
-    for (n = m + 1; n < NUM_CARDS_IN_DECK - 1; n++) {
+  for (m = 0; m < NUM_CARDS_IN_DECK - 1; m++) {
+    for (n = m + 1; n < NUM_CARDS_IN_DECK; n++) {
       if ((m == cards[0]) && (n == cards[1]))
         return o;
 
