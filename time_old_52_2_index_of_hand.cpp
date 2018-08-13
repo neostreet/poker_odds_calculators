@@ -94,4 +94,6 @@ static int index_of_hand(int *cards)
       o++;
     }
   }
+
+  return -1;
 }
