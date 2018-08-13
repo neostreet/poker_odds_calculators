@@ -9,7 +9,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: time_new_52_2_index_of_hand (-debug) loop_count\n";
+"usage: time_new_52_2_index_of_hand (-debug) (-swap) loop_count\n";
 
 static int index_of_hand(int *cards);
 
@@ -19,23 +19,28 @@ int main(int argc,char **argv)
   int n;
   int curr_arg;
   bool bDebug;
+  bool bSwap;
   int loop_count;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   time_t start_sec;
   time_t stop_sec;
   int ix;
   int bad_count;
+  int temp;
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 4)) {
     printf(usage);
     return 1;
   }
 
   bDebug = false;
+  bSwap = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug =  true;
+    else if (!strcmp(argv[curr_arg],"-swap"))
+      bSwap =  true;
     else
       break;
   }
@@ -55,6 +60,12 @@ int main(int argc,char **argv)
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],m);
+
+      if (bSwap) {
+        temp = cards[0];
+        cards[0] = cards[1];
+        cards[1] = temp;
+      }
 
       ix = index_of_hand(cards);
 
