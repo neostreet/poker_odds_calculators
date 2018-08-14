@@ -58,16 +58,16 @@ int main(int argc,char **argv)
 
       ix = index_of_hand(cards);
 
-      if (bDebug) {
-        if (ix != m) {
+      if (ix != m) {
+        if (bDebug)
           printf("bad index for %d: %d (%d %d)\n",m,ix,cards[0],cards[1]);
-          bad_count++;
-          // return 2;
-        }
+
+        bad_count++;
+        // return 2;
       }
     }
 
-    if (bDebug)
+    if (bad_count)
       printf("\nbad_count = %d\n",bad_count);
   }
 
