@@ -11,8 +11,6 @@ using namespace std;
 static char usage[] =
 "usage: time_new_52_2_index_of_hand (-debug) (-swap) loop_count\n";
 
-static int index_of_hand(int *cards);
-
 int main(int argc,char **argv)
 {
   int m;
@@ -67,7 +65,7 @@ int main(int argc,char **argv)
         cards[1] = temp;
       }
 
-      ix = index_of_hand(cards);
+      ix = get_52_2_index_of_hand(cards);
 
       if (ix != m) {
         if (bDebug)
@@ -87,30 +85,4 @@ int main(int argc,char **argv)
   printf("elapsed seconds: %d\n",stop_sec - start_sec);
 
   return 0;
-}
-
-static int index_of_hand(int *cards)
-{
-  int n;
-  int index;
-  int num_other_cards;
-  int temp;
-
-  if (cards[0] > cards[1]) {
-    temp = cards[0];
-    cards[0] = cards[1];
-    cards[1] = temp;
-  }
-
-  index = 0;
-  num_other_cards = NUM_CARDS_IN_DECK - 1;
-
-  for (n = 0; n < cards[0]; n++) {
-    index += num_other_cards;
-    num_other_cards--;
-  }
-
-  index += cards[1] - cards[0] - 1;
-
-  return index;
 }
