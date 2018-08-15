@@ -2467,3 +2467,23 @@ int get_52_2_index_of_hand(int *cards)
 
   return index;
 }
+
+int get_52_2_index_of_hole_cards(char *hole_cards,int *index)
+{
+  int retval;
+  int cards[2];
+
+  retval = card_value_from_card_string(&hole_cards[0],&cards[0]);
+
+  if (retval)
+    return retval;
+
+  retval = card_value_from_card_string(&hole_cards[3],&cards[1]);
+
+  if (retval)
+    return retval;
+
+  *index = get_52_2_index_of_hand(cards);
+
+  return 0;
+}
