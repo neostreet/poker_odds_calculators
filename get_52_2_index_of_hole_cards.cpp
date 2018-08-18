@@ -9,7 +9,7 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: get_52_2_index_of_hand hole_cards\n";
+"usage: get_52_2_index_of_hole_cards hole_cards\n";
 
 int main(int argc,char **argv)
 {
