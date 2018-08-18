@@ -2487,3 +2487,11 @@ int get_52_2_index_of_hole_cards(char *hole_cards,int *index)
 
   return 0;
 }
+
+int get_52_2_index_of_hand2(int *cards)
+{
+  if (cards[0] < cards[1])
+    return cards[0] * (NUM_CARDS_IN_DECK - 1) + cards[1] - 1;
+  else
+    return cards[0] * (NUM_CARDS_IN_DECK - 1) + cards[1];
+}
