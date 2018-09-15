@@ -32,7 +32,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-only_lost)\n"
-"  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown) (-only_showdown_count)\n"
+"  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown) (-only_showdown_countcount)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-call_in) (-fall_in) (-not_fall_in)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
@@ -1039,29 +1039,19 @@ int main(int argc,char **argv)
     return 21;
   }
 
-  if (local_vars.bOnlyShowdown && local_vars.bOnlyShowdownCount) {
-    printf("can't specify both -only_showdown and -only_showdown_count\n");
-    return 22;
-  }
-
-  if (local_vars.bOnlyNoShowdown && local_vars.bOnlyShowdownCount) {
-    printf("can't specify both -only_no_showdown and -only_showdown_count\n");
-    return 23;
-  }
-
   if (local_vars.bAllIn && local_vars.bNotAllIn) {
     printf("can't specify both -all_in and -not_all_in\n");
-    return 24;
+    return 22;
   }
 
   if (local_vars.bAllIn && local_vars.bAllInPreflop) {
     printf("can't specify both -all_in and -all_in_preflop\n");
-    return 25;
+    return 23;
   }
 
   if (local_vars.bNotAllIn && local_vars.bAllInPreflop) {
     printf("can't specify both -not_all_in and -all_in_preflop\n");
-    return 26;
+    return 24;
   }
 
   if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
@@ -1073,24 +1063,24 @@ int main(int argc,char **argv)
       "  show_num_decisions, show_wagered, show_table_boss,\n"
       "  show_num_possible_checks, show_running_total, show_num_positive_deltas\n"
       "  show_roi\n");
-    return 27;
+    return 25;
   }
 
   if (local_vars.bOnlyLost && local_vars.bOnlyWash) {
     printf("can't specify both -only_lost and -only_wash\n");
-    return 28;
+    return 26;
   }
 
   if (local_vars.bOnlyWon && local_vars.bOnlyWash) {
     printf("can't specify both -only_won and -only_wash\n");
-    return 29;
+    return 27;
   }
 
   if (local_vars.only_count + local_vars.sum_quantum + local_vars.sum_abs_delta + local_vars.max_delta + local_vars.min_delta +
     local_vars.max_abs_delta + local_vars.max_collected + local_vars.max_delta_hand_type +
     local_vars.winning_percentage + local_vars.filter_percentage > 1) {
     printf("can only specify one of -only_count, -sum_quantum, -sum_abs_delta, -max_delta, -min_delta, -max_abs_delta, -max_collected, -max_delta_hand_type, -winning_percentage, and filter_percentage\n");
-    return 30;
+    return 28;
   }
 
   if ((local_vars.only_count) || (local_vars.sum_quantum) || (local_vars.sum_abs_delta) || (local_vars.max_delta) ||
@@ -1106,7 +1096,7 @@ int main(int argc,char **argv)
   if (local_vars.bHoleCardsUsed) {
     if (local_vars.bAbbrev) {
       printf("can't specify both -abbrev and -hole_cards_used\n");
-      return 31;
+      return 29;
     }
 
     local_vars.bSawFlop = true;
@@ -1114,112 +1104,112 @@ int main(int argc,char **argv)
 
   if (local_vars.bHitFelt && local_vars.bDidntHitFelt) {
     printf("can't specify both -hit_felt and -didnt_hit_felt\n");
-    return 32;
+    return 30;
   }
 
   if (local_vars.bVeryBestHand && local_vars.bFlopped) {
     printf("can't specify both -very_best_hand and -flopped\n");
-    return 33;
+    return 31;
   }
 
   if (local_vars.bHandTypeSpecified && local_vars.bHandTypIdSpecified) {
     printf("can't specify both -hand_typehand_type and -hand_typ_idid\n");
-    return 34;
+    return 32;
   }
 
   if (local_vars.bShowHandType && local_vars.bShowHandTypId) {
     printf("can't specify both -show_hand_type and -show_hand_typ_id\n");
-    return 35;
+    return 33;
   }
 
   if (local_vars.bSawFlop && local_vars.bDidntSeeFlop) {
     printf("can't specify both -saw_flop and -didnt_see_flop\n");
-    return 36;
+    return 34;
   }
 
   if (local_vars.bOnlyWinningSession && local_vars.bOnlyLosingSession) {
     printf("can't specify both -only_winning_session and -only_losing_session\n");
-    return 37;
+    return 35;
   }
 
   if (local_vars.bSumByTableCount && local_vars.bShowTableName) {
     printf("can't specify both -sum_by_table_count and -show_table_name\n");
-    return 38;
+    return 36;
   }
 
   if (local_vars.bSumByTableCount && local_vars.bShowTableCount) {
     printf("can't specify both -sum_by_table_count and -show_table_count\n");
-    return 39;
+    return 37;
   }
 
   if (local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind + local_vars.no_blind > 1) {
     printf("can only specify one of -local_vars.small_blind, -big_blind, -local_vars.small_or_big_blind, and -local_vars.no_blind\n");
-    return 40;
+    return 38;
   }
 
   if (local_vars.bHandSpecified && local_vars.bDeuceOrTreyOff) {
     printf("can't specify both -handhand and -deuce_or_trey_off\n");
-    return 41;
+    return 39;
   }
 
   if (local_vars.bVoluntaryBet && local_vars.bNoVoluntaryBet) {
     printf("can't specify both -voluntary_bet and -no_voluntary_bet\n");
-    return 42;
+    return 40;
   }
 
   if (local_vars.bShowBoard && local_vars.bShowRiver) {
     printf("can't specify both -show_board and -show_river\n");
-    return 43;
+    return 41;
   }
 
   if (local_vars.bHandTypIdSpecified && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -hand_typ_idid and -hand_typ_id_geid\n");
-    return 44;
+    return 42;
   }
 
   if (local_vars.bStealthTwoPair && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -stealth_two_pair and -hand_typ_id_geid\n");
-    return 45;
+    return 43;
   }
 
   if (local_vars.bBottomTwo && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -bottom_two and -hand_typ_id_geid\n");
-    return 46;
+    return 44;
   }
 
   if (local_vars.bHandTypeSpecified && local_vars.bHandTypIdGeSpecified) {
     printf("can't specify both -hand_typehand_type and -hand_typ_id_geid\n");
-    return 47;
+    return 45;
   }
 
   if (local_vars.bAllIn && local_vars.bAllInPostflop) {
     printf("can't specify both -all_in and -all_in_postflop\n");
-    return 48;
+    return 46;
   }
 
   if (local_vars.bAllInPreflop && local_vars.bAllInPostflop) {
     printf("can't specify both -all_in_preflop and -all_in_postflop\n");
-    return 49;
+    return 47;
   }
 
   if (local_vars.bFallIn && local_vars.bNotFallIn) {
     printf("can't specify both -fall_in and -not_fall_in\n");
-    return 50;
+    return 48;
   }
 
   if (local_vars.bTwinAbbrevs && local_vars.bTwinHands) {
     printf("can't specify both -twin_abbrevs and -twin_hands\n");
-    return 51;
+    return 49;
   }
 
   if (local_vars.bTwinAbbrevs && local_vars.bIdenticalTwinHands) {
     printf("can't specify both -twin_abbrevs and -identical_twin_hands\n");
-    return 52;
+    return 50;
   }
 
   if (local_vars.bTwinHands && local_vars.bIdenticalTwinHands) {
     printf("can't specify both -twin_hands and -identical_twin_hands\n");
-    return 53;
+    return 51;
   }
 
   player_name_ix = curr_arg++;
@@ -1227,7 +1217,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 54;
+    return 52;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -1622,7 +1612,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 55;
+          return 53;
         }
 
         continue;
@@ -1766,7 +1756,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 56;
+                    return 54;
                   }
                 }
               }
@@ -2072,7 +2062,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 57;
+              return 55;
             }
           }
 
@@ -2104,7 +2094,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 58;
+            return 56;
           }
 
           if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2140,7 +2130,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 59;
+              return 57;
             }
 
             if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2233,7 +2223,7 @@ int main(int argc,char **argv)
             }
           }
 
-          if (local_vars.bOnlyShowdownCount && local_vars.bHaveShowdown && (showdown_count == local_vars.showdown_count))
+          if (local_vars.bOnlyShowdownCount && (showdown_count == local_vars.showdown_count))
             local_vars.bHaveShowdownCount = true;
 
           continue;
