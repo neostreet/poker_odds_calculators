@@ -2495,3 +2495,23 @@ int get_52_2_index_of_hand2(int *cards)
   else
     return cards[0] * (NUM_CARDS_IN_DECK - 1) + cards[1];
 }
+
+int get_52_2_index_of_hole_cards2(char *hole_cards,int *index)
+{
+  int retval;
+  int cards[2];
+
+  retval = card_value_from_card_string(&hole_cards[0],&cards[0]);
+
+  if (retval)
+    return retval;
+
+  retval = card_value_from_card_string(&hole_cards[3],&cards[1]);
+
+  if (retval)
+    return retval;
+
+  *index = get_52_2_index_of_hand2(cards);
+
+  return 0;
+}

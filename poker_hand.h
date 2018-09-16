@@ -478,3 +478,4 @@ int index_of_hand_abbrev(char *hand_abbrev,int *index_pt);
 int get_52_2_index_of_hand(int *cards);
 int get_52_2_index_of_hole_cards(char *hole_cards,int *index);
 int get_52_2_index_of_hand2(int *cards);
+int get_52_2_index_of_hole_cards2(char *hole_cards,int *index);
