@@ -1946,6 +1946,84 @@ ostream& operator<<(ostream& out,const OmahaPokerHand& holdem_hand)
   return out;
 }
 
+// default constructor
+
+HeadsUpTurn::HeadsUpTurn()
+{
+  _have_cards = false;
+  _evaluated = false;
+}
+
+// copy constructor
+
+HeadsUpTurn::HeadsUpTurn(const HeadsUpTurn& hut)
+{
+  int n;
+
+  for (n = 0; n < NUM_HEADS_UP_TURN_CARDS; n++) {
+    _cards[n] = hut._cards[n];
+  }
+
+  _have_cards = hut._have_cards;
+  _evaluated = hut._evaluated;
+}
+
+// assignment operator
+
+HeadsUpTurn& HeadsUpTurn::operator=(const HeadsUpTurn& hut)
+{
+  int n;
+
+  for (n = 0; n < NUM_HEADS_UP_TURN_CARDS; n++) {
+    _cards[n] = hut._cards[n];
+  }
+
+  _have_cards = hut._have_cards;
+  _evaluated = hut._evaluated;
+
+  return *this;
+}
+
+// destructor
+
+HeadsUpTurn::~HeadsUpTurn()
+{
+}
+
+HeadsUpTurn::HeadsUpTurn(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _cards[6] = card7 % NUM_CARDS_IN_DECK;
+  _cards[7] = card8 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+void HeadsUpTurn::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7,int card8)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _cards[6] = card7 % NUM_CARDS_IN_DECK;
+  _cards[7] = card8 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+void HeadsUpTurn::Evaluate()
+{
+}
+
 void get_permutation_instance_two(
   int set_size,
   int *m,int *n,

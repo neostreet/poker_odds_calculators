@@ -52,6 +52,8 @@ enum FlopType {
 #define NUM_SUITED_NONPAIRS ((NUM_CARDS_IN_SUIT * (NUM_CARDS_IN_SUIT - 1)) / 2)
 #define NUM_NONSUITED_NONPAIRS NUM_SUITED_NONPAIRS
 
+#define NUM_HEADS_UP_TURN_CARDS 8
+
 #ifdef MAIN_MODULE
 char suit_chars[] = "cdhs";
 char rank_chars[] = "23456789TJQKA";
@@ -417,6 +419,31 @@ class OmahaPokerHand {
 };
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
+
+class HeadsUpTurn {
+  public:
+
+  // default constructor
+  HeadsUpTurn();
+  // copy constructor
+  HeadsUpTurn(const HeadsUpTurn&);
+  // assignment operator
+  HeadsUpTurn& operator=(const HeadsUpTurn&);
+  // destructor
+  ~HeadsUpTurn();
+
+  HeadsUpTurn(int card1,int card2,int card3,int card4, int card5, int card6, int card7, int card8);
+  void NewCards(int card1,int card2,int card3,int card4, int card5, int card6, int card7, int card8);
+
+  void Evaluate();
+
+  private:
+
+  int _cards[NUM_HEADS_UP_TURN_CARDS];
+  bool _have_cards;
+  struct outcomes _outcomes[2];
+  bool _evaluated;
+};
 
 void get_permutation_instance_two(
   int set_size,
