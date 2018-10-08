@@ -53,6 +53,7 @@ enum FlopType {
 #define NUM_NONSUITED_NONPAIRS NUM_SUITED_NONPAIRS
 
 #define NUM_HEADS_UP_TURN_CARDS 8
+#define NUM_REMAINING_HEADS_UP_TURN_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_TURN_CARDS)
 
 #ifdef MAIN_MODULE
 char suit_chars[] = "cdhs";
@@ -434,6 +435,7 @@ class HeadsUpTurn {
 
   HeadsUpTurn(int card1,int card2,int card3,int card4, int card5, int card6, int card7, int card8);
   void NewCards(int card1,int card2,int card3,int card4, int card5, int card6, int card7, int card8);
+  struct outcomes * GetOutcomes();
 
   void Evaluate();
 

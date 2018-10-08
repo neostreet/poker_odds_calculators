@@ -2020,8 +2020,67 @@ void HeadsUpTurn::NewCards(int card1,int card2,int card3,int card4,int card5,int
   _evaluated = false;
 }
 
+struct outcomes * HeadsUpTurn::GetOutcomes()
+{
+  return _outcomes;
+}
+
 void HeadsUpTurn::Evaluate()
 {
+  int m;
+  int n;
+  int o;
+  int p;
+  int remaining_cards[NUM_REMAINING_HEADS_UP_TURN_CARDS];
+  HoldemPokerHand holdem_hand[2];
+  PokerHand hand[2];
+  int ret_compare;
+
+  m = 0;
+
+  for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
+    for (o = 0; o < NUM_HEADS_UP_TURN_CARDS; o++) {
+      if (n == _cards[o])
+        break;
+    }
+
+    if (o == NUM_HEADS_UP_TURN_CARDS)
+      remaining_cards[m++] = n;
+  }
+
+  for (n = 0; n < 2; n++) {
+    _outcomes[n].wins = 0;
+    _outcomes[n].losses = 0;
+    _outcomes[n].ties = 0;
+  }
+
+  for (m = 0; m < NUM_REMAINING_HEADS_UP_TURN_CARDS; m++) {
+    holdem_hand[0].NewCards(_cards[0],_cards[1],
+      _cards[4],_cards[5],_cards[6],_cards[7],
+      remaining_cards[m]);
+
+    holdem_hand[1].NewCards(_cards[2],_cards[3],
+      _cards[4],_cards[5],_cards[6],_cards[7],
+      remaining_cards[m]);
+
+    for (p = 0; p < 2; p++)
+      hand[p] = holdem_hand[p].BestPokerHand();
+
+    ret_compare = hand[0].Compare(hand[1],0);
+
+    if (ret_compare == 1) {
+      _outcomes[0].wins++;
+      _outcomes[1].losses++;
+    }
+    else if (ret_compare == -1) {
+      _outcomes[0].losses++;
+      _outcomes[1].wins++;
+    }
+    else {
+      _outcomes[0].ties++;
+      _outcomes[1].ties++;
+    }
+  }
 }
 
 void get_permutation_instance_two(

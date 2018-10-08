@@ -31,18 +31,13 @@ int main(int argc,char **argv)
   int only_player;
   int m;
   int n;
-  int o;
-  int p;
   int retval;
   FILE *fptr;
   int line_no;
   int line_len;
+  HeadsUpTurn hut;
   int cards[NUM_HEADS_UP_TURN_CARDS];
-  int remaining_cards[NUM_REMAINING_CARDS];
-  HoldemPokerHand holdem_hand[NUM_PLAYERS];
-  PokerHand hand[NUM_PLAYERS];
-  int ret_compare;
-  struct outcomes outcomes[NUM_PLAYERS];
+  struct outcomes *outcomes;
   int total;
   double pct;
   time_t start_time;
@@ -142,77 +137,9 @@ int main(int argc,char **argv)
       }
     }
 
-    m = 0;
-
-    for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
-      for (o = 0; o < NUM_HEADS_UP_TURN_CARDS; o++) {
-        if (n == cards[o])
-          break;
-      }
-
-      if (o == NUM_HEADS_UP_TURN_CARDS)
-        remaining_cards[m++] = n;
-    }
-
-    for (n = 0; n < NUM_PLAYERS; n++) {
-      outcomes[n].wins = 0;
-      outcomes[n].losses = 0;
-      outcomes[n].ties = 0;
-
-      if (bVerbose) {
-        for (m = 0; m < NUM_HAND_TYPES; m++) {
-          outcomes[n].wins_hand_counts[m] = 0;
-          outcomes[n].losses_hand_counts[m] = 0;
-          outcomes[n].ties_hand_counts[m] = 0;
-        }
-      }
-    }
-
-    for (m = 0; m < NUM_REMAINING_CARDS; m++) {
-      holdem_hand[0].NewCards(cards[0],cards[1],
-        cards[4],cards[5],cards[6],cards[7],
-        remaining_cards[m]);
-
-      holdem_hand[1].NewCards(cards[2],cards[3],
-        cards[4],cards[5],cards[6],cards[7],
-        remaining_cards[m]);
-
-      for (p = 0; p < NUM_PLAYERS; p++)
-        hand[p] = holdem_hand[p].BestPokerHand();
-
-      if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0);
-      else
-        ret_compare = hand[0].CompareLow(hand[1],0);
-
-      if (ret_compare == 1) {
-        outcomes[0].wins++;
-        outcomes[1].losses++;
-
-        if (bVerbose) {
-          outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
-          outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
-        }
-      }
-      else if (ret_compare == -1) {
-        outcomes[0].losses++;
-        outcomes[1].wins++;
-
-        if (bVerbose) {
-          outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
-          outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
-        }
-      }
-      else {
-        outcomes[0].ties++;
-        outcomes[1].ties++;
-
-        if (bVerbose) {
-          outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
-          outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
-        }
-      }
-    }
+    hut.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6],cards[7]);
+    hut.Evaluate();
+    outcomes = hut.GetOutcomes();
 
     putchar(0x0a);
 
