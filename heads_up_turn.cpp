@@ -8,8 +8,6 @@ using namespace std;
 #include "poker_hand.h"
 
 #define NUM_PLAYERS 2
-#define NUM_HEADS_UP_TURN_CARDS 8
-#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_TURN_CARDS)
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
