@@ -13,7 +13,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up_turn (-debug_levellevel) (-verbose) (-compare_low)\n"
+"usage: heads_up_turn (-debug_levellevel) (-verbose)\n"
 "  (-only_playern) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
@@ -25,7 +25,6 @@ int main(int argc,char **argv)
   int curr_arg;
   int debug_level;
   bool bVerbose;
-  bool bCompareLow;
   int only_player;
   int m;
   int n;
@@ -41,14 +40,13 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 6)) {
+  if ((argc < 2) || (argc > 5)) {
     cout << usage << endl;
     return 1;
   }
 
   debug_level = 0;
   bVerbose = false;
-  bCompareLow = false;
   only_player = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
@@ -56,8 +54,6 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][12],"%d",&debug_level);
     else if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
-    else if (!strcmp(argv[curr_arg],"-compare_low"))
-      bCompareLow = true;
     else if (!strncmp(argv[curr_arg],"-only_player",12)) {
       sscanf(&argv[curr_arg][12],"%d",&only_player);
 
