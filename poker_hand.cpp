@@ -1948,6 +1948,141 @@ ostream& operator<<(ostream& out,const OmahaPokerHand& holdem_hand)
 
 // default constructor
 
+HeadsUp::HeadsUp()
+{
+  _have_cards = false;
+  _evaluated = false;
+}
+
+// copy constructor
+
+HeadsUp::HeadsUp(const HeadsUp& hu)
+{
+  int n;
+
+  for (n = 0; n < NUM_HEADS_UP_CARDS; n++) {
+    _cards[n] = hu._cards[n];
+  }
+
+  _have_cards = hu._have_cards;
+  _evaluated = hu._evaluated;
+}
+
+// assignment operator
+
+HeadsUp& HeadsUp::operator=(const HeadsUp& hu)
+{
+  int n;
+
+  for (n = 0; n < NUM_HEADS_UP_CARDS; n++) {
+    _cards[n] = hu._cards[n];
+  }
+
+  _have_cards = hu._have_cards;
+  _evaluated = hu._evaluated;
+
+  return *this;
+}
+
+// destructor
+
+HeadsUp::~HeadsUp()
+{
+}
+
+HeadsUp::HeadsUp(int card1,int card2,int card3,int card4)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+void HeadsUp::NewCards(int card1,int card2,int card3,int card4)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+struct outcomes * HeadsUp::GetOutcomes()
+{
+  return _outcomes;
+}
+
+void HeadsUp::Evaluate()
+{
+  int m;
+  int n;
+  int o;
+  int p;
+  int q;
+  int r;
+  int remaining_cards[NUM_REMAINING_HEADS_UP_CARDS];
+  HoldemPokerHand holdem_hand[2];
+  PokerHand hand[2];
+  int ret_compare;
+
+  m = 0;
+
+  for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
+    for (o = 0; o < NUM_HEADS_UP_CARDS; o++) {
+      if (n == _cards[o])
+        break;
+    }
+
+    if (o == NUM_HEADS_UP_CARDS)
+      remaining_cards[m++] = n;
+  }
+
+  for (n = 0; n < 2; n++) {
+    _outcomes[n].wins = 0;
+    _outcomes[n].losses = 0;
+    _outcomes[n].ties = 0;
+  }
+
+  for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
+    get_permutation_instance_five(NUM_REMAINING_HEADS_UP_CARDS,&m,&n,&o,&p,&q,r);
+
+    holdem_hand[0].NewCards(_cards[0],_cards[1],
+      remaining_cards[m],remaining_cards[n],
+      remaining_cards[o],remaining_cards[p],
+      remaining_cards[q]);
+
+    holdem_hand[1].NewCards(_cards[2],_cards[3],
+      remaining_cards[m],remaining_cards[n],
+      remaining_cards[o],remaining_cards[p],
+      remaining_cards[q]);
+
+    hand[0] = holdem_hand[0].BestPokerHand();
+    hand[1] = holdem_hand[1].BestPokerHand();
+
+    ret_compare = hand[0].Compare(hand[1],0);
+
+    if (ret_compare == 1) {
+      _outcomes[0].wins++;
+      _outcomes[1].losses++;
+    }
+    else if (ret_compare == -1) {
+      _outcomes[0].losses++;
+      _outcomes[1].wins++;
+    }
+    else {
+      _outcomes[0].ties++;
+      _outcomes[1].ties++;
+    }
+  }
+}
+
+// default constructor
+
 HeadsUpTurn::HeadsUpTurn()
 {
   _have_cards = false;

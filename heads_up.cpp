@@ -8,14 +8,12 @@ using namespace std;
 #include "poker_hand.h"
 
 #define NUM_PLAYERS 2
-#define NUM_PREFLOP_CARDS (NUM_PLAYERS * NUM_HOLE_CARDS_IN_HOLDEM_HAND)
-#define NUM_REMAINING_CARDS (NUM_CARDS_IN_DECK - NUM_PREFLOP_CARDS)
 
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up (-debug_levellevel) (-verbose) (-compare_low) filename";
+"usage: heads_up (-verbose) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,46 +22,31 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  int debug_level;
   bool bVerbose;
-  bool bCompareLow;
   int m;
   int n;
-  int o;
-  int p;
-  int q;
-  int r;
   int retval;
   FILE *fptr;
   int line_no;
   int line_len;
-  int cards[NUM_PREFLOP_CARDS];
-  int remaining_cards[NUM_REMAINING_CARDS];
-  HoldemPokerHand holdem_hand[NUM_PLAYERS];
-  PokerHand hand[NUM_PLAYERS];
-  int ret_compare;
-  struct outcomes outcomes[NUM_PLAYERS];
+  HeadsUp hu;
+  int cards[NUM_HEADS_UP_CARDS];
+  struct outcomes *outcomes;
   int total;
   double pct;
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 3)) {
     cout << usage << endl;
     return 1;
   }
 
-  debug_level = 0;
   bVerbose = false;
-  bCompareLow = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strncmp(argv[curr_arg],"-debug_level",12))
-      sscanf(&argv[curr_arg][12],"%d",&debug_level);
-    else if (!strcmp(argv[curr_arg],"-verbose"))
+    if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
-    else if (!strcmp(argv[curr_arg],"-compare_low"))
-      bCompareLow = true;
     else
       break;
   }
@@ -81,11 +64,6 @@ int main(int argc,char **argv)
   time(&start_time);
 
   line_no = 0;
-
-  if (debug_level) {
-    for (n = 0; n < NUM_PLAYERS; n++)
-      hand[n].SetDebugLevel(debug_level);
-  }
 
   for ( ; ; ) {
     GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -111,7 +89,7 @@ int main(int argc,char **argv)
       return 4;
     }
 
-    for (n = 0; n < NUM_PREFLOP_CARDS; n++) {
+    for (n = 0; n < NUM_HEADS_UP_CARDS; n++) {
       retval = card_value_from_card_string(&line[m],&cards[n]);
 
       if (retval) {
@@ -121,7 +99,7 @@ int main(int argc,char **argv)
 
       m += 2;
 
-      if (n < NUM_PREFLOP_CARDS - 1) {
+      if (n < NUM_HEADS_UP_CARDS - 1) {
         // skip whitespace
 
         for ( ; m < line_len; m++) {
@@ -136,81 +114,9 @@ int main(int argc,char **argv)
       }
     }
 
-    m = 0;
-
-    for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
-      for (o = 0; o < NUM_PREFLOP_CARDS; o++) {
-        if (n == cards[o])
-          break;
-      }
-
-      if (o == NUM_PREFLOP_CARDS)
-        remaining_cards[m++] = n;
-    }
-
-    for (n = 0; n < NUM_PLAYERS; n++) {
-      outcomes[n].wins = 0;
-      outcomes[n].losses = 0;
-      outcomes[n].ties = 0;
-
-      if (bVerbose) {
-        for (m = 0; m < NUM_HAND_TYPES; m++) {
-          outcomes[n].wins_hand_counts[m] = 0;
-          outcomes[n].losses_hand_counts[m] = 0;
-          outcomes[n].ties_hand_counts[m] = 0;
-        }
-      }
-    }
-
-    for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
-      get_permutation_instance_five(NUM_REMAINING_CARDS,&m,&n,&o,&p,&q,r);
-
-      holdem_hand[0].NewCards(cards[0],cards[1],
-        remaining_cards[m],remaining_cards[n],
-        remaining_cards[o],remaining_cards[p],
-        remaining_cards[q]);
-
-      holdem_hand[1].NewCards(cards[2],cards[3],
-        remaining_cards[m],remaining_cards[n],
-        remaining_cards[o],remaining_cards[p],
-        remaining_cards[q]);
-
-      hand[0] = holdem_hand[0].BestPokerHand();
-      hand[1] = holdem_hand[1].BestPokerHand();
-
-      if (!bCompareLow)
-        ret_compare = hand[0].Compare(hand[1],0);
-      else
-        ret_compare = hand[0].CompareLow(hand[1],0);
-
-      if (ret_compare == 1) {
-        outcomes[0].wins++;
-        outcomes[1].losses++;
-
-        if (bVerbose) {
-          outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
-          outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
-        }
-      }
-      else if (ret_compare == -1) {
-        outcomes[0].losses++;
-        outcomes[1].wins++;
-
-        if (bVerbose) {
-          outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
-          outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
-        }
-      }
-      else {
-        outcomes[0].ties++;
-        outcomes[1].ties++;
-
-        if (bVerbose) {
-          outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
-          outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
-        }
-      }
-    }
+    hu.NewCards(cards[0],cards[1],cards[2],cards[3]);
+    hu.Evaluate();
+    outcomes = hu.GetOutcomes();
 
     putchar(0x0a);
 

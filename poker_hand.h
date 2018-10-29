@@ -52,6 +52,8 @@ enum FlopType {
 #define NUM_SUITED_NONPAIRS ((NUM_CARDS_IN_SUIT * (NUM_CARDS_IN_SUIT - 1)) / 2)
 #define NUM_NONSUITED_NONPAIRS NUM_SUITED_NONPAIRS
 
+#define NUM_HEADS_UP_CARDS 4
+#define NUM_REMAINING_HEADS_UP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_CARDS)
 #define NUM_HEADS_UP_TURN_CARDS 8
 #define NUM_REMAINING_HEADS_UP_TURN_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_TURN_CARDS)
 
@@ -420,6 +422,32 @@ class OmahaPokerHand {
 };
 
 ostream& operator<<(ostream& out,const OmahaPokerHand& board_hand);
+
+class HeadsUp {
+  public:
+
+  // default constructor
+  HeadsUp();
+  // copy constructor
+  HeadsUp(const HeadsUp&);
+  // assignment operator
+  HeadsUp& operator=(const HeadsUp&);
+  // destructor
+  ~HeadsUp();
+
+  HeadsUp(int card1,int card2,int card3,int card4);
+  void NewCards(int card1,int card2,int card3,int card4);
+  struct outcomes * GetOutcomes();
+
+  void Evaluate();
+
+  private:
+
+  int _cards[NUM_HEADS_UP_CARDS];
+  bool _have_cards;
+  struct outcomes _outcomes[2];
+  bool _evaluated;
+};
 
 class HeadsUpTurn {
   public:
