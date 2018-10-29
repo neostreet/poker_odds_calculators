@@ -13,8 +13,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up_turn (-debug_levellevel) (-verbose)\n"
-"  (-only_playern) filename";
+"usage: heads_up_turn (-verbose) (-only_playern) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -23,7 +22,6 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  int debug_level;
   bool bVerbose;
   int only_player;
   int m;
@@ -45,14 +43,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  debug_level = 0;
   bVerbose = false;
   only_player = -1;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strncmp(argv[curr_arg],"-debug_level",12))
-      sscanf(&argv[curr_arg][12],"%d",&debug_level);
-    else if (!strcmp(argv[curr_arg],"-verbose"))
+    if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
     else if (!strncmp(argv[curr_arg],"-only_player",12)) {
       sscanf(&argv[curr_arg][12],"%d",&only_player);
