@@ -38,7 +38,7 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 4)) {
     cout << usage << endl;
     return 1;
   }
