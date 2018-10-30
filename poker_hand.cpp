@@ -2017,7 +2017,7 @@ struct outcomes * HeadsUp::GetOutcomes()
   return _outcomes;
 }
 
-void HeadsUp::Evaluate()
+void HeadsUp::Evaluate(bool bVerbose)
 {
   int m;
   int n;
@@ -2046,6 +2046,14 @@ void HeadsUp::Evaluate()
     _outcomes[n].wins = 0;
     _outcomes[n].losses = 0;
     _outcomes[n].ties = 0;
+
+    if (bVerbose) {
+      for (m = 0; m < NUM_HAND_TYPES; m++) {
+        _outcomes[n].wins_hand_counts[m] = 0;
+        _outcomes[n].losses_hand_counts[m] = 0;
+        _outcomes[n].ties_hand_counts[m] = 0;
+      }
+    }
   }
 
   for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
@@ -2069,14 +2077,29 @@ void HeadsUp::Evaluate()
     if (ret_compare == 1) {
       _outcomes[0].wins++;
       _outcomes[1].losses++;
+
+      if (bVerbose) {
+        _outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+      }
     }
     else if (ret_compare == -1) {
       _outcomes[0].losses++;
       _outcomes[1].wins++;
+
+      if (bVerbose) {
+        _outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
+      }
     }
     else {
       _outcomes[0].ties++;
       _outcomes[1].ties++;
+
+      if (bVerbose) {
+        _outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
+      }
     }
   }
 }
@@ -2160,7 +2183,7 @@ struct outcomes * HeadsUpTurn::GetOutcomes()
   return _outcomes;
 }
 
-void HeadsUpTurn::Evaluate()
+void HeadsUpTurn::Evaluate(bool bVerbose)
 {
   int m;
   int n;
@@ -2187,6 +2210,14 @@ void HeadsUpTurn::Evaluate()
     _outcomes[n].wins = 0;
     _outcomes[n].losses = 0;
     _outcomes[n].ties = 0;
+
+    if (bVerbose) {
+      for (m = 0; m < NUM_HAND_TYPES; m++) {
+        _outcomes[n].wins_hand_counts[m] = 0;
+        _outcomes[n].losses_hand_counts[m] = 0;
+        _outcomes[n].ties_hand_counts[m] = 0;
+      }
+    }
   }
 
   for (m = 0; m < NUM_REMAINING_HEADS_UP_TURN_CARDS; m++) {
@@ -2206,14 +2237,29 @@ void HeadsUpTurn::Evaluate()
     if (ret_compare == 1) {
       _outcomes[0].wins++;
       _outcomes[1].losses++;
+
+      if (bVerbose) {
+        _outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+      }
     }
     else if (ret_compare == -1) {
       _outcomes[0].losses++;
       _outcomes[1].wins++;
+
+      if (bVerbose) {
+        _outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
+      }
     }
     else {
       _outcomes[0].ties++;
       _outcomes[1].ties++;
+
+      if (bVerbose) {
+        _outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
+      }
     }
   }
 }

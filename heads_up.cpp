@@ -127,7 +127,7 @@ int main(int argc,char **argv)
     }
 
     hu.NewCards(cards[0],cards[1],cards[2],cards[3]);
-    hu.Evaluate();
+    hu.Evaluate(bVerbose);
     outcomes = hu.GetOutcomes();
 
     putchar(0x0a);

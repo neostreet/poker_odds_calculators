@@ -439,7 +439,7 @@ class HeadsUp {
   void NewCards(int card1,int card2,int card3,int card4);
   struct outcomes * GetOutcomes();
 
-  void Evaluate();
+  void Evaluate(bool bVerbose);
 
   private:
 
@@ -465,7 +465,7 @@ class HeadsUpTurn {
   void NewCards(int card1,int card2,int card3,int card4, int card5, int card6, int card7, int card8);
   struct outcomes * GetOutcomes();
 
-  void Evaluate();
+  void Evaluate(bool bVerbose);
 
   private:
 
