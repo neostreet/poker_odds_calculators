@@ -54,6 +54,8 @@ enum FlopType {
 
 #define NUM_HEADS_UP_CARDS 4
 #define NUM_REMAINING_HEADS_UP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_CARDS)
+#define NUM_HEADS_UP_FLOP_CARDS 7
+#define NUM_REMAINING_HEADS_UP_FLOP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_FLOP_CARDS)
 #define NUM_HEADS_UP_TURN_CARDS 8
 #define NUM_REMAINING_HEADS_UP_TURN_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_TURN_CARDS)
 
@@ -444,6 +446,32 @@ class HeadsUp {
   private:
 
   int _cards[NUM_HEADS_UP_CARDS];
+  bool _have_cards;
+  struct outcomes _outcomes[2];
+  bool _evaluated;
+};
+
+class HeadsUpFlop {
+  public:
+
+  // default constructor
+  HeadsUpFlop();
+  // copy constructor
+  HeadsUpFlop(const HeadsUpFlop&);
+  // assignment operator
+  HeadsUpFlop& operator=(const HeadsUpFlop&);
+  // destructor
+  ~HeadsUpFlop();
+
+  HeadsUpFlop(int card1,int card2,int card3,int card4, int card5, int card6, int card7);
+  void NewCards(int card1,int card2,int card3,int card4, int card5, int card6, int card7);
+  struct outcomes * GetOutcomes();
+
+  void Evaluate(bool bVerbose);
+
+  private:
+
+  int _cards[NUM_HEADS_UP_FLOP_CARDS];
   bool _have_cards;
   struct outcomes _outcomes[2];
   bool _evaluated;

@@ -2106,6 +2106,166 @@ void HeadsUp::Evaluate(bool bVerbose)
 
 // default constructor
 
+HeadsUpFlop::HeadsUpFlop()
+{
+  _have_cards = false;
+  _evaluated = false;
+}
+
+// copy constructor
+
+HeadsUpFlop::HeadsUpFlop(const HeadsUpFlop& hut)
+{
+  int n;
+
+  for (n = 0; n < NUM_HEADS_UP_FLOP_CARDS; n++) {
+    _cards[n] = hut._cards[n];
+  }
+
+  _have_cards = hut._have_cards;
+  _evaluated = hut._evaluated;
+}
+
+// assignment operator
+
+HeadsUpFlop& HeadsUpFlop::operator=(const HeadsUpFlop& hut)
+{
+  int n;
+
+  for (n = 0; n < NUM_HEADS_UP_FLOP_CARDS; n++) {
+    _cards[n] = hut._cards[n];
+  }
+
+  _have_cards = hut._have_cards;
+  _evaluated = hut._evaluated;
+
+  return *this;
+}
+
+// destructor
+
+HeadsUpFlop::~HeadsUpFlop()
+{
+}
+
+HeadsUpFlop::HeadsUpFlop(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _cards[6] = card7 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+void HeadsUpFlop::NewCards(int card1,int card2,int card3,int card4,int card5,int card6,int card7)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _cards[5] = card6 % NUM_CARDS_IN_DECK;
+  _cards[6] = card7 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+struct outcomes * HeadsUpFlop::GetOutcomes()
+{
+  return _outcomes;
+}
+
+void HeadsUpFlop::Evaluate(bool bVerbose)
+{
+  int m;
+  int n;
+  int o;
+  int p;
+  int remaining_cards[NUM_REMAINING_HEADS_UP_FLOP_CARDS];
+  HoldemPokerHand holdem_hand[2];
+  PokerHand hand[2];
+  int ret_compare;
+
+  m = 0;
+
+  for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
+    for (o = 0; o < NUM_HEADS_UP_FLOP_CARDS; o++) {
+      if (n == _cards[o])
+        break;
+    }
+
+    if (o == NUM_HEADS_UP_FLOP_CARDS)
+      remaining_cards[m++] = n;
+  }
+
+  for (n = 0; n < 2; n++) {
+    _outcomes[n].wins = 0;
+    _outcomes[n].losses = 0;
+    _outcomes[n].ties = 0;
+
+    if (bVerbose) {
+      for (m = 0; m < NUM_HAND_TYPES; m++) {
+        _outcomes[n].wins_hand_counts[m] = 0;
+        _outcomes[n].losses_hand_counts[m] = 0;
+        _outcomes[n].ties_hand_counts[m] = 0;
+      }
+    }
+  }
+
+  for (o = 0; o < POKER_45_2_PERMUTATIONS; o++) {
+    get_permutation_instance_two(NUM_REMAINING_HEADS_UP_FLOP_CARDS,&m,&n,o);
+
+    holdem_hand[0].NewCards(_cards[0],_cards[1],
+      _cards[4],_cards[5],_cards[6],
+      remaining_cards[m],remaining_cards[n]);
+
+    holdem_hand[1].NewCards(_cards[2],_cards[3],
+      _cards[4],_cards[5],_cards[6],
+      remaining_cards[m],remaining_cards[n]);
+
+    for (p = 0; p < 2; p++)
+      hand[p] = holdem_hand[p].BestPokerHand();
+
+    ret_compare = hand[0].Compare(hand[1],0);
+
+    if (ret_compare == 1) {
+      _outcomes[0].wins++;
+      _outcomes[1].losses++;
+
+      if (bVerbose) {
+        _outcomes[0].wins_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].losses_hand_counts[hand[1].GetHandType()]++;
+      }
+    }
+    else if (ret_compare == -1) {
+      _outcomes[0].losses++;
+      _outcomes[1].wins++;
+
+      if (bVerbose) {
+        _outcomes[0].losses_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].wins_hand_counts[hand[1].GetHandType()]++;
+      }
+    }
+    else {
+      _outcomes[0].ties++;
+      _outcomes[1].ties++;
+
+      if (bVerbose) {
+        _outcomes[0].ties_hand_counts[hand[0].GetHandType()]++;
+        _outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
+      }
+    }
+  }
+}
+
+// default constructor
+
 HeadsUpTurn::HeadsUpTurn()
 {
   _have_cards = false;
