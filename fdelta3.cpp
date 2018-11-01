@@ -62,7 +62,7 @@ static char usage[] =
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
-"  player_name filename\n";
+"  (-river_outs) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -276,6 +276,7 @@ struct vars {
   bool bTwinAbbrevs;
   bool bTwinHands;
   bool bIdenticalTwinHands;
+  bool bRiverOuts;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -441,7 +442,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 120)) {
+  if ((argc < 3) || (argc > 121)) {
     printf(usage);
     return 1;
   }
@@ -546,6 +547,7 @@ int main(int argc,char **argv)
   local_vars.bTwinAbbrevs = false;
   local_vars.bTwinHands = false;
   local_vars.bIdenticalTwinHands = false;
+  local_vars.bRiverOuts = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -913,6 +915,8 @@ int main(int argc,char **argv)
       local_vars.bTwinHands = true;
     else if (!strcmp(argv[curr_arg],"-identical_twin_hands"))
       local_vars.bIdenticalTwinHands = true;
+    else if (!strcmp(argv[curr_arg],"-river_outs"))
+      local_vars.bRiverOuts = true;
     else
       break;
   }
@@ -1220,6 +1224,12 @@ int main(int argc,char **argv)
   if (local_vars.bLastHandOnly && local_vars.bExceptLastHand) {
     printf("can't specify both -last_hand_only and -except_last_hand\n");
     return 52;
+  }
+
+  if (local_vars.bRiverOuts) {
+    local_vars.bOnlyShowdown = true;
+    local_vars.bOnlyShowdownCount = true;
+    local_vars.showdown_count = 2;
   }
 
   player_name_ix = curr_arg++;
