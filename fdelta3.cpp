@@ -2785,7 +2785,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                       if (!varspt->bNoDelta) {
                                                                                                                                                         if (!varspt->bHoleCardsUsed) {
                                                                                                                                                           if (!varspt->bNoHoleCards) {
-                                                                                                                                                            if (!varspt->bShowWinningHandHoleCards)
+                                                                                                                                                            if (!varspt->bShowWinningHandHoleCards || !varspt->bHaveWinningHandHoleCards)
                                                                                                                                                               printf("%10d %s",varspt->delta,varspt->hole_cards);
                                                                                                                                                             else
                                                                                                                                                               printf("%10d %s %s",varspt->delta,varspt->hole_cards,varspt->winning_hand_hole_cards);
