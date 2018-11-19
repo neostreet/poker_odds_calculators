@@ -62,7 +62,9 @@ static char usage[] =
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
-"  (-river_outs) player_name filename\n";
+"  (-river_outs) (-show_winning_hand_hole_card_ixs)\n"
+"  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -131,6 +133,8 @@ static char and_won[] = " and won ";
 #define AND_WON_LEN (sizeof (and_won) - 1)
 static char sitting_out[] = " sitting out";
 #define SITTING_OUT_LEN (sizeof (sitting_out) - 1)
+static char board[] = "Board [";
+#define BOARD_LEN (sizeof (board) - 1)
 
 #define MAX_TABLE_COUNT 9
 
@@ -185,6 +189,9 @@ struct vars {
   bool bHandSpecified;
   bool bOnlyPremiumHands;
   bool bShowWinningHandHoleCards;
+  bool bShowWinningHandHoleCardIxs;
+  bool bShowOpponentHoleCards;
+  bool bShowOpponentHoleCardIxs;
   struct hand_ixs specified_hand_ixs;
   bool bShowdownHandSpecified;
   int specified_showdown_hand_index;
@@ -314,6 +321,7 @@ struct vars {
   bool bHaveSpecifiedShowdownHand2;
   bool bHaveSpecifiedWinningHand;
   bool bHaveWinningHandHoleCards;
+  bool bHaveOpponentHoleCards;
   bool bHaveFlop;
   bool bHaveFlop2;
   bool bHaveRiver;
@@ -366,6 +374,9 @@ struct vars {
   int collected_from_pot_count;
   char hole_cards[12];
   char winning_hand_hole_cards[6];
+  int winning_hand_hole_card_ixs[2];
+  char opponent_hole_cards[6];
+  int opponent_hole_card_ixs[2];
   int hole_cards_used;
   int num_hands;
   int num_hands_in_file;
@@ -416,6 +427,7 @@ int main(int argc,char **argv)
   int ix;
   int pot_ix;
   int showed_ix;
+  int bracket_ix;
   int street;
   int num_street_markers;
   int max_streets;
@@ -442,7 +454,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 121)) {
+  if ((argc < 3) || (argc > 124)) {
     printf(usage);
     return 1;
   }
@@ -460,6 +472,9 @@ int main(int argc,char **argv)
   local_vars.bHandSpecified = false;
   local_vars.bOnlyPremiumHands = false;
   local_vars.bShowWinningHandHoleCards = false;
+  local_vars.bShowWinningHandHoleCardIxs = false;
+  local_vars.bShowOpponentHoleCards = false;
+  local_vars.bShowOpponentHoleCardIxs = false;
   local_vars.bShowdownHandSpecified = false;
   local_vars.bShowdownHand2Specified = false;
   local_vars.bWinningHandSpecified = false;
@@ -638,6 +653,17 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-show_winning_hand_hole_cards")) {
       local_vars.bShowWinningHandHoleCards = true;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_winning_hand_hole_card_ixs")) {
+      local_vars.bShowWinningHandHoleCards = true;
+      local_vars.bShowWinningHandHoleCardIxs = true;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_opponent_hole_cards")) {
+      local_vars.bShowOpponentHoleCards = true;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_opponent_hole_card_ixs")) {
+      local_vars.bShowOpponentHoleCards = true;
+      local_vars.bShowOpponentHoleCardIxs = true;
     }
     else if (!strncmp(argv[curr_arg],"-showdown_hand2",15)) {
       local_vars.bShowdownHand2Specified = true;
@@ -1309,6 +1335,7 @@ int main(int argc,char **argv)
     local_vars.bHaveSpecifiedShowdownHand2 = false;
     local_vars.bHaveSpecifiedWinningHand = false;
     local_vars.bHaveWinningHandHoleCards = false;
+    local_vars.bHaveOpponentHoleCards = false;
     local_vars.bHaveFlop = false;
     local_vars.bHaveFlop2 = false;
     local_vars.bHaveRiver = false;
@@ -1508,6 +1535,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveSpecifiedShowdownHand2 = false;
                 local_vars.bHaveSpecifiedWinningHand = false;
                 local_vars.bHaveWinningHandHoleCards = false;
+                local_vars.bHaveOpponentHoleCards = false;
                 local_vars.bHaveFlop = false;
                 local_vars.bHaveFlop2 = false;
                 local_vars.bHaveRiver = false;
@@ -1708,7 +1736,37 @@ int main(int argc,char **argv)
               for (n = 0; n < 5; n++)
                 local_vars.winning_hand_hole_cards[n] = line[showed_ix + SHOWED_LEN + n];
 
+              for (n = 0; n < 2; n++)
+                retval = card_value_from_card_string(&local_vars.winning_hand_hole_cards[n*3],&local_vars.winning_hand_hole_card_ixs[n]);
+
               local_vars.bHaveWinningHandHoleCards = true;
+            }
+          }
+        }
+        else if (local_vars.bShowOpponentHoleCards && !local_vars.bHaveOpponentHoleCards) {
+          if (Contains(true,
+            line,line_len,
+            "[",1,
+            &bracket_ix)) {
+
+            if (!Contains(true,
+              line,line_len,
+              argv[player_name_ix],player_name_len,
+              &ix)) {
+
+              if (!Contains(true,
+                line,line_len,
+                board,BOARD_LEN,
+                &ix)) {
+
+                for (n = 0; n < 5; n++)
+                  local_vars.opponent_hole_cards[n] = line[bracket_ix + 1 + n];
+
+                for (n = 0; n < 2; n++)
+                  retval = card_value_from_card_string(&local_vars.opponent_hole_cards[n*3],&local_vars.opponent_hole_card_ixs[n]);
+
+                local_vars.bHaveOpponentHoleCards = true;
+              }
             }
           }
         }
@@ -2785,10 +2843,26 @@ void run_filter(struct vars *varspt)
                                                                                                                                                       if (!varspt->bNoDelta) {
                                                                                                                                                         if (!varspt->bHoleCardsUsed) {
                                                                                                                                                           if (!varspt->bNoHoleCards) {
-                                                                                                                                                            if (!varspt->bShowWinningHandHoleCards || !varspt->bHaveWinningHandHoleCards)
-                                                                                                                                                              printf("%10d %s",varspt->delta,varspt->hole_cards);
+                                                                                                                                                            if (varspt->bShowWinningHandHoleCards && varspt->bHaveWinningHandHoleCards) {
+                                                                                                                                                              if (!varspt->bShowWinningHandHoleCardIxs)
+                                                                                                                                                                printf("%10d %s %s",varspt->delta,varspt->hole_cards,varspt->winning_hand_hole_cards);
+                                                                                                                                                              else {
+                                                                                                                                                                printf("%10d %s %d %d",varspt->delta,varspt->hole_cards,
+                                                                                                                                                                  varspt->winning_hand_hole_card_ixs[0],
+                                                                                                                                                                  varspt->winning_hand_hole_card_ixs[1]);
+                                                                                                                                                              }
+                                                                                                                                                            }
+                                                                                                                                                            else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
+                                                                                                                                                              if (!varspt->bShowOpponentHoleCardIxs)
+                                                                                                                                                                printf("%10d %s %s",varspt->delta,varspt->hole_cards,varspt->opponent_hole_cards);
+                                                                                                                                                              else {
+                                                                                                                                                                printf("%10d %s %d %d",varspt->delta,varspt->hole_cards,
+                                                                                                                                                                  varspt->opponent_hole_card_ixs[0],
+                                                                                                                                                                  varspt->opponent_hole_card_ixs[1]);
+                                                                                                                                                              }
+                                                                                                                                                            }
                                                                                                                                                             else
-                                                                                                                                                              printf("%10d %s %s",varspt->delta,varspt->hole_cards,varspt->winning_hand_hole_cards);
+                                                                                                                                                              printf("%10d %s",varspt->delta,varspt->hole_cards);
                                                                                                                                                           }
                                                                                                                                                           else
                                                                                                                                                             printf("%10d",varspt->delta);
