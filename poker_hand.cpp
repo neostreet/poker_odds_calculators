@@ -2993,3 +2993,43 @@ int get_52_2_index_of_hole_cards2(char *hole_cards,int *index)
 
   return 0;
 }
+
+void get_abbrev(char *line,char *abbrev)
+{
+  int rank_ix1;
+  int rank_ix2;
+
+  for (rank_ix1 = 0; rank_ix1 < NUM_CARDS_IN_SUIT; rank_ix1++) {
+    if (line[0] == rank_chars[rank_ix1])
+      break;
+  }
+
+  if (rank_ix1 == NUM_CARDS_IN_SUIT)
+    rank_ix1 = 0;
+
+  for (rank_ix2 = 0; rank_ix2 < NUM_CARDS_IN_SUIT; rank_ix2++) {
+    if (line[3] == rank_chars[rank_ix2])
+      break;
+  }
+
+  if (rank_ix2 == NUM_CARDS_IN_SUIT)
+    rank_ix2 = 0;
+
+  if (rank_ix1 >= rank_ix2) {
+    abbrev[0] = line[0];
+    abbrev[1] = line[3];
+  }
+  else {
+    abbrev[0] = line[3];
+    abbrev[1] = line[0];
+  }
+
+  if (abbrev[0] == abbrev[1])
+    abbrev[2] = ' ';
+  else {
+    if (line[1] == line[4])
+      abbrev[2] = 's';
+    else
+      abbrev[2] = 'o';
+  }
+}

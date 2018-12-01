@@ -438,8 +438,6 @@ int main(int argc,char **argv)
   int file_no;
   int dbg_file_no;
   int dbg;
-  int rank_ix1;
-  int rank_ix2;
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
   HoldemTurnHand turn_hand;
   HoldemPokerHand holdem_hand;
@@ -1838,41 +1836,8 @@ int main(int argc,char **argv)
                   }
                 }
               }
-              else {
-                for (rank_ix1 = 0; rank_ix1 < NUM_CARDS_IN_SUIT; rank_ix1++) {
-                  if (line[n] == rank_chars[rank_ix1])
-                    break;
-                }
-
-                if (rank_ix1 == NUM_CARDS_IN_SUIT)
-                  rank_ix1 = 0;
-
-                for (rank_ix2 = 0; rank_ix2 < NUM_CARDS_IN_SUIT; rank_ix2++) {
-                  if (line[n+3] == rank_chars[rank_ix2])
-                    break;
-                }
-
-                if (rank_ix2 == NUM_CARDS_IN_SUIT)
-                  rank_ix2 = 0;
-
-                if (rank_ix1 >= rank_ix2) {
-                  local_vars.hole_cards[0] = line[n];
-                  local_vars.hole_cards[1] = line[n+3];
-                }
-                else {
-                  local_vars.hole_cards[0] = line[n+3];
-                  local_vars.hole_cards[1] = line[n];
-                }
-
-                if (local_vars.hole_cards[0] == local_vars.hole_cards[1])
-                  local_vars.hole_cards[2] = ' ';
-                else {
-                  if (line[n+1] == line[n+4])
-                    local_vars.hole_cards[2] = 's';
-                  else
-                    local_vars.hole_cards[2] = 'o';
-                }
-              }
+              else
+                get_abbrev(&line[n],&local_vars.hole_cards[0]);
             }
 
             if (local_vars.bHandSpecified) {
