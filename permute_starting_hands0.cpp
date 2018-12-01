@@ -9,7 +9,7 @@ using namespace std;
 
 static char usage[] =
 "usage: permute_starting_hands0 (-card_strings) (-print_offset)\n"
-"  (-unique_first_cards)\n";
+"  (-unique_first_cards) (-abbrev)\n";
 
 int main(int argc,char **argv)
 {
@@ -19,11 +19,13 @@ int main(int argc,char **argv)
   bool bCardStrings;
   bool bPrintOffset;
   bool bUniqueFirstCards;
+  bool bAbbrev;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
-  char card_string[3];
+  char hole_cards[6];
+  char hole_cards_abbrev[4];
   int prev_first_card;
 
-  if (argc > 4) {
+  if (argc > 5) {
     printf(usage);
     return 1;
   }
@@ -31,6 +33,7 @@ int main(int argc,char **argv)
   bCardStrings = false;
   bPrintOffset = false;
   bUniqueFirstCards = false;
+  bAbbrev = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-card_strings"))
@@ -39,11 +42,15 @@ int main(int argc,char **argv)
       bPrintOffset = true;
     else if (!strcmp(argv[curr_arg],"-unique_first_cards"))
       bUniqueFirstCards = true;
+    else if (!strcmp(argv[curr_arg],"-abbrev"))
+      bAbbrev = true;
     else
       break;
   }
 
-  card_string[2] = 0;
+  hole_cards[2] = ' ';
+  hole_cards[5] = 0;
+  hole_cards_abbrev[3] = 0;
 
   for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
     get_permutation_instance_two(
@@ -56,19 +63,24 @@ int main(int argc,char **argv)
     if (bPrintOffset)
       printf("%4d ",m);
 
-    if (!bCardStrings)
-      printf("%2d %2d\n",cards[0],cards[1]);
-    else {
-      for (n = 0; n < NUM_HOLE_CARDS_IN_HOLDEM_HAND; n++) {
-        card_string_from_card_value(cards[n],card_string);
-        printf("%s",card_string);
+    if (bCardStrings || bAbbrev) {
+      for (n = 0; n < NUM_HOLE_CARDS_IN_HOLDEM_HAND; n++)
+        card_string_from_card_value(cards[n],&hole_cards[n * 3]);
 
-        if (n < NUM_HOLE_CARDS_IN_HOLDEM_HAND - 1)
-          putchar(' ');
+      if (bAbbrev)
+        get_abbrev(hole_cards,hole_cards_abbrev);
+
+      if (bCardStrings) {
+        if (!bAbbrev)
+          printf("%s\n",hole_cards);
         else
-          putchar(0x0a);
+          printf("%s %s\n",hole_cards,hole_cards_abbrev);
       }
+      else
+        printf("%s\n",hole_cards_abbrev);
     }
+    else
+      printf("%2d %2d\n",cards[0],cards[1]);
 
     prev_first_card = cards[0];
   }
