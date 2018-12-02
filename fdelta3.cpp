@@ -169,20 +169,6 @@ enum quantum_typ {
   QUANTUM_TYPE_ROI
 };
 
-char *premium_hand_abbrevs[] = {
-  "AA ",
-  "KK ",
-  "QQ ",
-  "AKs",
-  "JJ ",
-  "TT ",
-  "AQs",
-  "AKo",
-  "AJs",
-  "KQs"
-};
-#define NUM_PREMIUM_HANDS (sizeof (premium_hand_abbrevs) / sizeof (char *))
-
 struct vars {
   bool bTerse;
   bool bVerbose;
@@ -1856,15 +1842,8 @@ int main(int argc,char **argv)
               }
             }
 
-            if (local_vars.bOnlyPremiumHands) {
-              for (m = 0; m < NUM_PREMIUM_HANDS; m++) {
-                if (!strcmp(&local_vars.hole_cards_abbrev[0],premium_hand_abbrevs[m]))
-                  break;
-              }
-
-              if (m < NUM_PREMIUM_HANDS)
-                local_vars.bHavePremiumHand = true;
-            }
+            if (local_vars.bOnlyPremiumHands)
+              local_vars.bHavePremiumHand = is_premium_hand(local_vars.hole_cards_abbrev);
 
             if (local_vars.bTwinAbbrevs) {
               retval = abbrev_index_of_hand(&line[n],&local_vars.curr_abbrev_index);

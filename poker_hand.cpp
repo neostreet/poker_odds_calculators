@@ -3033,3 +3033,15 @@ void get_abbrev(char *line,char *abbrev)
       abbrev[2] = 'o';
   }
 }
+
+bool is_premium_hand(char *abbrev)
+{
+  int m;
+
+  for (m = 0; m < NUM_PREMIUM_HANDS; m++) {
+    if (!strcmp(abbrev,premium_hand_abbrevs[m]))
+      break;
+  }
+
+  return (m < NUM_PREMIUM_HANDS);
+}

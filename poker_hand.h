@@ -76,12 +76,27 @@ char *plain_hand_types[] = {
   "royal flush"
 };
 int plain_hand_type_lens[NUM_HAND_TYPES];
+
+char *premium_hand_abbrevs[] = {
+  "AA ",
+  "KK ",
+  "QQ ",
+  "AKs",
+  "JJ ",
+  "TT ",
+  "AQs",
+  "AKo",
+  "AJs",
+  "KQs"
+};
 #else
 extern char suit_chars[];
 extern char rank_chars[];
 extern char *plain_hand_types[];
 extern int plain_hand_type_lens[];
+extern char *premium_hand_abbrevs[];
 #endif
+#define NUM_PREMIUM_HANDS 10
 
 #define NUM_CARDS_IN_HAND 5
 
@@ -565,3 +580,4 @@ int get_52_2_index_of_hole_cards(char *hole_cards,int *index);
 int get_52_2_index_of_hand2(int *cards);
 int get_52_2_index_of_hole_cards2(char *hole_cards,int *index);
 void get_abbrev(char *line,char *abbrev);
+bool is_premium_hand(char *abbrev);
