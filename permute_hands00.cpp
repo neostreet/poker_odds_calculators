@@ -22,7 +22,7 @@ using namespace std;
 
 static char usage[] =
 "usage: permute_hands00 (-terse) (-skip_sort) (-count_ties) (-countcount)\n"
-"  (-binfilefile)\n";
+"  (-binfilefile) (-write_sorted)\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static int *ixs;
@@ -42,6 +42,7 @@ int main(int argc,char **argv)
   bool bCountTies;
   int count;
   bool bBinFile;
+  bool bWriteSorted;
   char *binfile_name;
   int cards[NUM_CARDS_IN_HAND];
   char card_string[3];
@@ -50,11 +51,12 @@ int main(int argc,char **argv)
   time_t end_time;
   int ties;
   struct hand_and_type *hands_and_types;
+  struct hand_and_type *sorted_hands_and_types;
   hand work_hand;
   struct hand_and_type *found;
   int fhndl;
 
-  if (argc > 6) {
+  if (argc > 7) {
     printf(usage);
     return 1;
   }
@@ -64,6 +66,7 @@ int main(int argc,char **argv)
   bCountTies = false;
   count = POKER_52_5_PERMUTATIONS;
   bBinFile = false;
+  bWriteSorted = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -80,6 +83,8 @@ int main(int argc,char **argv)
       bBinFile = true;
       binfile_name = &argv[curr_arg][8];
     }
+    else if (!strcmp(argv[curr_arg],"-write_sorted"))
+      bWriteSorted = true;
     else
       break;
   }
@@ -110,6 +115,15 @@ int main(int argc,char **argv)
     if (hands_and_types == NULL) {
       printf("malloc of hands_and_types failed\n");
       return 5;
+    }
+
+    if (bWriteSorted) {
+      sorted_hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * count);
+
+      if (sorted_hands_and_types == NULL) {
+        printf("malloc of hands_and_types failed\n");
+        return 6;
+      }
     }
   }
 
@@ -184,23 +198,31 @@ int main(int argc,char **argv)
     }
   }
 
-  free(ixs2);
-  free(ixs);
-
   if (bBinFile) {
     if ((fhndl = open(binfile_name,
       O_CREAT | O_EXCL | O_BINARY | O_WRONLY,
       S_IREAD | S_IWRITE)) == -1) {
 
       printf(couldnt_open,binfile_name);
-      return 4;
+      return 7;
     }
 
-    write(fhndl,hands_and_types,sizeof (struct hand_and_type) * count);
+    if (!bWriteSorted)
+      write(fhndl,hands_and_types,sizeof (struct hand_and_type) * count);
+    else {
+      for (m = 0; m < count; m++)
+        sorted_hands_and_types[m] = hands_and_types[ixs[m]];
+
+      write(fhndl,sorted_hands_and_types,sizeof (struct hand_and_type) * count);
+    }
+
     close(fhndl);
 
     free(hands_and_types);
   }
+
+  free(ixs2);
+  free(ixs);
 
   return 0;
 }
