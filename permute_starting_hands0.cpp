@@ -9,7 +9,7 @@ using namespace std;
 
 static char usage[] =
 "usage: permute_starting_hands0 (-card_strings) (-print_offset)\n"
-"  (-unique_first_cards) (-abbrev)\n";
+"  (-unique_first_cards) (-abbrev) (-premium)\n";
 
 int main(int argc,char **argv)
 {
@@ -20,12 +20,13 @@ int main(int argc,char **argv)
   bool bPrintOffset;
   bool bUniqueFirstCards;
   bool bAbbrev;
+  bool bPremium;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   char hole_cards[6];
   char hole_cards_abbrev[4];
   int prev_first_card;
 
-  if (argc > 5) {
+  if (argc > 6) {
     printf(usage);
     return 1;
   }
@@ -34,6 +35,7 @@ int main(int argc,char **argv)
   bPrintOffset = false;
   bUniqueFirstCards = false;
   bAbbrev = false;
+  bPremium = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-card_strings"))
@@ -44,6 +46,8 @@ int main(int argc,char **argv)
       bUniqueFirstCards = true;
     else if (!strcmp(argv[curr_arg],"-abbrev"))
       bAbbrev = true;
+    else if (!strcmp(argv[curr_arg],"-premium"))
+      bPremium = true;
     else
       break;
   }
@@ -63,12 +67,17 @@ int main(int argc,char **argv)
     if (bPrintOffset)
       printf("%4d ",m);
 
-    if (bCardStrings || bAbbrev) {
+    if (bCardStrings || bAbbrev || bPremium) {
       for (n = 0; n < NUM_HOLE_CARDS_IN_HOLDEM_HAND; n++)
         card_string_from_card_value(cards[n],&hole_cards[n * 3]);
 
-      if (bAbbrev)
+      if (bAbbrev || bPremium)
         get_abbrev(hole_cards,hole_cards_abbrev);
+
+      if (bPremium) {
+        if (!is_premium_hand(hole_cards_abbrev))
+          continue;
+      }
 
       if (bCardStrings) {
         if (!bAbbrev)
@@ -76,8 +85,10 @@ int main(int argc,char **argv)
         else
           printf("%s %s\n",hole_cards,hole_cards_abbrev);
       }
-      else
+      else if (bAbbrev)
         printf("%s\n",hole_cards_abbrev);
+      else
+        printf("%2d %2d\n",cards[0],cards[1]);
     }
     else
       printf("%2d %2d\n",cards[0],cards[1]);
