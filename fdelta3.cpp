@@ -166,7 +166,8 @@ enum quantum_typ {
   QUANTUM_TYPE_RUNNING_TOTAL,
   QUANTUM_TYPE_NUM_POSITIVE_DELTAS,
   QUANTUM_TYPE_DISCREPANCY,
-  QUANTUM_TYPE_ROI
+  QUANTUM_TYPE_ROI,
+  QUANTUM_TYPE_OUTS
 };
 
 struct vars {
@@ -248,6 +249,7 @@ struct vars {
   int running_total;
   int show_roi;
   int show_num_positive_deltas;
+  int show_outs;
   int num_positive_deltas;
   bool bAceOnTheRiver;
   bool bOnlyWash;
@@ -350,6 +352,7 @@ struct vars {
   bool bHaveBadRiverMoney;
   bool bHaveDiscrepancy;
   int discrepancy;
+  int outs;
   bool bHaveKnockout;
   bool bHaveDoubleUp;
   bool bIsSittingOut;
@@ -518,6 +521,7 @@ int main(int argc,char **argv)
   local_vars.show_roi = 0;
   local_vars.running_total = 0;
   local_vars.show_num_positive_deltas = 0;
+  local_vars.show_outs = 0;
   local_vars.bAceOnTheRiver = false;
   local_vars.bOnlyWash = false;
   local_vars.sum_quantum = 0;
@@ -1247,6 +1251,8 @@ int main(int argc,char **argv)
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
+    local_vars.show_outs = 1;
+    local_vars.quantum_type = QUANTUM_TYPE_OUTS;
   }
 
   player_name_ix = curr_arg++;
@@ -2852,6 +2858,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                     case QUANTUM_TYPE_RUNNING_TOTAL:
                                                                                                                                                     case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
                                                                                                                                                     case QUANTUM_TYPE_DISCREPANCY:
+                                                                                                                                                    case QUANTUM_TYPE_OUTS:
                                                                                                                                                       printf("%10d %s",varspt->quantum,varspt->hole_cards);
 
                                                                                                                                                       break;
@@ -3047,6 +3054,10 @@ static void do_balance_processing(struct vars *varspt)
       break;
     case QUANTUM_TYPE_DISCREPANCY:
       varspt->quantum = varspt->discrepancy;
+
+      break;
+    case QUANTUM_TYPE_OUTS:
+      varspt->quantum = varspt->outs;
 
       break;
   }
