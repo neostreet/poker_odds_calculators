@@ -62,7 +62,7 @@ static char usage[] =
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
-"  (-river_outs) (-show_winning_hand_hole_card_ixs)\n"
+"  (-hut_outs) (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
@@ -275,7 +275,7 @@ struct vars {
   bool bTwinAbbrevs;
   bool bTwinHands;
   bool bIdenticalTwinHands;
-  bool bRiverOuts;
+  bool bHutOuts;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -553,7 +553,7 @@ int main(int argc,char **argv)
   local_vars.bTwinAbbrevs = false;
   local_vars.bTwinHands = false;
   local_vars.bIdenticalTwinHands = false;
-  local_vars.bRiverOuts = false;
+  local_vars.bHutOuts = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -932,8 +932,8 @@ int main(int argc,char **argv)
       local_vars.bTwinHands = true;
     else if (!strcmp(argv[curr_arg],"-identical_twin_hands"))
       local_vars.bIdenticalTwinHands = true;
-    else if (!strcmp(argv[curr_arg],"-river_outs"))
-      local_vars.bRiverOuts = true;
+    else if (!strcmp(argv[curr_arg],"-hut_outs"))
+      local_vars.bHutOuts = true;
     else
       break;
   }
@@ -1243,7 +1243,7 @@ int main(int argc,char **argv)
     return 52;
   }
 
-  if (local_vars.bRiverOuts) {
+  if (local_vars.bHutOuts) {
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
