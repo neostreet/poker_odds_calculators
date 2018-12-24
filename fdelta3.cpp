@@ -1277,6 +1277,7 @@ int main(int argc,char **argv)
     local_vars.hole_cards[11] = 0;
 
   local_vars.winning_hand_hole_cards[5] = 0;
+  local_vars.opponent_hole_cards[5] = 0;
 
   if (local_vars.bSumByTableCount) {
     for (n = 0; n < MAX_TABLE_COUNT - 1; n++) {
