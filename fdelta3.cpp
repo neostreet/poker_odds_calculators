@@ -249,8 +249,9 @@ struct vars {
   int running_total;
   int show_roi;
   int show_num_positive_deltas;
-  int show_outs;
   int num_positive_deltas;
+  int show_outs;
+  int outs;
   bool bAceOnTheRiver;
   bool bOnlyWash;
   bool bNoDelta;
@@ -352,7 +353,6 @@ struct vars {
   bool bHaveBadRiverMoney;
   bool bHaveDiscrepancy;
   int discrepancy;
-  int outs;
   bool bHaveKnockout;
   bool bHaveDoubleUp;
   bool bIsSittingOut;
@@ -1378,6 +1378,9 @@ int main(int argc,char **argv)
     if (local_vars.show_num_positive_deltas)
       local_vars.num_positive_deltas = 0;
 
+    if (local_vars.show_outs)
+      local_vars.outs = 0;
+
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
@@ -1574,6 +1577,9 @@ int main(int argc,char **argv)
                 if (local_vars.show_num_positive_deltas)
                   local_vars.num_positive_deltas = 0;
 
+                if (local_vars.show_outs)
+                  local_vars.outs = 0;
+
                 street = 0;
                 num_street_markers = 0;
                 ante = 0;
@@ -1741,7 +1747,7 @@ int main(int argc,char **argv)
             }
           }
         }
-        else if (local_vars.bShowOpponentHoleCards && !local_vars.bHaveOpponentHoleCards) {
+        else if (!local_vars.bHaveOpponentHoleCards) {
           if (Contains(true,
             line,line_len,
             "[",1,
@@ -2644,6 +2650,9 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
 void run_filter(struct vars *varspt)
 {
   double dwork;
+  HeadsUpTurn hut;
+  int cards[NUM_HEADS_UP_TURN_CARDS];
+  struct outcomes *outcomes;
 
   if (varspt->filter_percentage)
     varspt->summary_val++;
@@ -2719,6 +2728,21 @@ void run_filter(struct vars *varspt)
                                                                                                                                           if (!varspt->bTwinAbbrevs || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
                                                                                                                                             if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                               if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
+                                                                                                                                                if (varspt->bHutOuts) {
+                                                                                                                                                  card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
+                                                                                                                                                  card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
+                                                                                                                                                  card_value_from_card_string(&varspt->opponent_hole_cards[0],&cards[2]);
+                                                                                                                                                  card_value_from_card_string(&varspt->opponent_hole_cards[3],&cards[3]);
+                                                                                                                                                  card_value_from_card_string(&varspt->board_cards[0],&cards[4]);
+                                                                                                                                                  card_value_from_card_string(&varspt->board_cards[3],&cards[5]);
+                                                                                                                                                  card_value_from_card_string(&varspt->board_cards[6],&cards[6]);
+                                                                                                                                                  card_value_from_card_string(&varspt->board_cards[9],&cards[7]);
+                                                                                                                                                  hut.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6],cards[7]);
+                                                                                                                                                  hut.Evaluate(false);
+                                                                                                                                                  outcomes = hut.GetOutcomes();
+                                                                                                                                                  varspt->quantum = outcomes[0].wins;
+                                                                                                                                                }
+
                                                                                                                                                 if (varspt->bTerse) {
                                                                                                                                                   if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
                                                                                                                                                     if (varspt->quantum_type == QUANTUM_TYPE_OPM) {
@@ -3055,10 +3079,6 @@ static void do_balance_processing(struct vars *varspt)
       break;
     case QUANTUM_TYPE_DISCREPANCY:
       varspt->quantum = varspt->discrepancy;
-
-      break;
-    case QUANTUM_TYPE_OUTS:
-      varspt->quantum = varspt->outs;
 
       break;
   }
