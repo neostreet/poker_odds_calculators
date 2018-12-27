@@ -62,7 +62,8 @@ static char usage[] =
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
-"  (-hut_outs) (-show_winning_hand_hole_card_ixs)\n"
+"  (-hut_outs) (-hut_outs_gevalue) -hut_outs_levalue\n"
+"  (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
 "  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
@@ -279,6 +280,10 @@ struct vars {
   bool bTwinHands;
   bool bIdenticalTwinHands;
   bool bHutOuts;
+  bool bHutOutsGeValue;
+  int hut_outs_ge_value;
+  bool bHutOutsLeValue;
+  int hut_outs_le_value;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -448,7 +453,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 124)) {
+  if ((argc < 3) || (argc > 126)) {
     printf(usage);
     return 1;
   }
@@ -558,6 +563,8 @@ int main(int argc,char **argv)
   local_vars.bTwinHands = false;
   local_vars.bIdenticalTwinHands = false;
   local_vars.bHutOuts = false;
+  local_vars.bHutOutsGeValue = false;
+  local_vars.bHutOutsLeValue = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -938,6 +945,14 @@ int main(int argc,char **argv)
       local_vars.bIdenticalTwinHands = true;
     else if (!strcmp(argv[curr_arg],"-hut_outs"))
       local_vars.bHutOuts = true;
+    else if (!strncmp(argv[curr_arg],"-hut_outs_ge_value",18)) {
+      local_vars.bHutOutsGeValue = true;
+      sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_outs_ge_value);
+    }
+    else if (!strncmp(argv[curr_arg],"-hut_outs_le_value",18)) {
+      local_vars.bHutOutsLeValue = true;
+      sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_outs_le_value);
+    }
     else
       break;
   }
@@ -1247,7 +1262,22 @@ int main(int argc,char **argv)
     return 52;
   }
 
-  if (local_vars.bHutOuts) {
+  if (local_vars.bHutOuts && local_vars.bHutOutsGeValue) {
+    printf("can't specify both -hut_outs and -hut_outs_ge_value\n");
+    return 53;
+  }
+
+  if (local_vars.bHutOuts && local_vars.bHutOutsLeValue) {
+    printf("can't specify both -hut_outs and -hut_outs_le_value\n");
+    return 54;
+  }
+
+  if (local_vars.bHutOutsGeValue && local_vars.bHutOutsLeValue) {
+    printf("can't specify both -hut_outs_ge_value and -hut_outs_le_value\n");
+    return 55;
+  }
+
+  if (local_vars.bHutOuts || local_vars.bHutOutsGeValue || local_vars.bHutOutsLeValue) {
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
@@ -1260,7 +1290,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 53;
+    return 56;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -1664,7 +1694,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 54;
+          return 57;
         }
 
         continue;
@@ -1840,7 +1870,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 55;
+                    return 58;
                   }
                 }
               }
@@ -2100,7 +2130,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 56;
+              return 59;
             }
           }
 
@@ -2132,7 +2162,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 57;
+            return 60;
           }
 
           if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2168,7 +2198,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 58;
+              return 61;
             }
 
             if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2653,6 +2683,7 @@ void run_filter(struct vars *varspt)
   HeadsUpTurn hut;
   int cards[NUM_HEADS_UP_TURN_CARDS];
   struct outcomes *outcomes;
+  bool bSkip;
 
   if (varspt->filter_percentage)
     varspt->summary_val++;
@@ -2728,7 +2759,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                           if (!varspt->bTwinAbbrevs || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
                                                                                                                                             if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                               if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
-                                                                                                                                                if (varspt->bHutOuts) {
+                                                                                                                                                if (varspt->bHutOuts || varspt->bHutOutsGeValue || varspt->bHutOutsLeValue) {
                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
                                                                                                                                                   card_value_from_card_string(&varspt->opponent_hole_cards[0],&cards[2]);
@@ -2740,198 +2771,213 @@ void run_filter(struct vars *varspt)
                                                                                                                                                   hut.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6],cards[7]);
                                                                                                                                                   hut.Evaluate(false);
                                                                                                                                                   outcomes = hut.GetOutcomes();
-                                                                                                                                                  varspt->quantum = outcomes[0].wins;
+
+                                                                                                                                                  bSkip = false;
+
+                                                                                                                                                  if (varspt->bHutOutsGeValue) {
+                                                                                                                                                    if (outcomes[0].wins < varspt->hut_outs_ge_value)
+                                                                                                                                                      bSkip = true;
+                                                                                                                                                  }
+                                                                                                                                                  else if (varspt->bHutOutsLeValue) {
+                                                                                                                                                    if (outcomes[0].wins > varspt->hut_outs_le_value)
+                                                                                                                                                      bSkip = true;
+                                                                                                                                                  }
+
+                                                                                                                                                  if (!bSkip)
+                                                                                                                                                    varspt->quantum = outcomes[0].wins;
                                                                                                                                                 }
 
-                                                                                                                                                if (varspt->bTerse) {
-                                                                                                                                                  if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
-                                                                                                                                                    if (varspt->quantum_type == QUANTUM_TYPE_OPM) {
-                                                                                                                                                      if (!varspt->bShowTableCount)
-                                                                                                                                                        printf("%lf\n",varspt->dwork);
-                                                                                                                                                      else
-                                                                                                                                                        printf("%lf %d\n",varspt->dwork,varspt->table_count);
-                                                                                                                                                    }
-                                                                                                                                                    else {
-                                                                                                                                                      if (!varspt->bShowTableCount)
-                                                                                                                                                        printf("%d\n",varspt->quantum);
-                                                                                                                                                      else
-                                                                                                                                                        printf("%d %d\n",varspt->quantum,varspt->table_count);
-                                                                                                                                                    }
-                                                                                                                                                  }
-                                                                                                                                                  else if (!varspt->bSumByTableCount) {
-                                                                                                                                                    varspt->total_delta += varspt->quantum;
-
-                                                                                                                                                    if (varspt->winning_percentage) {
-                                                                                                                                                      varspt->summary_val++;
-
-                                                                                                                                                      if (varspt->delta > 0)
-                                                                                                                                                        varspt->summary_val2++;
-                                                                                                                                                    }
-                                                                                                                                                    else if (varspt->filter_percentage)
-                                                                                                                                                      varspt->summary_val2++;
-                                                                                                                                                    else if (varspt->only_count)
-                                                                                                                                                      varspt->summary_val++;
-                                                                                                                                                    else if (varspt->sum_quantum)
-                                                                                                                                                      varspt->summary_val += varspt->quantum;
-                                                                                                                                                    else if (varspt->sum_abs_delta) {
-                                                                                                                                                      if (varspt->delta > 0)
-                                                                                                                                                        varspt->summary_val += varspt->delta;
-                                                                                                                                                      else
-                                                                                                                                                        varspt->summary_val -= varspt->delta;
-                                                                                                                                                    }
-                                                                                                                                                    else if (varspt->max_delta) {
-                                                                                                                                                      if (varspt->delta > varspt->summary_val)
-                                                                                                                                                        varspt->summary_val = varspt->delta;
-                                                                                                                                                    }
-                                                                                                                                                    else if (varspt->min_delta) {
-                                                                                                                                                      if (varspt->delta < varspt->summary_val)
-                                                                                                                                                        varspt->summary_val = varspt->delta;
-                                                                                                                                                    }
-                                                                                                                                                    else if (varspt->max_abs_delta) {
-                                                                                                                                                      if (varspt->delta < 0) {
-                                                                                                                                                        varspt->work = varspt->delta * -1;
-
-                                                                                                                                                        if (varspt->work > varspt->summary_val)
-                                                                                                                                                          varspt->summary_val = varspt->work;
+                                                                                                                                                if (!bSkip) {
+                                                                                                                                                  if (varspt->bTerse) {
+                                                                                                                                                    if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
+                                                                                                                                                      if (varspt->quantum_type == QUANTUM_TYPE_OPM) {
+                                                                                                                                                        if (!varspt->bShowTableCount)
+                                                                                                                                                          printf("%lf\n",varspt->dwork);
+                                                                                                                                                        else
+                                                                                                                                                          printf("%lf %d\n",varspt->dwork,varspt->table_count);
                                                                                                                                                       }
                                                                                                                                                       else {
+                                                                                                                                                        if (!varspt->bShowTableCount)
+                                                                                                                                                          printf("%d\n",varspt->quantum);
+                                                                                                                                                        else
+                                                                                                                                                          printf("%d %d\n",varspt->quantum,varspt->table_count);
+                                                                                                                                                      }
+                                                                                                                                                    }
+                                                                                                                                                    else if (!varspt->bSumByTableCount) {
+                                                                                                                                                      varspt->total_delta += varspt->quantum;
+
+                                                                                                                                                      if (varspt->winning_percentage) {
+                                                                                                                                                        varspt->summary_val++;
+
+                                                                                                                                                        if (varspt->delta > 0)
+                                                                                                                                                          varspt->summary_val2++;
+                                                                                                                                                      }
+                                                                                                                                                      else if (varspt->filter_percentage)
+                                                                                                                                                        varspt->summary_val2++;
+                                                                                                                                                      else if (varspt->only_count)
+                                                                                                                                                        varspt->summary_val++;
+                                                                                                                                                      else if (varspt->sum_quantum)
+                                                                                                                                                        varspt->summary_val += varspt->quantum;
+                                                                                                                                                      else if (varspt->sum_abs_delta) {
+                                                                                                                                                        if (varspt->delta > 0)
+                                                                                                                                                          varspt->summary_val += varspt->delta;
+                                                                                                                                                        else
+                                                                                                                                                          varspt->summary_val -= varspt->delta;
+                                                                                                                                                      }
+                                                                                                                                                      else if (varspt->max_delta) {
                                                                                                                                                         if (varspt->delta > varspt->summary_val)
                                                                                                                                                           varspt->summary_val = varspt->delta;
                                                                                                                                                       }
-                                                                                                                                                    }
-                                                                                                                                                    else if (varspt->max_collected) {
-                                                                                                                                                      if (varspt->collected_from_pot > varspt->summary_val)
-                                                                                                                                                        varspt->summary_val = varspt->collected_from_pot;
+                                                                                                                                                      else if (varspt->min_delta) {
+                                                                                                                                                        if (varspt->delta < varspt->summary_val)
+                                                                                                                                                          varspt->summary_val = varspt->delta;
+                                                                                                                                                      }
+                                                                                                                                                      else if (varspt->max_abs_delta) {
+                                                                                                                                                        if (varspt->delta < 0) {
+                                                                                                                                                          varspt->work = varspt->delta * -1;
+
+                                                                                                                                                          if (varspt->work > varspt->summary_val)
+                                                                                                                                                            varspt->summary_val = varspt->work;
+                                                                                                                                                        }
+                                                                                                                                                        else {
+                                                                                                                                                          if (varspt->delta > varspt->summary_val)
+                                                                                                                                                            varspt->summary_val = varspt->delta;
+                                                                                                                                                        }
+                                                                                                                                                      }
+                                                                                                                                                      else if (varspt->max_collected) {
+                                                                                                                                                        if (varspt->collected_from_pot > varspt->summary_val)
+                                                                                                                                                          varspt->summary_val = varspt->collected_from_pot;
+                                                                                                                                                      }
+                                                                                                                                                      else {
+                                                                                                                                                        if (varspt->delta > varspt->summary_val) {
+                                                                                                                                                          varspt->summary_val = varspt->delta;
+                                                                                                                                                          varspt->max_delta_hand_typ = varspt->poker_hand.GetHandType();
+                                                                                                                                                        }
+                                                                                                                                                      }
                                                                                                                                                     }
                                                                                                                                                     else {
-                                                                                                                                                      if (varspt->delta > varspt->summary_val) {
-                                                                                                                                                        varspt->summary_val = varspt->delta;
-                                                                                                                                                        varspt->max_delta_hand_typ = varspt->poker_hand.GetHandType();
-                                                                                                                                                      }
+                                                                                                                                                      varspt->sum_by_table_count[varspt->table_count - 2] += varspt->delta;
+                                                                                                                                                      varspt->sum_by_table_count[varspt->table_count - 2]++;
                                                                                                                                                     }
                                                                                                                                                   }
                                                                                                                                                   else {
-                                                                                                                                                    varspt->sum_by_table_count[varspt->table_count - 2] += varspt->delta;
-                                                                                                                                                    varspt->sum_by_table_count[varspt->table_count - 2]++;
-                                                                                                                                                  }
-                                                                                                                                                }
-                                                                                                                                                else {
-                                                                                                                                                  switch(varspt->quantum_type) {
-                                                                                                                                                    case QUANTUM_TYPE_DELTA:
-                                                                                                                                                      if (!varspt->bNoDelta) {
-                                                                                                                                                        if (!varspt->bHoleCardsUsed) {
-                                                                                                                                                          if (!varspt->bNoHoleCards) {
-                                                                                                                                                            if (varspt->bShowWinningHandHoleCards && varspt->bHaveWinningHandHoleCards) {
-                                                                                                                                                              if (!varspt->bShowWinningHandHoleCardIxs) {
-                                                                                                                                                                printf("%10d %s %s",varspt->delta,
-                                                                                                                                                                  (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                                  varspt->winning_hand_hole_cards);
+                                                                                                                                                    switch(varspt->quantum_type) {
+                                                                                                                                                      case QUANTUM_TYPE_DELTA:
+                                                                                                                                                        if (!varspt->bNoDelta) {
+                                                                                                                                                          if (!varspt->bHoleCardsUsed) {
+                                                                                                                                                            if (!varspt->bNoHoleCards) {
+                                                                                                                                                              if (varspt->bShowWinningHandHoleCards && varspt->bHaveWinningHandHoleCards) {
+                                                                                                                                                                if (!varspt->bShowWinningHandHoleCardIxs) {
+                                                                                                                                                                  printf("%10d %s %s",varspt->delta,
+                                                                                                                                                                    (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                    varspt->winning_hand_hole_cards);
+                                                                                                                                                                }
+                                                                                                                                                                else {
+                                                                                                                                                                  printf("%10d %s %d %d",varspt->delta,
+                                                                                                                                                                    (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                    varspt->winning_hand_hole_card_ixs[0],
+                                                                                                                                                                    varspt->winning_hand_hole_card_ixs[1]);
+                                                                                                                                                                }
+                                                                                                                                                              }
+                                                                                                                                                              else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
+                                                                                                                                                                if (!varspt->bShowOpponentHoleCardIxs) {
+                                                                                                                                                                  printf("%10d %s %s",varspt->delta,
+                                                                                                                                                                    (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                    varspt->opponent_hole_cards);
+                                                                                                                                                                }
+                                                                                                                                                                else {
+                                                                                                                                                                  printf("%10d %s %d %d",varspt->delta,
+                                                                                                                                                                    (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                    varspt->opponent_hole_card_ixs[0],
+                                                                                                                                                                    varspt->opponent_hole_card_ixs[1]);
+                                                                                                                                                                }
                                                                                                                                                               }
                                                                                                                                                               else {
-                                                                                                                                                                printf("%10d %s %d %d",varspt->delta,
-                                                                                                                                                                  (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                                  varspt->winning_hand_hole_card_ixs[0],
-                                                                                                                                                                  varspt->winning_hand_hole_card_ixs[1]);
+                                                                                                                                                                printf("%10d %s",varspt->delta,
+                                                                                                                                                                  (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                                                                                                                                                               }
                                                                                                                                                             }
-                                                                                                                                                            else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
-                                                                                                                                                              if (!varspt->bShowOpponentHoleCardIxs) {
-                                                                                                                                                                printf("%10d %s %s",varspt->delta,
-                                                                                                                                                                  (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                                  varspt->opponent_hole_cards);
-                                                                                                                                                              }
-                                                                                                                                                              else {
-                                                                                                                                                                printf("%10d %s %d %d",varspt->delta,
-                                                                                                                                                                  (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                                  varspt->opponent_hole_card_ixs[0],
-                                                                                                                                                                  varspt->opponent_hole_card_ixs[1]);
-                                                                                                                                                              }
-                                                                                                                                                            }
-                                                                                                                                                            else {
-                                                                                                                                                              printf("%10d %s",varspt->delta,
-                                                                                                                                                                (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
-                                                                                                                                                            }
+                                                                                                                                                            else
+                                                                                                                                                              printf("%10d",varspt->delta);
                                                                                                                                                           }
-                                                                                                                                                          else
-                                                                                                                                                            printf("%10d",varspt->delta);
-                                                                                                                                                        }
-                                                                                                                                                        else {
-                                                                                                                                                          if (!varspt->bNoHoleCards) {
-                                                                                                                                                            printf("%10d %s (%d)",varspt->delta,
-                                                                                                                                                              (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                              varspt->hole_cards_used);
+                                                                                                                                                          else {
+                                                                                                                                                            if (!varspt->bNoHoleCards) {
+                                                                                                                                                              printf("%10d %s (%d)",varspt->delta,
+                                                                                                                                                                (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                varspt->hole_cards_used);
+                                                                                                                                                            }
+                                                                                                                                                            else
+                                                                                                                                                              printf("%10d (%d)",varspt->delta,varspt->hole_cards_used);
                                                                                                                                                           }
-                                                                                                                                                          else
-                                                                                                                                                            printf("%10d (%d)",varspt->delta,varspt->hole_cards_used);
                                                                                                                                                         }
+                                                                                                                                                        else if (!varspt->bNoHoleCards)
+                                                                                                                                                          printf("%s",varspt->hole_cards);
+
+                                                                                                                                                        break;
+                                                                                                                                                      case QUANTUM_TYPE_OPM:
+                                                                                                                                                        printf("%6.4lf (%10d %10d) %s",varspt->dwork,
+                                                                                                                                                          varspt->delta,varspt->collected_from_pot,varspt->hole_cards);
+
+                                                                                                                                                        break;
+                                                                                                                                                      case QUANTUM_TYPE_COLLECTED:
+                                                                                                                                                      case QUANTUM_TYPE_SPENT:
+                                                                                                                                                      case QUANTUM_TYPE_NUMDECISIONS:
+                                                                                                                                                      case QUANTUM_TYPE_WAGERED:
+                                                                                                                                                      case QUANTUM_TYPE_TABLE_BOSS:
+                                                                                                                                                      case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
+                                                                                                                                                      case QUANTUM_TYPE_RUNNING_TOTAL:
+                                                                                                                                                      case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
+                                                                                                                                                      case QUANTUM_TYPE_DISCREPANCY:
+                                                                                                                                                      case QUANTUM_TYPE_OUTS:
+                                                                                                                                                        printf("%10d %s",varspt->quantum,varspt->hole_cards);
+
+                                                                                                                                                        break;
+                                                                                                                                                      case QUANTUM_TYPE_ROI:
+                                                                                                                                                        if (!varspt->wagered_amount)
+                                                                                                                                                          dwork = (double)0;
+                                                                                                                                                        else
+                                                                                                                                                          dwork = (double)varspt->delta / (double)varspt->wagered_amount;
+
+                                                                                                                                                        printf("%lf (%d %d) %s",dwork,
+                                                                                                                                                          varspt->delta,varspt->wagered_amount,varspt->hole_cards);
+
+                                                                                                                                                        break;
+                                                                                                                                                    }
+
+                                                                                                                                                    if (varspt->bShowBoard && varspt->bHaveFlop2)
+                                                                                                                                                      printf(" %s",varspt->board_cards);
+
+                                                                                                                                                    if (varspt->bShowHandType && varspt->bHaveFlop)
+                                                                                                                                                      printf(" %s",plain_hand_types[varspt->poker_hand.GetHandType()]);
+
+                                                                                                                                                    if (varspt->bShowRiver)
+                                                                                                                                                      printf(" %s",&varspt->board_cards[12]);
+
+                                                                                                                                                    if (varspt->bShowHandTypId && varspt->bHaveFlop)
+                                                                                                                                                      printf(" %d",varspt->poker_hand.GetHandType());
+
+                                                                                                                                                    if (varspt->bShowHand && varspt->bHaveFlop)
+                                                                                                                                                      printf(" %s",varspt->poker_hand.GetHand());
+
+                                                                                                                                                    if (varspt->bShowTableName)
+                                                                                                                                                      printf(" %s",table_name);
+
+                                                                                                                                                    if (varspt->bShowTableCount)
+                                                                                                                                                      printf(" %d",varspt->table_count);
+
+                                                                                                                                                    if (varspt->bVerbose) {
+                                                                                                                                                      if (!varspt->bGetDateFromFilename) {
+                                                                                                                                                        if (!varspt->bVerboseStyle2)
+                                                                                                                                                          printf(" %s %3d\n",filename,varspt->num_hands);
+                                                                                                                                                        else
+                                                                                                                                                          printf(" %s%d.txt\n",style2(filename),varspt->num_hands);
                                                                                                                                                       }
-                                                                                                                                                      else if (!varspt->bNoHoleCards)
-                                                                                                                                                        printf("%s",varspt->hole_cards);
-
-                                                                                                                                                      break;
-                                                                                                                                                    case QUANTUM_TYPE_OPM:
-                                                                                                                                                      printf("%6.4lf (%10d %10d) %s",varspt->dwork,
-                                                                                                                                                        varspt->delta,varspt->collected_from_pot,varspt->hole_cards);
-
-                                                                                                                                                      break;
-                                                                                                                                                    case QUANTUM_TYPE_COLLECTED:
-                                                                                                                                                    case QUANTUM_TYPE_SPENT:
-                                                                                                                                                    case QUANTUM_TYPE_NUMDECISIONS:
-                                                                                                                                                    case QUANTUM_TYPE_WAGERED:
-                                                                                                                                                    case QUANTUM_TYPE_TABLE_BOSS:
-                                                                                                                                                    case QUANTUM_TYPE_NUM_POSSIBLE_CHECKS:
-                                                                                                                                                    case QUANTUM_TYPE_RUNNING_TOTAL:
-                                                                                                                                                    case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
-                                                                                                                                                    case QUANTUM_TYPE_DISCREPANCY:
-                                                                                                                                                    case QUANTUM_TYPE_OUTS:
-                                                                                                                                                      printf("%10d %s",varspt->quantum,varspt->hole_cards);
-
-                                                                                                                                                      break;
-                                                                                                                                                    case QUANTUM_TYPE_ROI:
-                                                                                                                                                      if (!varspt->wagered_amount)
-                                                                                                                                                        dwork = (double)0;
                                                                                                                                                       else
-                                                                                                                                                        dwork = (double)varspt->delta / (double)varspt->wagered_amount;
-
-                                                                                                                                                      printf("%lf (%d %d) %s",dwork,
-                                                                                                                                                        varspt->delta,varspt->wagered_amount,varspt->hole_cards);
-
-                                                                                                                                                      break;
-                                                                                                                                                  }
-
-                                                                                                                                                  if (varspt->bShowBoard && varspt->bHaveFlop2)
-                                                                                                                                                    printf(" %s",varspt->board_cards);
-
-                                                                                                                                                  if (varspt->bShowHandType && varspt->bHaveFlop)
-                                                                                                                                                    printf(" %s",plain_hand_types[varspt->poker_hand.GetHandType()]);
-
-                                                                                                                                                  if (varspt->bShowRiver)
-                                                                                                                                                    printf(" %s",&varspt->board_cards[12]);
-
-                                                                                                                                                  if (varspt->bShowHandTypId && varspt->bHaveFlop)
-                                                                                                                                                    printf(" %d",varspt->poker_hand.GetHandType());
-
-                                                                                                                                                  if (varspt->bShowHand && varspt->bHaveFlop)
-                                                                                                                                                    printf(" %s",varspt->poker_hand.GetHand());
-
-                                                                                                                                                  if (varspt->bShowTableName)
-                                                                                                                                                    printf(" %s",table_name);
-
-                                                                                                                                                  if (varspt->bShowTableCount)
-                                                                                                                                                    printf(" %d",varspt->table_count);
-
-                                                                                                                                                  if (varspt->bVerbose) {
-                                                                                                                                                    if (!varspt->bGetDateFromFilename) {
-                                                                                                                                                      if (!varspt->bVerboseStyle2)
-                                                                                                                                                        printf(" %s %3d\n",filename,varspt->num_hands);
-                                                                                                                                                      else
-                                                                                                                                                        printf(" %s%d.txt\n",style2(filename),varspt->num_hands);
+                                                                                                                                                        printf("\t%s\n",varspt->date_string);
                                                                                                                                                     }
                                                                                                                                                     else
-                                                                                                                                                      printf("\t%s\n",varspt->date_string);
+                                                                                                                                                      putchar(0x0a);
                                                                                                                                                   }
-                                                                                                                                                  else
-                                                                                                                                                    putchar(0x0a);
                                                                                                                                                 }
                                                                                                                                               }
                                                                                                                                             }
