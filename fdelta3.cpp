@@ -65,7 +65,7 @@ static char usage[] =
 "  (-hut_outs) (-hut_outs_ge_value) (-hut_outs_le_value) (-hut_outs_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
-"  player_name filename\n";
+"  (-hut_wins) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -253,6 +253,7 @@ struct vars {
   int num_positive_deltas;
   int show_outs;
   int outs;
+  int wins;
   bool bAceOnTheRiver;
   bool bOnlyWash;
   bool bNoDelta;
@@ -286,6 +287,7 @@ struct vars {
   int hut_outs_le_value;
   bool bHutOutsEqValue;
   int hut_outs_eq_value;
+  bool bHutWins;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -455,7 +457,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 127)) {
+  if ((argc < 3) || (argc > 128)) {
     printf(usage);
     return 1;
   }
@@ -568,6 +570,7 @@ int main(int argc,char **argv)
   local_vars.bHutOutsGeValue = false;
   local_vars.bHutOutsLeValue = false;
   local_vars.bHutOutsEqValue = false;
+  local_vars.bHutWins = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -960,6 +963,8 @@ int main(int argc,char **argv)
       local_vars.bHutOutsEqValue = true;
       sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_outs_eq_value);
     }
+    else if (!strcmp(argv[curr_arg],"-hut_wins"))
+      local_vars.bHutWins = true;
     else
       break;
   }
@@ -1284,7 +1289,9 @@ int main(int argc,char **argv)
     return 55;
   }
 
-  if (local_vars.bHutOuts || local_vars.bHutOutsGeValue || local_vars.bHutOutsLeValue || local_vars.bHutOutsEqValue) {
+  if (local_vars.bHutOuts || local_vars.bHutOutsGeValue || local_vars.bHutOutsLeValue ||
+    local_vars.bHutOutsEqValue || local_vars.bHutWins) {
+
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
@@ -2690,6 +2697,7 @@ void run_filter(struct vars *varspt)
   HeadsUpTurn hut;
   int cards[NUM_HEADS_UP_TURN_CARDS];
   struct outcomes *outcomes;
+  int outs;
   bool bSkip;
 
   if (varspt->filter_percentage)
@@ -2766,7 +2774,9 @@ void run_filter(struct vars *varspt)
                                                                                                                                           if (!varspt->bTwinAbbrevs || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
                                                                                                                                             if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                               if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
-                                                                                                                                                if (varspt->bHutOuts || varspt->bHutOutsGeValue || varspt->bHutOutsLeValue || varspt->bHutOutsEqValue) {
+                                                                                                                                                if (varspt->bHutOuts || varspt->bHutOutsGeValue || varspt->bHutOutsLeValue ||
+                                                                                                                                                  varspt->bHutOutsEqValue || varspt->bHutWins) {
+
                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
                                                                                                                                                   card_value_from_card_string(&varspt->opponent_hole_cards[0],&cards[2]);
@@ -2779,23 +2789,28 @@ void run_filter(struct vars *varspt)
                                                                                                                                                   hut.Evaluate(false);
                                                                                                                                                   outcomes = hut.GetOutcomes();
 
+                                                                                                                                                  if (!varspt->bHutWins)
+                                                                                                                                                    outs = outcomes[0].wins + outcomes[0].ties;
+                                                                                                                                                  else
+                                                                                                                                                    outs = outcomes[0].wins;
+
                                                                                                                                                   bSkip = false;
 
                                                                                                                                                   if (varspt->bHutOutsGeValue) {
-                                                                                                                                                    if (outcomes[0].wins + outcomes[0].ties < varspt->hut_outs_ge_value)
+                                                                                                                                                    if (outs < varspt->hut_outs_ge_value)
                                                                                                                                                       bSkip = true;
                                                                                                                                                   }
                                                                                                                                                   else if (varspt->bHutOutsLeValue) {
-                                                                                                                                                    if (outcomes[0].wins + outcomes[0].ties > varspt->hut_outs_le_value)
+                                                                                                                                                    if (outs > varspt->hut_outs_le_value)
                                                                                                                                                       bSkip = true;
                                                                                                                                                   }
                                                                                                                                                   else if (varspt->bHutOutsEqValue) {
-                                                                                                                                                    if (outcomes[0].wins + outcomes[0].ties != varspt->hut_outs_eq_value)
+                                                                                                                                                    if (outs != varspt->hut_outs_eq_value)
                                                                                                                                                       bSkip = true;
                                                                                                                                                   }
 
                                                                                                                                                   if (!bSkip)
-                                                                                                                                                    varspt->quantum = outcomes[0].wins + outcomes[0].ties;
+                                                                                                                                                    varspt->quantum = outs;
                                                                                                                                                 }
 
                                                                                                                                                 if (!bSkip) {
