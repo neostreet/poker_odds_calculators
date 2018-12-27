@@ -2782,20 +2782,20 @@ void run_filter(struct vars *varspt)
                                                                                                                                                   bSkip = false;
 
                                                                                                                                                   if (varspt->bHutOutsGeValue) {
-                                                                                                                                                    if (outcomes[0].wins < varspt->hut_outs_ge_value)
+                                                                                                                                                    if (outcomes[0].wins + outcomes[0].ties < varspt->hut_outs_ge_value)
                                                                                                                                                       bSkip = true;
                                                                                                                                                   }
                                                                                                                                                   else if (varspt->bHutOutsLeValue) {
-                                                                                                                                                    if (outcomes[0].wins > varspt->hut_outs_le_value)
+                                                                                                                                                    if (outcomes[0].wins + outcomes[0].ties > varspt->hut_outs_le_value)
                                                                                                                                                       bSkip = true;
                                                                                                                                                   }
                                                                                                                                                   else if (varspt->bHutOutsEqValue) {
-                                                                                                                                                    if (outcomes[0].wins != varspt->hut_outs_eq_value)
+                                                                                                                                                    if (outcomes[0].wins + outcomes[0].ties != varspt->hut_outs_eq_value)
                                                                                                                                                       bSkip = true;
                                                                                                                                                   }
 
                                                                                                                                                   if (!bSkip)
-                                                                                                                                                    varspt->quantum = outcomes[0].wins;
+                                                                                                                                                    varspt->quantum = outcomes[0].wins + outcomes[0].ties;
                                                                                                                                                 }
 
                                                                                                                                                 if (!bSkip) {
