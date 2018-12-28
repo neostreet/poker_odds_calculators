@@ -65,7 +65,7 @@ static char usage[] =
 "  (-hut_outs) (-hut_outs_ge_value) (-hut_outs_le_value) (-hut_outs_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
-"  (-hut_wins) player_name filename\n";
+"  (-hut_wins) (-hut_ties) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -288,6 +288,7 @@ struct vars {
   bool bHutOutsEqValue;
   int hut_outs_eq_value;
   bool bHutWins;
+  bool bHutTies;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -457,7 +458,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 128)) {
+  if ((argc < 3) || (argc > 129)) {
     printf(usage);
     return 1;
   }
@@ -571,6 +572,7 @@ int main(int argc,char **argv)
   local_vars.bHutOutsLeValue = false;
   local_vars.bHutOutsEqValue = false;
   local_vars.bHutWins = false;
+  local_vars.bHutTies = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -965,6 +967,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-hut_wins"))
       local_vars.bHutWins = true;
+    else if (!strcmp(argv[curr_arg],"-hut_ties"))
+      local_vars.bHutTies = true;
     else
       break;
   }
@@ -1290,7 +1294,7 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.bHutOuts || local_vars.bHutOutsGeValue || local_vars.bHutOutsLeValue ||
-    local_vars.bHutOutsEqValue || local_vars.bHutWins) {
+    local_vars.bHutOutsEqValue || local_vars.bHutWins || local_vars.bHutTies) {
 
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
@@ -2775,7 +2779,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                             if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                               if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
                                                                                                                                                 if (varspt->bHutOuts || varspt->bHutOutsGeValue || varspt->bHutOutsLeValue ||
-                                                                                                                                                  varspt->bHutOutsEqValue || varspt->bHutWins) {
+                                                                                                                                                  varspt->bHutOutsEqValue || varspt->bHutWins || varspt->bHutTies) {
 
                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
@@ -2789,10 +2793,12 @@ void run_filter(struct vars *varspt)
                                                                                                                                                   hut.Evaluate(false);
                                                                                                                                                   outcomes = hut.GetOutcomes();
 
-                                                                                                                                                  if (!varspt->bHutWins)
-                                                                                                                                                    outs = outcomes[0].wins + outcomes[0].ties;
-                                                                                                                                                  else
+                                                                                                                                                  if (varspt->bHutWins)
                                                                                                                                                     outs = outcomes[0].wins;
+                                                                                                                                                  else if (varspt->bHutTies)
+                                                                                                                                                    outs = outcomes[0].ties;
+                                                                                                                                                  else
+                                                                                                                                                    outs = outcomes[0].wins + outcomes[0].ties;
 
                                                                                                                                                   bSkip = false;
 
