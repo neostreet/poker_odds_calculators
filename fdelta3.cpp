@@ -65,7 +65,7 @@ static char usage[] =
 "  (-hut_outs) (-hut_outs_ge_value) (-hut_outs_le_value) (-hut_outs_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
-"  (-hut_wins) (-hut_ties) (-broadway) player_name filename\n";
+"  (-broadway) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -167,8 +167,7 @@ enum quantum_typ {
   QUANTUM_TYPE_RUNNING_TOTAL,
   QUANTUM_TYPE_NUM_POSITIVE_DELTAS,
   QUANTUM_TYPE_DISCREPANCY,
-  QUANTUM_TYPE_ROI,
-  QUANTUM_TYPE_OUTS
+  QUANTUM_TYPE_ROI
 };
 
 struct vars {
@@ -253,7 +252,6 @@ struct vars {
   int show_num_positive_deltas;
   int num_positive_deltas;
   int show_outs;
-  int outs;
   int wins;
   bool bAceOnTheRiver;
   bool bOnlyWash;
@@ -288,8 +286,6 @@ struct vars {
   int hut_outs_le_value;
   bool bHutOutsEqValue;
   int hut_outs_eq_value;
-  bool bHutWins;
-  bool bHutTies;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -459,7 +455,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 130)) {
+  if ((argc < 3) || (argc > 128)) {
     printf(usage);
     return 1;
   }
@@ -573,8 +569,6 @@ int main(int argc,char **argv)
   local_vars.bHutOutsGeValue = false;
   local_vars.bHutOutsLeValue = false;
   local_vars.bHutOutsEqValue = false;
-  local_vars.bHutWins = false;
-  local_vars.bHutTies = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -969,10 +963,6 @@ int main(int argc,char **argv)
       local_vars.bHutOutsEqValue = true;
       sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_outs_eq_value);
     }
-    else if (!strcmp(argv[curr_arg],"-hut_wins"))
-      local_vars.bHutWins = true;
-    else if (!strcmp(argv[curr_arg],"-hut_ties"))
-      local_vars.bHutTies = true;
     else
       break;
   }
@@ -1303,13 +1293,12 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.bHutOuts || local_vars.bHutOutsGeValue || local_vars.bHutOutsLeValue ||
-    local_vars.bHutOutsEqValue || local_vars.bHutWins || local_vars.bHutTies) {
+    local_vars.bHutOutsEqValue) {
 
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
     local_vars.show_outs = 1;
-    local_vars.quantum_type = QUANTUM_TYPE_OUTS;
   }
 
   player_name_ix = curr_arg++;
@@ -1434,9 +1423,6 @@ int main(int argc,char **argv)
 
     if (local_vars.show_num_positive_deltas)
       local_vars.num_positive_deltas = 0;
-
-    if (local_vars.show_outs)
-      local_vars.outs = 0;
 
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -1633,9 +1619,6 @@ int main(int argc,char **argv)
 
                 if (local_vars.show_num_positive_deltas)
                   local_vars.num_positive_deltas = 0;
-
-                if (local_vars.show_outs)
-                  local_vars.outs = 0;
 
                 street = 0;
                 num_street_markers = 0;
@@ -2789,7 +2772,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                               if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                                 if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
                                                                                                                                                   if (varspt->bHutOuts || varspt->bHutOutsGeValue || varspt->bHutOutsLeValue ||
-                                                                                                                                                    varspt->bHutOutsEqValue || varspt->bHutWins || varspt->bHutTies) {
+                                                                                                                                                    varspt->bHutOutsEqValue) {
 
                                                                                                                                                     card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
                                                                                                                                                     card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
@@ -2803,12 +2786,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                     hut.Evaluate(false);
                                                                                                                                                     outcomes = hut.GetOutcomes();
 
-                                                                                                                                                    if (varspt->bHutWins)
-                                                                                                                                                      outs = outcomes[0].wins;
-                                                                                                                                                    else if (varspt->bHutTies)
-                                                                                                                                                      outs = outcomes[0].ties;
-                                                                                                                                                    else
-                                                                                                                                                      outs = outcomes[0].wins + outcomes[0].ties;
+                                                                                                                                                    outs = outcomes[0].wins + outcomes[0].ties;
 
                                                                                                                                                     bSkip = false;
 
@@ -2970,7 +2948,6 @@ void run_filter(struct vars *varspt)
                                                                                                                                                         case QUANTUM_TYPE_RUNNING_TOTAL:
                                                                                                                                                         case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
                                                                                                                                                         case QUANTUM_TYPE_DISCREPANCY:
-                                                                                                                                                        case QUANTUM_TYPE_OUTS:
                                                                                                                                                           printf("%10d %s",varspt->quantum,varspt->hole_cards);
 
                                                                                                                                                           break;
