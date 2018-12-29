@@ -471,6 +471,17 @@ bool PokerHand::Straight()
   return 1;
 }
 
+bool PokerHand::Broadway()
+{
+  if (!Straight())
+    return 0;
+
+  if ((_rank.cards[_order.cards[0]] != ACE) || (_rank.cards[_order.cards[1]] != KING))
+    return 0;
+
+  return 1;
+}
+
 bool PokerHand::ThreeOfAKind()
 {
   if (_num_cards_with_same_rank.cards[_order.cards[0]] == 3)
