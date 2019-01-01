@@ -408,6 +408,7 @@ struct vars {
   quantum_typ quantum_type;
   int quantum;
   int hit_felt_in_session_count;
+  struct outcomes *outcomes;
 };
 
 int main(int argc,char **argv)
@@ -2692,7 +2693,6 @@ void run_filter(struct vars *varspt)
   double dwork;
   HeadsUpTurn hut;
   int cards[NUM_HEADS_UP_TURN_CARDS];
-  struct outcomes *outcomes;
   int outs;
   bool bSkip;
 
@@ -2784,9 +2784,9 @@ void run_filter(struct vars *varspt)
                                                                                                                                                     card_value_from_card_string(&varspt->board_cards[9],&cards[7]);
                                                                                                                                                     hut.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6],cards[7]);
                                                                                                                                                     hut.Evaluate(false);
-                                                                                                                                                    outcomes = hut.GetOutcomes();
+                                                                                                                                                    varspt->outcomes = hut.GetOutcomes();
 
-                                                                                                                                                    outs = outcomes[0].wins + outcomes[0].ties;
+                                                                                                                                                    outs = varspt->outcomes[0].wins + varspt->outcomes[0].ties;
 
                                                                                                                                                     bSkip = false;
 
@@ -2913,8 +2913,17 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                   }
                                                                                                                                                                 }
                                                                                                                                                                 else {
-                                                                                                                                                                  printf("%10d %s",varspt->delta,
-                                                                                                                                                                    (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                  if (!varspt->bHutOuts) {
+                                                                                                                                                                    printf("%10d %s",varspt->delta,
+                                                                                                                                                                      (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                  }
+                                                                                                                                                                  else {
+                                                                                                                                                                    printf("%10d %2d %2d %2d %s",varspt->delta,
+                                                                                                                                                                      varspt->outcomes[0].wins,
+                                                                                                                                                                      varspt->outcomes[0].losses,
+                                                                                                                                                                      varspt->outcomes[0].ties,
+                                                                                                                                                                      (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                  }
                                                                                                                                                                 }
                                                                                                                                                               }
                                                                                                                                                               else
