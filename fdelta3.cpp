@@ -63,6 +63,7 @@ static char usage[] =
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
 "  (-hut_outs) (-hut_wins_ge_value) (-hut_wins_le_value) (-hut_wins_eq_value\n"
+"  (-hut_losses_ge_value) (-hut_losses_le_value) (-hut_losses_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
 "  (-broadway) player_name filename\n";
@@ -286,6 +287,12 @@ struct vars {
   int hut_wins_le_value;
   bool bHutWinsEqValue;
   int hut_wins_eq_value;
+  bool bHutLossesGeValue;
+  int hut_losses_ge_value;
+  bool bHutLossesLeValue;
+  int hut_losses_le_value;
+  bool bHutLossesEqValue;
+  int hut_losses_eq_value;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -456,7 +463,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 128)) {
+  if ((argc < 3) || (argc > 131)) {
     printf(usage);
     return 1;
   }
@@ -570,6 +577,9 @@ int main(int argc,char **argv)
   local_vars.bHutWinsGeValue = false;
   local_vars.bHutWinsLeValue = false;
   local_vars.bHutWinsEqValue = false;
+  local_vars.bHutLossesGeValue = false;
+  local_vars.bHutLossesLeValue = false;
+  local_vars.bHutLossesEqValue = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -967,6 +977,21 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_wins_eq_value);
       local_vars.bHutOuts = true;
     }
+    else if (!strncmp(argv[curr_arg],"-hut_losses_ge_value",20)) {
+      local_vars.bHutLossesGeValue = true;
+      sscanf(&argv[curr_arg][20],"%d",&local_vars.hut_losses_ge_value);
+      local_vars.bHutOuts = true;
+    }
+    else if (!strncmp(argv[curr_arg],"-hut_losses_le_value",20)) {
+      local_vars.bHutLossesLeValue = true;
+      sscanf(&argv[curr_arg][20],"%d",&local_vars.hut_losses_le_value);
+      local_vars.bHutOuts = true;
+    }
+    else if (!strncmp(argv[curr_arg],"-hut_losses_eq_value",20)) {
+      local_vars.bHutLossesEqValue = true;
+      sscanf(&argv[curr_arg][20],"%d",&local_vars.hut_losses_eq_value);
+      local_vars.bHutOuts = true;
+    }
     else
       break;
   }
@@ -1281,24 +1306,37 @@ int main(int argc,char **argv)
     return 52;
   }
 
-  if (local_vars.bHutOuts && local_vars.bHutWinsGeValue) {
-    printf("can't specify both -hut_outs and -hut_wins_ge_value\n");
+  if (local_vars.bHutWinsGeValue && local_vars.bHutWinsLeValue) {
+    printf("can't specify both -hut_wins_ge_value and -hut_wins_le_value\n");
     return 53;
   }
 
-  if (local_vars.bHutOuts && local_vars.bHutWinsLeValue) {
-    printf("can't specify both -hut_outs and -hut_wins_le_value\n");
+  if (local_vars.bHutWinsGeValue && local_vars.bHutWinsEqValue) {
+    printf("can't specify both -hut_wins_ge_value and -hut_wins_eq_value\n");
     return 54;
   }
 
-  if (local_vars.bHutWinsGeValue && local_vars.bHutWinsLeValue) {
-    printf("can't specify both -hut_wins_ge_value and -hut_wins_le_value\n");
+  if (local_vars.bHutWinsLeValue && local_vars.bHutWinsEqValue) {
+    printf("can't specify both -hut_wins_le_value and -hut_wins_eq_value\n");
     return 55;
   }
 
-  if (local_vars.bHutOuts || local_vars.bHutWinsGeValue || local_vars.bHutWinsLeValue ||
-    local_vars.bHutWinsEqValue) {
+  if (local_vars.bHutLossesGeValue && local_vars.bHutLossesLeValue) {
+    printf("can't specify both -hut_losses_ge_value and -hut_losses_le_value\n");
+    return 56;
+  }
 
+  if (local_vars.bHutLossesGeValue && local_vars.bHutLossesEqValue) {
+    printf("can't specify both -hut_losses_ge_value and -hut_losses_eq_value\n");
+    return 57;
+  }
+
+  if (local_vars.bHutLossesLeValue && local_vars.bHutLossesEqValue) {
+    printf("can't specify both -hut_losses_le_value and -hut_losses_eq_value\n");
+    return 58;
+  }
+
+  if (local_vars.bHutOuts) {
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
@@ -1310,7 +1348,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 56;
+    return 59;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -1708,7 +1746,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 57;
+          return 60;
         }
 
         continue;
@@ -1884,7 +1922,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 58;
+                    return 61;
                   }
                 }
               }
@@ -2144,7 +2182,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 59;
+              return 62;
             }
           }
 
@@ -2176,7 +2214,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 60;
+            return 63;
           }
 
           if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2212,7 +2250,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 61;
+              return 64;
             }
 
             if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2773,9 +2811,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                             if (!varspt->bTwinAbbrevs || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
                                                                                                                                               if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                                 if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
-                                                                                                                                                  if (varspt->bHutOuts || varspt->bHutWinsGeValue || varspt->bHutWinsLeValue ||
-                                                                                                                                                    varspt->bHutWinsEqValue) {
-
+                                                                                                                                                  if (varspt->bHutOuts) {
                                                                                                                                                     card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
                                                                                                                                                     card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
                                                                                                                                                     card_value_from_card_string(&varspt->opponent_hole_cards[0],&cards[2]);
@@ -2803,8 +2839,18 @@ void run_filter(struct vars *varspt)
                                                                                                                                                         bSkip = true;
                                                                                                                                                     }
 
-                                                                                                                                                    if (!bSkip)
-                                                                                                                                                      varspt->quantum = varspt->outcomes[0].wins;
+                                                                                                                                                    if (varspt->bHutLossesGeValue) {
+                                                                                                                                                      if (varspt->outcomes[0].losses < varspt->hut_losses_ge_value)
+                                                                                                                                                        bSkip = true;
+                                                                                                                                                    }
+                                                                                                                                                    else if (varspt->bHutLossesLeValue) {
+                                                                                                                                                      if (varspt->outcomes[0].losses > varspt->hut_losses_le_value)
+                                                                                                                                                        bSkip = true;
+                                                                                                                                                    }
+                                                                                                                                                    else if (varspt->bHutLossesEqValue) {
+                                                                                                                                                      if (varspt->outcomes[0].losses != varspt->hut_losses_eq_value)
+                                                                                                                                                        bSkip = true;
+                                                                                                                                                    }
                                                                                                                                                   }
 
                                                                                                                                                   if (!bSkip) {
