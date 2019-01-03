@@ -64,6 +64,7 @@ static char usage[] =
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
 "  (-hut_outs) (-hut_wins_ge_value) (-hut_wins_le_value) (-hut_wins_eq_value\n"
 "  (-hut_losses_ge_value) (-hut_losses_le_value) (-hut_losses_eq_value\n"
+"  (-hut_ties_ge_value) (-hut_ties_le_value) (-hut_ties_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
 "  (-broadway) player_name filename\n";
@@ -293,6 +294,12 @@ struct vars {
   int hut_losses_le_value;
   bool bHutLossesEqValue;
   int hut_losses_eq_value;
+  bool bHutTiesGeValue;
+  int hut_ties_ge_value;
+  bool bHutTiesLeValue;
+  int hut_ties_le_value;
+  bool bHutTiesEqValue;
+  int hut_ties_eq_value;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -463,7 +470,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 131)) {
+  if ((argc < 3) || (argc > 134)) {
     printf(usage);
     return 1;
   }
@@ -580,6 +587,9 @@ int main(int argc,char **argv)
   local_vars.bHutLossesGeValue = false;
   local_vars.bHutLossesLeValue = false;
   local_vars.bHutLossesEqValue = false;
+  local_vars.bHutTiesGeValue = false;
+  local_vars.bHutTiesLeValue = false;
+  local_vars.bHutTiesEqValue = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -992,6 +1002,21 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][20],"%d",&local_vars.hut_losses_eq_value);
       local_vars.bHutOuts = true;
     }
+    else if (!strncmp(argv[curr_arg],"-hut_ties_ge_value",18)) {
+      local_vars.bHutTiesGeValue = true;
+      sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_ties_ge_value);
+      local_vars.bHutOuts = true;
+    }
+    else if (!strncmp(argv[curr_arg],"-hut_ties_le_value",18)) {
+      local_vars.bHutTiesLeValue = true;
+      sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_ties_le_value);
+      local_vars.bHutOuts = true;
+    }
+    else if (!strncmp(argv[curr_arg],"-hut_ties_eq_value",18)) {
+      local_vars.bHutTiesEqValue = true;
+      sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_ties_eq_value);
+      local_vars.bHutOuts = true;
+    }
     else
       break;
   }
@@ -1336,6 +1361,21 @@ int main(int argc,char **argv)
     return 58;
   }
 
+  if (local_vars.bHutTiesGeValue && local_vars.bHutTiesLeValue) {
+    printf("can't specify both -hut_ties_ge_value and -hut_ties_le_value\n");
+    return 59;
+  }
+
+  if (local_vars.bHutTiesGeValue && local_vars.bHutTiesEqValue) {
+    printf("can't specify both -hut_ties_ge_value and -hut_ties_eq_value\n");
+    return 60;
+  }
+
+  if (local_vars.bHutTiesLeValue && local_vars.bHutTiesEqValue) {
+    printf("can't specify both -hut_ties_le_value and -hut_ties_eq_value\n");
+    return 61;
+  }
+
   if (local_vars.bHutOuts) {
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
@@ -1348,7 +1388,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 59;
+    return 62;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -1746,7 +1786,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 60;
+          return 63;
         }
 
         continue;
@@ -1922,7 +1962,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,line_no);
-                    return 61;
+                    return 64;
                   }
                 }
               }
@@ -2182,7 +2222,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 62;
+              return 65;
             }
           }
 
@@ -2214,7 +2254,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,line_no);
-            return 63;
+            return 66;
           }
 
           if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2250,7 +2290,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,line_no);
-              return 64;
+              return 67;
             }
 
             if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
@@ -2849,6 +2889,19 @@ void run_filter(struct vars *varspt)
                                                                                                                                                     }
                                                                                                                                                     else if (varspt->bHutLossesEqValue) {
                                                                                                                                                       if (varspt->outcomes[0].losses != varspt->hut_losses_eq_value)
+                                                                                                                                                        bSkip = true;
+                                                                                                                                                    }
+
+                                                                                                                                                    if (varspt->bHutTiesGeValue) {
+                                                                                                                                                      if (varspt->outcomes[0].ties < varspt->hut_ties_ge_value)
+                                                                                                                                                        bSkip = true;
+                                                                                                                                                    }
+                                                                                                                                                    else if (varspt->bHutTiesLeValue) {
+                                                                                                                                                      if (varspt->outcomes[0].ties > varspt->hut_ties_le_value)
+                                                                                                                                                        bSkip = true;
+                                                                                                                                                    }
+                                                                                                                                                    else if (varspt->bHutTiesEqValue) {
+                                                                                                                                                      if (varspt->outcomes[0].ties != varspt->hut_ties_eq_value)
                                                                                                                                                         bSkip = true;
                                                                                                                                                     }
                                                                                                                                                   }
