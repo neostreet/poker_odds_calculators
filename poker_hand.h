@@ -53,6 +53,7 @@ enum FlopType {
 #define NUM_NONSUITED_NONPAIRS NUM_SUITED_NONPAIRS
 
 #define NUM_HEADS_UP_CARDS 4
+#define MAX_HEADS_UP_BURNT_CARDS 14
 #define NUM_REMAINING_HEADS_UP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_CARDS)
 #define NUM_HEADS_UP_FLOP_CARDS 7
 #define NUM_REMAINING_HEADS_UP_FLOP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_FLOP_CARDS)
@@ -455,6 +456,10 @@ class HeadsUp {
 
   HeadsUp(int card1,int card2,int card3,int card4);
   void NewCards(int card1,int card2,int card3,int card4);
+  void BurntCards(
+    int card1,int card2,int card3,int card4, int card5,
+    int card6,int card7,int card8,int card9, int card10,
+    int card11,int card12,int card13,int card14);
   struct outcomes * GetOutcomes();
 
   void Evaluate(bool bVerbose);
@@ -462,6 +467,8 @@ class HeadsUp {
   private:
 
   int _cards[NUM_HEADS_UP_CARDS];
+  int _num_burnt_cards;
+  int _burnt_cards[MAX_HEADS_UP_BURNT_CARDS];
   bool _have_cards;
   struct outcomes _outcomes[2];
   bool _evaluated;

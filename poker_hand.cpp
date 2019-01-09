@@ -1963,6 +1963,7 @@ HeadsUp::HeadsUp()
 {
   _have_cards = false;
   _evaluated = false;
+  _num_burnt_cards = 0;
 }
 
 // copy constructor
@@ -1975,8 +1976,13 @@ HeadsUp::HeadsUp(const HeadsUp& hu)
     _cards[n] = hu._cards[n];
   }
 
+  for (n = 0; n < hu._num_burnt_cards; n++) {
+    _burnt_cards[n] = hu._burnt_cards[n];
+  }
+
   _have_cards = hu._have_cards;
   _evaluated = hu._evaluated;
+  _num_burnt_cards = hu._num_burnt_cards;
 }
 
 // assignment operator
@@ -1989,8 +1995,13 @@ HeadsUp& HeadsUp::operator=(const HeadsUp& hu)
     _cards[n] = hu._cards[n];
   }
 
+  for (n = 0; n < hu._num_burnt_cards; n++) {
+    _burnt_cards[n] = hu._burnt_cards[n];
+  }
+
   _have_cards = hu._have_cards;
   _evaluated = hu._evaluated;
+  _num_burnt_cards = hu._num_burnt_cards;
 
   return *this;
 }
@@ -2023,6 +2034,111 @@ void HeadsUp::NewCards(int card1,int card2,int card3,int card4)
   _evaluated = false;
 }
 
+void HeadsUp::BurntCards(
+  int card1,int card2,int card3,int card4, int card5,
+  int card6,int card7,int card8,int card9, int card10,
+  int card11,int card12,int card13,int card14)
+{
+  if (card1 == -1) {
+    _num_burnt_cards = 0;
+    return;
+  }
+
+  _burnt_cards[0] = card1 % NUM_CARDS_IN_DECK;
+
+  if (card2 == -1) {
+    _num_burnt_cards = 1;
+    return;
+  }
+
+  _burnt_cards[1] = card2 % NUM_CARDS_IN_DECK;
+
+  if (card3 == -1) {
+    _num_burnt_cards = 2;
+    return;
+  }
+
+  _burnt_cards[2] = card3 % NUM_CARDS_IN_DECK;
+
+  if (card4 == -1) {
+    _num_burnt_cards = 3;
+    return;
+  }
+
+  _burnt_cards[3] = card4 % NUM_CARDS_IN_DECK;
+
+  if (card5 == -1) {
+    _num_burnt_cards = 4;
+    return;
+  }
+
+  _burnt_cards[4] = card5 % NUM_CARDS_IN_DECK;
+
+  if (card6 == -1) {
+    _num_burnt_cards = 5;
+    return;
+  }
+
+  _burnt_cards[5] = card6 % NUM_CARDS_IN_DECK;
+
+  if (card7 == -1) {
+    _num_burnt_cards = 6;
+    return;
+  }
+
+  _burnt_cards[6] = card7 % NUM_CARDS_IN_DECK;
+
+  if (card8 == -1) {
+    _num_burnt_cards = 7;
+    return;
+  }
+
+  _burnt_cards[7] = card8 % NUM_CARDS_IN_DECK;
+
+  if (card9 == -1) {
+    _num_burnt_cards = 8;
+    return;
+  }
+
+  _burnt_cards[8] = card9 % NUM_CARDS_IN_DECK;
+
+  if (card10 == -1) {
+    _num_burnt_cards = 9;
+    return;
+  }
+
+  _burnt_cards[9] = card10 % NUM_CARDS_IN_DECK;
+
+  if (card11 == -1) {
+    _num_burnt_cards = 10;
+    return;
+  }
+
+  _burnt_cards[10] = card11 % NUM_CARDS_IN_DECK;
+
+  if (card12 == -1) {
+    _num_burnt_cards = 11;
+    return;
+  }
+
+  _burnt_cards[11] = card12 % NUM_CARDS_IN_DECK;
+
+  if (card13 == -1) {
+    _num_burnt_cards = 12;
+    return;
+  }
+
+  _burnt_cards[12] = card13 % NUM_CARDS_IN_DECK;
+
+  if (card14 == -1) {
+    _num_burnt_cards = 13;
+    return;
+  }
+
+  _burnt_cards[13] = card14 % NUM_CARDS_IN_DECK;
+  _num_burnt_cards = 14;
+}
+
 struct outcomes * HeadsUp::GetOutcomes()
 {
   return _outcomes;
@@ -2036,10 +2152,13 @@ void HeadsUp::Evaluate(bool bVerbose)
   int p;
   int q;
   int r;
+  int num_remaining_cards;
   int remaining_cards[NUM_REMAINING_HEADS_UP_CARDS];
   HoldemPokerHand holdem_hand[2];
   PokerHand hand[2];
   int ret_compare;
+
+  num_remaining_cards = NUM_REMAINING_HEADS_UP_CARDS - _num_burnt_cards;
 
   m = 0;
 
@@ -2049,8 +2168,15 @@ void HeadsUp::Evaluate(bool bVerbose)
         break;
     }
 
-    if (o == NUM_HEADS_UP_CARDS)
-      remaining_cards[m++] = n;
+    if (o == NUM_HEADS_UP_CARDS) {
+      for (o = 0; o < _num_burnt_cards; o++) {
+        if (n == _burnt_cards[o])
+          break;
+      }
+
+      if (o == _num_burnt_cards)
+        remaining_cards[m++] = n;
+    }
   }
 
   for (n = 0; n < 2; n++) {
@@ -2068,7 +2194,7 @@ void HeadsUp::Evaluate(bool bVerbose)
   }
 
   for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
-    get_permutation_instance_five(NUM_REMAINING_HEADS_UP_CARDS,&m,&n,&o,&p,&q,r);
+    get_permutation_instance_five(num_remaining_cards,&m,&n,&o,&p,&q,r);
 
     holdem_hand[0].NewCards(_cards[0],_cards[1],
       remaining_cards[m],remaining_cards[n],
