@@ -78,10 +78,12 @@ int main(int argc,char **argv)
   for (n = 0; n < NUM_SUIT_COMBOS_COLLAPSED; n++)
     breakouts[n] = 0;
 
-  for (o = 0; o < POKER_52_2_PERMUTATIONS; o++) {
+  for (o = 0; ; ) {
     get_permutation_instance_two(
       NUM_CARDS_IN_DECK,
       &m,&n,o);
+
+    o++;
 
     suit_ix1 = m / NUM_CARDS_IN_SUIT;
     suit_ix2 = n / NUM_CARDS_IN_SUIT;
@@ -89,6 +91,9 @@ int main(int argc,char **argv)
     map_ix = suit_ix1 * NUM_SUITS + suit_ix2;
 
     breakouts[suit_combos_map_to_collapsed[map_ix]]++;
+
+    if (m == NUM_CARDS_IN_DECK - 2)
+      break;
   }
 
   for (n = 0; n < NUM_SUIT_COMBOS_COLLAPSED; n++) {

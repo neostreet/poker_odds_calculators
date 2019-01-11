@@ -56,13 +56,15 @@ int main(int argc,char **argv)
   hole_cards[5] = 0;
   hole_cards_abbrev[3] = 0;
 
-  for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+  for (m = 0; ; ) {
     get_permutation_instance_two(
       NUM_CARDS_IN_DECK,
       &cards[0],&cards[1],m);
 
+    m++;
+
     if (bUniqueFirstCards && (m > 0) && (cards[0] == prev_first_card))
-      continue;
+      goto end_loop;
 
     if (bPrintOffset)
       printf("%4d ",m);
@@ -76,7 +78,7 @@ int main(int argc,char **argv)
 
       if (bPremium) {
         if (!is_premium_hand(hole_cards_abbrev))
-          continue;
+          goto end_loop;
       }
 
       if (bCardStrings) {
@@ -94,6 +96,11 @@ int main(int argc,char **argv)
       printf("%2d %2d\n",cards[0],cards[1]);
 
     prev_first_card = cards[0];
+
+end_loop:
+
+    if (cards[0] == NUM_CARDS_IN_DECK - 2)
+      break;
   }
 
   return 0;

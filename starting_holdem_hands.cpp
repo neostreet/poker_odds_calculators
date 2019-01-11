@@ -49,10 +49,12 @@ int main(int argc,char **argv)
     card_string[n][2] = 0;
 
   if (!bDontIgnoreOrder) {
-    for (o = 0; o < POKER_52_2_PERMUTATIONS; o++) {
+    for (o = 0; ; ) {
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &m,&n,o);
+
+      o++;
 
       if (!bIndexes) {
         card_string_from_card_value(m,card_string[0]);
@@ -65,6 +67,9 @@ int main(int argc,char **argv)
       }
       else
         printf("%02d %02d\n",m,n);
+
+      if (m == NUM_CARDS_IN_DECK - 2)
+        break;
     }
   }
   else {
