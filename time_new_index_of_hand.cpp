@@ -36,7 +36,7 @@ int main(int argc,char **argv)
   time(&start_sec);
 
   for (n = 0; n < loop_count; n++) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; ; ) {
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],m);
@@ -47,6 +47,11 @@ int main(int argc,char **argv)
         printf("bad index for %d: %d\n",m,ix);
         return 2;
       }
+
+      m++;
+
+      if (cards[0] == NUM_CARDS_IN_DECK - 2)
+        break;
     }
   }
 

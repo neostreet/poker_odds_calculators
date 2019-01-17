@@ -51,7 +51,7 @@ int main(int argc,char **argv)
   for (n = 0; n < loop_count; n++) {
     bad_count = 0;
 
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; ; ) {
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],m);
@@ -65,6 +65,11 @@ int main(int argc,char **argv)
         bad_count++;
         // return 2;
       }
+
+      m++;
+
+      if (cards[0] == NUM_CARDS_IN_DECK - 2)
+        break;
     }
 
     if (bad_count)

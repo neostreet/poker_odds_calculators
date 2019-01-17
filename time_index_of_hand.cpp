@@ -65,21 +65,31 @@ int main(int argc,char **argv)
   }
 
   if (index_algorithm == 4) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; ; ) {
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],m);
 
       ixs[cards[0]][cards[1]] = m;
+
+      m++;
+
+      if (cards[0] == NUM_CARDS_IN_DECK - 2)
+        break;
     }
   }
   else if (index_algorithm == 5) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; ; ) {
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],m);
 
       ixs2[cards[0]][cards[1]-1] = m;
+
+      m++;
+
+      if (cards[0] == NUM_CARDS_IN_DECK - 2)
+        break;
     }
   }
 
@@ -92,7 +102,7 @@ int main(int argc,char **argv)
     time(&start_sec);
 
   for (n = 0; n < loop_count; n++) {
-    for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+    for (m = 0; ; ) {
       get_permutation_instance_two(
         NUM_CARDS_IN_DECK,
         &cards[0],&cards[1],m);
@@ -125,6 +135,11 @@ int main(int argc,char **argv)
 
       if (bDebug)
         printf("%d\n",ix);
+
+      m++;
+
+      if (cards[0] == NUM_CARDS_IN_DECK - 2)
+        break;
     }
   }
 
@@ -143,7 +158,7 @@ static int index_of_hand0(int *cards)
   int n;
   int local_cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
 
-  for (m = 0; m < POKER_52_2_PERMUTATIONS; m++) {
+  for (m = 0; ; ) {
     get_permutation_instance_two(
       NUM_CARDS_IN_DECK,
       &local_cards[0],&local_cards[1],m);
@@ -155,6 +170,11 @@ static int index_of_hand0(int *cards)
 
     if (n == NUM_HOLE_CARDS_IN_HOLDEM_HAND)
       return m;
+
+    m++;
+
+    if (local_cards[0] == NUM_CARDS_IN_DECK - 2)
+      break;
   }
 
   return 0;
