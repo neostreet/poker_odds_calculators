@@ -2193,7 +2193,7 @@ void HeadsUp::Evaluate(bool bVerbose)
     }
   }
 
-  for (r = 0; r < POKER_48_5_PERMUTATIONS; r++) {
+  for (r = 0; ; ) {
     get_permutation_instance_five(num_remaining_cards,&m,&n,&o,&p,&q,r);
 
     holdem_hand[0].NewCards(_cards[0],_cards[1],
@@ -2238,6 +2238,11 @@ void HeadsUp::Evaluate(bool bVerbose)
         _outcomes[1].ties_hand_counts[hand[1].GetHandType()]++;
       }
     }
+
+    r++;
+
+    if (m == num_remaining_cards - 5)
+      break;
   }
 }
 
