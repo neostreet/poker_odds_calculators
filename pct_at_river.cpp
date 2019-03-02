@@ -12,7 +12,9 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: pct_at_river (-debug) (-deep_debug) filename";
+static char usage[] =
+"usage: pct_at_river (-debug) (-deep_debug) (-show_opponent_winning_hands)\n"
+"  filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -24,15 +26,18 @@ int main(int argc,char **argv)
   bool bDebug;
   int deep_debug;
   int deep_debug_counter;
+  bool bShowOpponentWinningHands;
   int m;
   int n;
   int o;
+  int p;
   int retval;
   FILE *fptr;
   int line_no;
   int line_len;
   int cards[NUM_PCT_AT_RIVER_CARDS];
   int remaining_cards[NUM_REMAINING_CARDS];
+  int opponent_cards[2];
   HoldemPokerHand holdem_hand1;
   HoldemPokerHand holdem_hand2;
   PokerHand hand1;
@@ -47,20 +52,27 @@ int main(int argc,char **argv)
   int hand2_winning_hand_counts[NUM_HAND_TYPES];
   int tie_hand_counts[NUM_HAND_TYPES];
   int total_hand_counts[NUM_HAND_TYPES];
+  char card_string[2][3];
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 5)) {
     cout << usage << endl;
     return 1;
   }
 
+  for (n = 0; n < 2; n++)
+    card_string[n][2] = 0;
+
   bDebug = false;
   deep_debug = 0;
+  bShowOpponentWinningHands = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
     else if (!strncmp(argv[curr_arg],"-deep_debug",11))
       sscanf(&argv[curr_arg][11],"%d",&deep_debug);
+    else if (!strcmp(argv[curr_arg],"-show_opponent_winning_hands"))
+      bShowOpponentWinningHands = true;
     else
       break;
   }
@@ -169,8 +181,11 @@ int main(int argc,char **argv)
           continue;
       }
 
+      opponent_cards[0] = remaining_cards[m];
+      opponent_cards[1] = remaining_cards[n];
+
       holdem_hand2.NewCards(
-        remaining_cards[m],remaining_cards[n],
+        opponent_cards[0],opponent_cards[1],
         cards[2],cards[3],cards[4],cards[5],cards[6]);
 
       hand2 = holdem_hand2.BestPokerHand();
@@ -201,6 +216,13 @@ int main(int argc,char **argv)
 
         if (bDebug)
           hand2_winning_hand_counts[hand2.GetHandType()]++;
+
+        if (bShowOpponentWinningHands) {
+          for (p = 0; p < 2; p++)
+            card_string_from_card_value(opponent_cards[p],card_string[p]);
+
+          printf("  %s %s\n",card_string[0],card_string[1]);
+        }
       }
       else {
         ties++;
