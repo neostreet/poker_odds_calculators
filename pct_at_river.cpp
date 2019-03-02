@@ -14,7 +14,7 @@ static char line[MAX_LINE_LEN];
 
 static char usage[] =
 "usage: pct_at_river (-debug) (-deep_debug) (-show_opponent_winning_hands)\n"
-"  filename";
+"  (-show_opponent_tying_hands) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -27,6 +27,7 @@ int main(int argc,char **argv)
   int deep_debug;
   int deep_debug_counter;
   bool bShowOpponentWinningHands;
+  bool bShowOpponentTyingHands;
   int m;
   int n;
   int o;
@@ -54,7 +55,7 @@ int main(int argc,char **argv)
   int total_hand_counts[NUM_HAND_TYPES];
   char card_string[2][3];
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 6)) {
     cout << usage << endl;
     return 1;
   }
@@ -65,6 +66,7 @@ int main(int argc,char **argv)
   bDebug = false;
   deep_debug = 0;
   bShowOpponentWinningHands = false;
+  bShowOpponentTyingHands = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
@@ -73,6 +75,8 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][11],"%d",&deep_debug);
     else if (!strcmp(argv[curr_arg],"-show_opponent_winning_hands"))
       bShowOpponentWinningHands = true;
+    else if (!strcmp(argv[curr_arg],"-show_opponent_tying_hands"))
+      bShowOpponentTyingHands = true;
     else
       break;
   }
@@ -82,9 +86,14 @@ int main(int argc,char **argv)
     return 2;
   }
 
+  if (bShowOpponentWinningHands && bShowOpponentTyingHands) {
+    printf("can't specify both -show_opponent_winning_hands and -show_opponent_tying_hands\n");
+    return 3;
+  }
+
   if ((fptr = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 3;
+    return 4;
   }
 
   line_no = 0;
@@ -110,7 +119,7 @@ int main(int argc,char **argv)
 
     if (m == line_len) {
       printf(parse_error,line_no,-1,4);
-      return 4;
+      return 5;
     }
 
     for (n = 0; n < NUM_PCT_AT_RIVER_CARDS; n++) {
@@ -118,7 +127,7 @@ int main(int argc,char **argv)
 
       if (retval) {
         printf(parse_error,line_no,n,5);
-        return 5;
+        return 6;
       }
 
       m += 2;
@@ -133,7 +142,7 @@ int main(int argc,char **argv)
 
         if (m == line_len) {
           printf(parse_error,line_no,n,6);
-          return 6;
+          return 7;
         }
       }
     }
@@ -229,6 +238,13 @@ int main(int argc,char **argv)
 
         if (bDebug)
           tie_hand_counts[hand1.GetHandType()]++;
+
+        if (bShowOpponentTyingHands) {
+          for (p = 0; p < 2; p++)
+            card_string_from_card_value(opponent_cards[p],card_string[p]);
+
+          printf("  %s %s\n",card_string[0],card_string[1]);
+        }
       }
 
       total++;
