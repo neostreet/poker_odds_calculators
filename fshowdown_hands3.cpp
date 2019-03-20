@@ -22,7 +22,7 @@ static char buf[MAX_LINE_LEN];
 static char buf2[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: fshowdown_hands3 (-verbose) (-debug) filename\n";
+"usage: fshowdown_hands3 (-verbose) (-debug) (-abbrev) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -36,6 +36,8 @@ static char space[] = " ";
 static char indent[] = "  ";
 static char linefeed[] = "\n";
 
+static char hole_cards_abbrev[4];
+
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
@@ -47,6 +49,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bVerbose;
   bool bDebug;
+  bool bAbbrev;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -60,6 +63,7 @@ int main(int argc,char **argv)
   int num_qualifying_hands;
   int dbg;
   char *cpt;
+  char *cpt2;
   int showdown_hands;
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
   PokerHand poker_hand;
@@ -70,19 +74,22 @@ int main(int argc,char **argv)
   int opened_count;
   int closed_count;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     printf(usage);
     return 1;
   }
 
   bVerbose = false;
   bDebug = false;
+  bAbbrev = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-abbrev"))
+      bAbbrev = true;
     else
       break;
   }
@@ -96,6 +103,8 @@ int main(int argc,char **argv)
     printf(couldnt_open,argv[curr_arg]);
     return 3;
   }
+
+  hole_cards_abbrev[3] = 0;
 
   file_no = 0;
   dbg_file_no = -1;
@@ -217,9 +226,23 @@ int main(int argc,char **argv)
           else if (!strncmp(line,"Seat ",5)) {
             cpt = get_bracketed_string(line,line_len);
 
-            if (cpt != NULL) {
+            if (!bAbbrev)
+              cpt2 = cpt;
+            else {
+              if (Contains(true,
+                line,line_len,
+                "[",1,
+                &ix)) {
+                get_abbrev(&line[ix+1],&hole_cards_abbrev[0]);
+                cpt2 = hole_cards_abbrev;
+              }
+              else
+                cpt2 = cpt;
+            }
+
+            if (cpt2 != NULL) {
               strcat(buf,indent);
-              strcat(buf,cpt);
+              strcat(buf,cpt2);
 
               showdown_hands++;
 
