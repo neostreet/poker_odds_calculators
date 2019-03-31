@@ -66,8 +66,9 @@ static char usage[] =
 "  (-hut_outs) (-hut_wins_ge_value) (-hut_wins_le_value) (-hut_wins_eq_value\n"
 "  (-hut_losses_ge_value) (-hut_losses_le_value) (-hut_losses_eq_value\n"
 "  (-hut_ties_ge_value) (-hut_ties_le_value) (-hut_ties_eq_value\n"
-"  (-show_winning_hand_hole_card_ixs)\n"
+"  (-show_winning_hand_hole_card_ixs) (-show_winning_hand_hole_cards_abbrev)\n"
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
+"  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -186,8 +187,10 @@ struct vars {
   bool bOnlyPremiumHands;
   bool bShowWinningHandHoleCards;
   bool bShowWinningHandHoleCardIxs;
+  bool bShowWinningHandHoleCardsAbbrev;
   bool bShowOpponentHoleCards;
   bool bShowOpponentHoleCardIxs;
+  bool bShowOpponentHoleCardsAbbrev;
   struct hand_ixs specified_hand_ixs;
   bool bShowdownHandSpecified;
   int specified_showdown_hand_index;
@@ -395,8 +398,10 @@ struct vars {
   char hole_cards_abbrev[4];
   char winning_hand_hole_cards[6];
   int winning_hand_hole_card_ixs[2];
+  char winning_hand_hole_cards_abbrev[4];
   char opponent_hole_cards[6];
   int opponent_hole_card_ixs[2];
+  char opponent_hole_cards_abbrev[4];
   int hole_cards_used;
   int num_hands;
   int num_hands_in_file;
@@ -473,7 +478,7 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
 
-  if ((argc < 3) || (argc > 135)) {
+  if ((argc < 3) || (argc > 137)) {
     printf(usage);
     return 1;
   }
@@ -492,8 +497,10 @@ int main(int argc,char **argv)
   local_vars.bOnlyPremiumHands = false;
   local_vars.bShowWinningHandHoleCards = false;
   local_vars.bShowWinningHandHoleCardIxs = false;
+  local_vars.bShowWinningHandHoleCardsAbbrev = false;
   local_vars.bShowOpponentHoleCards = false;
   local_vars.bShowOpponentHoleCardIxs = false;
+  local_vars.bShowOpponentHoleCardsAbbrev = false;
   local_vars.bShowdownHandSpecified = false;
   local_vars.bShowdownHand2Specified = false;
   local_vars.bWinningHandSpecified = false;
@@ -688,6 +695,12 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_winning_hand_hole_card_ixs")) {
       local_vars.bShowWinningHandHoleCards = true;
       local_vars.bShowWinningHandHoleCardIxs = true;
+      local_vars.bShowWinningHandHoleCardsAbbrev = false;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_winning_hand_hole_cards_abbrev")) {
+      local_vars.bShowWinningHandHoleCards = true;
+      local_vars.bShowWinningHandHoleCardsAbbrev = true;
+      local_vars.bShowWinningHandHoleCardIxs = false;
     }
     else if (!strcmp(argv[curr_arg],"-show_opponent_hole_cards")) {
       local_vars.bShowOpponentHoleCards = true;
@@ -695,6 +708,12 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_opponent_hole_card_ixs")) {
       local_vars.bShowOpponentHoleCards = true;
       local_vars.bShowOpponentHoleCardIxs = true;
+      local_vars.bShowOpponentHoleCardsAbbrev = false;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_opponent_hole_cards_abbrev")) {
+      local_vars.bShowOpponentHoleCards = true;
+      local_vars.bShowOpponentHoleCardsAbbrev = true;
+      local_vars.bShowOpponentHoleCardIxs = false;
     }
     else if (!strncmp(argv[curr_arg],"-showdown_hand2",15)) {
       local_vars.bShowdownHand2Specified = true;
@@ -1406,6 +1425,8 @@ int main(int argc,char **argv)
   dbg_file_no = -1;
 
   local_vars.hole_cards_abbrev[3] = 0;
+  local_vars.winning_hand_hole_cards_abbrev[3] = 0;
+  local_vars.opponent_hole_cards_abbrev[3] = 0;
 
   if (!local_vars.bAbbrev)
     local_vars.hole_cards[11] = 0;
@@ -1873,6 +1894,8 @@ int main(int argc,char **argv)
               for (n = 0; n < 2; n++)
                 retval = card_value_from_card_string(&local_vars.winning_hand_hole_cards[n*3],&local_vars.winning_hand_hole_card_ixs[n]);
 
+              get_abbrev(local_vars.winning_hand_hole_cards,&local_vars.winning_hand_hole_cards_abbrev[0]);
+
               local_vars.bHaveWinningHandHoleCards = true;
             }
           }
@@ -1898,6 +1921,8 @@ int main(int argc,char **argv)
 
                 for (n = 0; n < 2; n++)
                   retval = card_value_from_card_string(&local_vars.opponent_hole_cards[n*3],&local_vars.opponent_hole_card_ixs[n]);
+
+                get_abbrev(local_vars.opponent_hole_cards,&local_vars.opponent_hole_cards_abbrev[0]);
 
                 local_vars.bHaveOpponentHoleCards = true;
               }
@@ -2998,29 +3023,39 @@ void run_filter(struct vars *varspt)
                                                                                                                                                               if (!varspt->bHoleCardsUsed) {
                                                                                                                                                                 if (!varspt->bNoHoleCards) {
                                                                                                                                                                   if (varspt->bShowWinningHandHoleCards && varspt->bHaveWinningHandHoleCards) {
-                                                                                                                                                                    if (!varspt->bShowWinningHandHoleCardIxs) {
-                                                                                                                                                                      printf("%10d %s %s",varspt->delta,
-                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                                        varspt->winning_hand_hole_cards);
-                                                                                                                                                                    }
-                                                                                                                                                                    else {
+                                                                                                                                                                    if (varspt->bShowWinningHandHoleCardIxs) {
                                                                                                                                                                       printf("%10d %s %d %d",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->winning_hand_hole_card_ixs[0],
                                                                                                                                                                         varspt->winning_hand_hole_card_ixs[1]);
                                                                                                                                                                     }
-                                                                                                                                                                  }
-                                                                                                                                                                  else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
-                                                                                                                                                                    if (!varspt->bShowOpponentHoleCardIxs) {
+                                                                                                                                                                    else if (varspt->bShowWinningHandHoleCardsAbbrev) {
                                                                                                                                                                       printf("%10d %s %s",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
-                                                                                                                                                                        varspt->opponent_hole_cards);
+                                                                                                                                                                        varspt->winning_hand_hole_cards_abbrev);
                                                                                                                                                                     }
                                                                                                                                                                     else {
+                                                                                                                                                                      printf("%10d %s %s",varspt->delta,
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->winning_hand_hole_cards);
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
+                                                                                                                                                                    if (varspt->bShowOpponentHoleCardIxs) {
                                                                                                                                                                       printf("%10d %s %d %d",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->opponent_hole_card_ixs[0],
                                                                                                                                                                         varspt->opponent_hole_card_ixs[1]);
+                                                                                                                                                                    }
+                                                                                                                                                                    else if (varspt->bShowOpponentHoleCardsAbbrev) {
+                                                                                                                                                                      printf("%10d %s %s",varspt->delta,
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->opponent_hole_cards_abbrev);
+                                                                                                                                                                    }
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%10d %s %s",varspt->delta,
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->opponent_hole_cards);
                                                                                                                                                                     }
                                                                                                                                                                   }
                                                                                                                                                                   else {
