@@ -197,7 +197,7 @@ struct vars {
   bool bShowdownHand2Specified;
   int specified_showdown_hand2_index;
   bool bWinningHandSpecified;
-  int specified_winning_hand_index;
+  struct hand_ixs specified_winning_hand_hand_ixs;
   int curr_abbrev_index;
   int prev_abbrev_index;
   int curr_52_2_index;
@@ -477,6 +477,7 @@ int main(int argc,char **argv)
   int my_seat_ix;
   int work_hand_index;
   char specified_hand[4];
+  char specified_winning_hand[4];
 
   if ((argc < 3) || (argc > 137)) {
     printf(usage);
@@ -628,6 +629,7 @@ int main(int argc,char **argv)
   local_vars.bOnlyDoubleUp = false;
   local_vars.hand_number = -1;
   specified_hand[3] = 0;
+  specified_winning_hand[3] = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -731,10 +733,28 @@ int main(int argc,char **argv)
     }
     else if (!strncmp(argv[curr_arg],"-winning_hand",13)) {
       local_vars.bWinningHandSpecified = true;
-      retval = index_of_hand_abbrev(&argv[curr_arg][13],&local_vars.specified_winning_hand_index);
 
-      if (retval)
-        local_vars.specified_winning_hand_index = -1;
+      if ((strlen(&argv[curr_arg][13]) == 3) && (argv[curr_arg][15] == 'x')) {
+        local_vars.specified_winning_hand_hand_ixs.num_hand_ixs = 2;
+
+        for (n = 0; n < 2; n++)
+          specified_winning_hand[n] = argv[curr_arg][13+n];
+
+        for (n = 0; n < 2; n++) {
+          specified_winning_hand[2] = (n ? 's' : 'o');
+          retval = index_of_hand_abbrev(specified_winning_hand,&local_vars.specified_winning_hand_hand_ixs.ix[n]);
+
+          if (retval)
+            local_vars.specified_winning_hand_hand_ixs.ix[n] = -1;
+        }
+      }
+      else {
+        local_vars.specified_winning_hand_hand_ixs.num_hand_ixs = 1;
+        retval = index_of_hand_abbrev(&argv[curr_arg][13],&local_vars.specified_winning_hand_hand_ixs.ix[0]);
+
+        if (retval)
+          local_vars.specified_winning_hand_hand_ixs.ix[0] = -1;
+      }
     }
     else if (!strcmp(argv[curr_arg],"-skip_folded"))
       local_vars.bSkipFolded = true;
@@ -1871,7 +1891,7 @@ int main(int argc,char **argv)
               retval = index_of_hand(&line[showed_ix+SHOWED_LEN],&work_hand_index);
 
               if (!retval) {
-                if (work_hand_index == local_vars.specified_winning_hand_index)
+                if (hand_ix_match(work_hand_index,&local_vars.specified_winning_hand_hand_ixs))
                   local_vars.bHaveSpecifiedWinningHand = true;
               }
             }
