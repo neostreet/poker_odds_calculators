@@ -3039,52 +3039,109 @@ void run_filter(struct vars *varspt)
                                                                                                                                                       else {
                                                                                                                                                         switch(varspt->quantum_type) {
                                                                                                                                                           case QUANTUM_TYPE_DELTA:
-                                                                                                                                                            if (!varspt->bNoDelta) {
-                                                                                                                                                              if (!varspt->bHoleCardsUsed) {
-                                                                                                                                                                if (!varspt->bNoHoleCards) {
-                                                                                                                                                                  if (varspt->bShowWinningHandHoleCards && varspt->bHaveWinningHandHoleCards) {
-                                                                                                                                                                    if (varspt->bShowWinningHandHoleCardIxs) {
+                                                                                                                                                            if (!varspt->bHoleCardsUsed) {
+                                                                                                                                                              if (!varspt->bNoHoleCards) {
+                                                                                                                                                                if (varspt->bShowWinningHandHoleCards && varspt->bHaveWinningHandHoleCards) {
+                                                                                                                                                                  if (varspt->bShowWinningHandHoleCardIxs) {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s %d %d",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->winning_hand_hole_card_ixs[0],
                                                                                                                                                                         varspt->winning_hand_hole_card_ixs[1]);
                                                                                                                                                                     }
-                                                                                                                                                                    else if (varspt->bShowWinningHandHoleCardsAbbrev) {
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%s %d %d",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->winning_hand_hole_card_ixs[0],
+                                                                                                                                                                        varspt->winning_hand_hole_card_ixs[1]);
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else if (varspt->bShowWinningHandHoleCardsAbbrev) {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s %s",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->winning_hand_hole_cards_abbrev);
                                                                                                                                                                     }
                                                                                                                                                                     else {
+                                                                                                                                                                      printf("%s %s",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->winning_hand_hole_cards_abbrev);
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s %s",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->winning_hand_hole_cards);
                                                                                                                                                                     }
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%s %s",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->winning_hand_hole_cards);
+                                                                                                                                                                    }
                                                                                                                                                                   }
-                                                                                                                                                                  else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
-                                                                                                                                                                    if (varspt->bShowOpponentHoleCardIxs) {
+                                                                                                                                                                }
+                                                                                                                                                                else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
+                                                                                                                                                                  if (varspt->bShowOpponentHoleCardIxs) {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s %d %d",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->opponent_hole_card_ixs[0],
                                                                                                                                                                         varspt->opponent_hole_card_ixs[1]);
                                                                                                                                                                     }
-                                                                                                                                                                    else if (varspt->bShowOpponentHoleCardsAbbrev) {
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%s %d %d",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->opponent_hole_card_ixs[0],
+                                                                                                                                                                        varspt->opponent_hole_card_ixs[1]);
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else if (varspt->bShowOpponentHoleCardsAbbrev) {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s %s",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->opponent_hole_cards_abbrev);
                                                                                                                                                                     }
                                                                                                                                                                     else {
+                                                                                                                                                                      printf("%s %s",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->opponent_hole_cards_abbrev);
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s %s",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                         varspt->opponent_hole_cards);
                                                                                                                                                                     }
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%s %s",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                        varspt->opponent_hole_cards);
+                                                                                                                                                                    }
                                                                                                                                                                   }
-                                                                                                                                                                  else {
-                                                                                                                                                                    if (!varspt->bHutOuts) {
+                                                                                                                                                                }
+                                                                                                                                                                else {
+                                                                                                                                                                  if (!varspt->bHutOuts) {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %s",varspt->delta,
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                                                                                                                                                                     }
                                                                                                                                                                     else {
+                                                                                                                                                                      printf("%s",
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %2d %2d %2d %s",varspt->delta,
+                                                                                                                                                                        varspt->outcomes[0].wins,
+                                                                                                                                                                        varspt->outcomes[0].losses,
+                                                                                                                                                                        varspt->outcomes[0].ties,
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                    }
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%2d %2d %2d %s",
                                                                                                                                                                         varspt->outcomes[0].wins,
                                                                                                                                                                         varspt->outcomes[0].losses,
                                                                                                                                                                         varspt->outcomes[0].ties,
@@ -3092,21 +3149,30 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                     }
                                                                                                                                                                   }
                                                                                                                                                                 }
-                                                                                                                                                                else
-                                                                                                                                                                  printf("%10d",varspt->delta);
                                                                                                                                                               }
-                                                                                                                                                              else {
-                                                                                                                                                                if (!varspt->bNoHoleCards) {
+                                                                                                                                                              else if (!varspt->bNoDelta)
+                                                                                                                                                                printf("%10d",varspt->delta);
+                                                                                                                                                            }
+                                                                                                                                                            else {
+                                                                                                                                                              if (!varspt->bNoHoleCards) {
+                                                                                                                                                                if (!varspt->bNoDelta) {
                                                                                                                                                                   printf("%10d %s (%d)",varspt->delta,
                                                                                                                                                                     (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                                                                                                                                                                     varspt->hole_cards_used);
                                                                                                                                                                 }
-                                                                                                                                                                else
+                                                                                                                                                                else {
+                                                                                                                                                                  printf("%s (%d)",
+                                                                                                                                                                    (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                                                                                                                                                                    varspt->hole_cards_used);
+                                                                                                                                                                }
+                                                                                                                                                              }
+                                                                                                                                                              else {
+                                                                                                                                                                if (!varspt->bNoDelta)
                                                                                                                                                                   printf("%10d (%d)",varspt->delta,varspt->hole_cards_used);
+                                                                                                                                                                else
+                                                                                                                                                                  printf("(%d)",varspt->hole_cards_used);
                                                                                                                                                               }
                                                                                                                                                             }
-                                                                                                                                                            else if (!varspt->bNoHoleCards)
-                                                                                                                                                              printf("%s",varspt->hole_cards);
 
                                                                                                                                                             break;
                                                                                                                                                           case QUANTUM_TYPE_OPM:
