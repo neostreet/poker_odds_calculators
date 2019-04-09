@@ -64,6 +64,7 @@ static char usage[] =
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
 "  (-hut_outs) (-hut_wins_ge_value) (-hut_wins_le_value) (-hut_wins_eq_value\n"
+"  (-huf_outs)\n"
 "  (-hut_losses_ge_value) (-hut_losses_le_value) (-hut_losses_eq_value\n"
 "  (-hut_ties_ge_value) (-hut_ties_le_value) (-hut_ties_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs) (-show_winning_hand_hole_cards_abbrev)\n"
@@ -305,6 +306,7 @@ struct vars {
   int hut_ties_le_value;
   bool bHutTiesEqValue;
   int hut_ties_eq_value;
+  bool bHufOuts;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -479,7 +481,7 @@ int main(int argc,char **argv)
   char specified_hand[4];
   char specified_winning_hand[4];
 
-  if ((argc < 3) || (argc > 137)) {
+  if ((argc < 3) || (argc > 138)) {
     printf(usage);
     return 1;
   }
@@ -602,6 +604,7 @@ int main(int argc,char **argv)
   local_vars.bHutTiesGeValue = false;
   local_vars.bHutTiesLeValue = false;
   local_vars.bHutTiesEqValue = false;
+  local_vars.bHufOuts = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -1062,6 +1065,8 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_ties_eq_value);
       local_vars.bHutOuts = true;
     }
+    else if (!strcmp(argv[curr_arg],"-huf_outs"))
+      local_vars.bHufOuts = true;
     else
       break;
   }
@@ -1421,7 +1426,7 @@ int main(int argc,char **argv)
     return 61;
   }
 
-  if (local_vars.bHutOuts) {
+  if (local_vars.bHutOuts || local_vars.bHufOuts) {
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
@@ -2829,6 +2834,7 @@ void run_filter(struct vars *varspt)
 {
   double dwork;
   HeadsUpTurn hut;
+  HeadsUpFlop huf;
   int cards[NUM_HEADS_UP_TURN_CARDS];
   bool bSkip;
 
@@ -2961,6 +2967,20 @@ void run_filter(struct vars *varspt)
                                                                                                                                                         if (varspt->outcomes[0].ties != varspt->hut_ties_eq_value)
                                                                                                                                                           bSkip = true;
                                                                                                                                                       }
+                                                                                                                                                    }
+                                                                                                                                                    else if (varspt->bHufOuts) {
+                                                                                                                                                      card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
+                                                                                                                                                      card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
+                                                                                                                                                      card_value_from_card_string(&varspt->opponent_hole_cards[0],&cards[2]);
+                                                                                                                                                      card_value_from_card_string(&varspt->opponent_hole_cards[3],&cards[3]);
+                                                                                                                                                      card_value_from_card_string(&varspt->board_cards[0],&cards[4]);
+                                                                                                                                                      card_value_from_card_string(&varspt->board_cards[3],&cards[5]);
+                                                                                                                                                      card_value_from_card_string(&varspt->board_cards[6],&cards[6]);
+                                                                                                                                                      huf.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4],cards[5],cards[6]);
+                                                                                                                                                      huf.Evaluate(false);
+                                                                                                                                                      varspt->outcomes = huf.GetOutcomes();
+
+                                                                                                                                                      bSkip = false;
                                                                                                                                                     }
 
                                                                                                                                                     if (!bSkip) {
@@ -3122,17 +3142,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                   }
                                                                                                                                                                 }
                                                                                                                                                                 else {
-                                                                                                                                                                  if (!varspt->bHutOuts) {
-                                                                                                                                                                    if (!varspt->bNoDelta) {
-                                                                                                                                                                      printf("%10d %s",varspt->delta,
-                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
-                                                                                                                                                                    }
-                                                                                                                                                                    else {
-                                                                                                                                                                      printf("%s",
-                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
-                                                                                                                                                                    }
-                                                                                                                                                                  }
-                                                                                                                                                                  else {
+                                                                                                                                                                  if (varspt->bHutOuts || varspt->bHufOuts) {
                                                                                                                                                                     if (!varspt->bNoDelta) {
                                                                                                                                                                       printf("%10d %2d %2d %2d %s",varspt->delta,
                                                                                                                                                                         varspt->outcomes[0].wins,
@@ -3145,6 +3155,16 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                         varspt->outcomes[0].wins,
                                                                                                                                                                         varspt->outcomes[0].losses,
                                                                                                                                                                         varspt->outcomes[0].ties,
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                    }
+                                                                                                                                                                  }
+                                                                                                                                                                  else {
+                                                                                                                                                                    if (!varspt->bNoDelta) {
+                                                                                                                                                                      printf("%10d %s",varspt->delta,
+                                                                                                                                                                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                    }
+                                                                                                                                                                    else {
+                                                                                                                                                                      printf("%s",
                                                                                                                                                                         (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                                                                                                                                                                     }
                                                                                                                                                                   }
