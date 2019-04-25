@@ -71,7 +71,7 @@ static char usage[] =
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) (-magic_flush) (-any_all_in) (-no_all_in)\n"
-"  player_name filename\n";
+"  (-hut_outs_diff) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -293,6 +293,7 @@ struct vars {
   bool bTwinHands;
   bool bIdenticalTwinHands;
   bool bHutOuts;
+  bool bHutOutsDiff;
   bool bHutWinsGeValue;
   int hut_wins_ge_value;
   bool bHutWinsLeValue;
@@ -488,7 +489,7 @@ int main(int argc,char **argv)
   char specified_hand[4];
   char specified_winning_hand[4];
 
-  if ((argc < 3) || (argc > 141)) {
+  if ((argc < 3) || (argc > 142)) {
     printf(usage);
     return 1;
   }
@@ -605,6 +606,7 @@ int main(int argc,char **argv)
   local_vars.bTwinHands = false;
   local_vars.bIdenticalTwinHands = false;
   local_vars.bHutOuts = false;
+  local_vars.bHutOutsDiff = false;
   local_vars.bHutWinsGeValue = false;
   local_vars.bHutWinsLeValue = false;
   local_vars.bHutWinsEqValue = false;
@@ -1030,6 +1032,8 @@ int main(int argc,char **argv)
       local_vars.bIdenticalTwinHands = true;
     else if (!strcmp(argv[curr_arg],"-hut_outs"))
       local_vars.bHutOuts = true;
+    else if (!strcmp(argv[curr_arg],"-hut_outs_diff"))
+      local_vars.bHutOutsDiff = true;
     else if (!strncmp(argv[curr_arg],"-hut_wins_ge_value",18)) {
       local_vars.bHutWinsGeValue = true;
       sscanf(&argv[curr_arg][18],"%d",&local_vars.hut_wins_ge_value);
@@ -1447,7 +1451,7 @@ int main(int argc,char **argv)
     return 61;
   }
 
-  if (local_vars.bHutOuts || local_vars.bHufOuts) {
+  if (local_vars.bHutOuts || local_vars.bHutOutsDiff || local_vars.bHufOuts) {
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
@@ -2964,7 +2968,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                     if (!varspt->bTwinAbbrevs || (varspt->curr_abbrev_index == varspt->prev_abbrev_index)) {
                                                                                                                                                       if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                                         if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
-                                                                                                                                                          if (varspt->bHutOuts) {
+                                                                                                                                                          if (varspt->bHutOuts || varspt->bHutOutsDiff) {
                                                                                                                                                             card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
                                                                                                                                                             card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
                                                                                                                                                             card_value_from_card_string(&varspt->opponent_hole_cards[0],&cards[2]);
@@ -3204,6 +3208,22 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                             printf("%2d %2d %2d %s",
                                                                                                                                                                               varspt->outcomes[0].wins,
                                                                                                                                                                               varspt->outcomes[0].losses,
+                                                                                                                                                                              varspt->outcomes[0].ties,
+                                                                                                                                                                              (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                          }
+                                                                                                                                                                        }
+                                                                                                                                                                        else if (varspt->bHutOutsDiff) {
+                                                                                                                                                                          if (!varspt->bNoDelta) {
+                                                                                                                                                                            printf("%10d %2d %s",varspt->delta,
+                                                                                                                                                                              varspt->outcomes[0].wins -
+                                                                                                                                                                              varspt->outcomes[0].losses +
+                                                                                                                                                                              varspt->outcomes[0].ties,
+                                                                                                                                                                              (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                                                                                                                                                                          }
+                                                                                                                                                                          else {
+                                                                                                                                                                            printf("%2d %s",
+                                                                                                                                                                              varspt->outcomes[0].wins -
+                                                                                                                                                                              varspt->outcomes[0].losses +
                                                                                                                                                                               varspt->outcomes[0].ties,
                                                                                                                                                                               (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                                                                                                                                                                           }
