@@ -3216,14 +3216,14 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                         else {
                                                                                                                                                                           if (varspt->bHutOuts || varspt->bHufOuts) {
                                                                                                                                                                             if (!varspt->bNoDelta) {
-                                                                                                                                                                              printf("%10d %2d %2d %2d %s",varspt->delta,
+                                                                                                                                                                              printf("%10d %3d %3d %3d %s",varspt->delta,
                                                                                                                                                                                 varspt->outcomes[0].wins,
                                                                                                                                                                                 varspt->outcomes[0].losses,
                                                                                                                                                                                 varspt->outcomes[0].ties,
                                                                                                                                                                                 (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                                                                                                                                                                             }
                                                                                                                                                                             else {
-                                                                                                                                                                              printf("%2d %2d %2d %s",
+                                                                                                                                                                              printf("%3d %3d %3d %s",
                                                                                                                                                                                 varspt->outcomes[0].wins,
                                                                                                                                                                                 varspt->outcomes[0].losses,
                                                                                                                                                                                 varspt->outcomes[0].ties,
