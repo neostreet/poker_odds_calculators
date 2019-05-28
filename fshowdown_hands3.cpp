@@ -16,6 +16,9 @@ using namespace std;
 #define MAX_FILENAME_LEN 1024
 static char filename[MAX_FILENAME_LEN];
 
+#define MAX_PLAYER_NAME_LEN 30
+static char player_name[MAX_PLAYER_NAME_LEN+1];
+
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 static char buf[MAX_LINE_LEN];
@@ -42,6 +45,7 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
   char *string,int string_len,int *index);
 static char *get_bracketed_string(char *line,int line_len);
+void get_player_name(char *line,int line_len);
 
 int main(int argc,char **argv)
 {
@@ -224,6 +228,7 @@ int main(int argc,char **argv)
             }
           }
           else if (!strncmp(line,"Seat ",5)) {
+            get_player_name(line,line_len);
             cpt = get_bracketed_string(line,line_len);
 
             if (!bAbbrev)
@@ -269,6 +274,10 @@ int main(int argc,char **argv)
 
               strcat(buf,space);
               strcat(buf,plain_hand_types[poker_hand.GetHandType()]);
+              strcat(buf,space);
+              strcat(buf,poker_hand.GetHand());
+              strcat(buf,space);
+              strcat(buf,player_name);
               strcat(buf,linefeed);
             }
           }
@@ -373,4 +382,39 @@ static char *get_bracketed_string(char *line,int line_len)
   line[m+1] = 0;
 
   return &line[n];
+}
+
+void get_player_name(char *line,int line_len)
+{
+  int m;
+  int n;
+
+  for (n = 0; n < line_len; n++) {
+    if (line[n] == ':')
+      break;
+  }
+
+  if (n == line_len) {
+    player_name[0] = 0;
+    return;
+  }
+
+  n += 2;
+
+  for (m = n; m < line_len; m++) {
+    if (line[m] == ' ')
+      break;
+
+    if (m - n < MAX_PLAYER_NAME_LEN)
+      player_name[m - n] = line[m];
+    else
+      break;
+  }
+
+  if (n == line_len) {
+    player_name[0] = 0;
+    return;
+  }
+
+  player_name[m - n] = 0;
 }
