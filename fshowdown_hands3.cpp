@@ -77,6 +77,9 @@ int main(int argc,char **argv)
   bool bHaveShowdown;
   int opened_count;
   int closed_count;
+  bool bHandTypesMatch;
+  HandType prev_hand_type;
+  HandType hand_type;
 
   if ((argc < 2) || (argc > 5)) {
     printf(usage);
@@ -177,6 +180,7 @@ int main(int argc,char **argv)
         num_qualifying_hands++;
         showdown_hands = 0;
         buf[0] = 0;
+        bHandTypesMatch = true;
 
         for ( ; ; ) {
           GetLine(fptr,line,&line_len,MAX_LINE_LEN);
@@ -271,9 +275,19 @@ int main(int argc,char **argv)
                 cards[3],cards[4],cards[5],cards[6]);
 
               poker_hand = holdem_hand.BestPokerHand();
+              hand_type = poker_hand.GetHandType();
+
+              if (bHandTypesMatch) {
+                if (showdown_hands > 1) {
+                  if (prev_hand_type != hand_type)
+                    bHandTypesMatch = false;
+                }
+
+                prev_hand_type = hand_type;
+              }
 
               strcat(buf,space);
-              strcat(buf,plain_hand_types[poker_hand.GetHandType()]);
+              strcat(buf,plain_hand_types[hand_type]);
               strcat(buf,space);
               strcat(buf,poker_hand.GetHand());
               strcat(buf,space);
@@ -286,6 +300,9 @@ int main(int argc,char **argv)
     }
 
     fclose(fptr);
+
+    if (bHandTypesMatch && (showdown_hands > 1))
+      printf("  hand types match\n");
 
     if (bDebug) {
       closed_count++;
