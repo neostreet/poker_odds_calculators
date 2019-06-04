@@ -65,7 +65,7 @@ static char usage[] =
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
 "  (-hut_outs) (-hut_wins_ge_value) (-hut_wins_le_value) (-hut_wins_eq_value\n"
-"  (-huf_outs)\n"
+"  (-huf_outs) (-3t_outs\n"
 "  (-hut_losses_ge_value) (-hut_losses_le_value) (-hut_losses_eq_value\n"
 "  (-hut_ties_ge_value) (-hut_ties_le_value) (-hut_ties_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs) (-show_winning_hand_hole_cards_abbrev)\n"
@@ -266,7 +266,6 @@ struct vars {
   int show_roi;
   int show_num_positive_deltas;
   int num_positive_deltas;
-  int show_outs;
   int wins;
   bool bAceOnTheRiver;
   bool bOnlyWash;
@@ -315,6 +314,7 @@ struct vars {
   bool bHutTiesEqValue;
   int hut_ties_eq_value;
   bool bHufOuts;
+  bool b3tOuts;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
   bool bSmallBlind;
@@ -492,7 +492,7 @@ int main(int argc,char **argv)
   char specified_hand[4];
   char specified_winning_hand[4];
 
-  if ((argc < 3) || (argc > 143)) {
+  if ((argc < 3) || (argc > 144)) {
     printf(usage);
     return 1;
   }
@@ -573,7 +573,6 @@ int main(int argc,char **argv)
   local_vars.show_roi = 0;
   local_vars.running_total = 0;
   local_vars.show_num_positive_deltas = 0;
-  local_vars.show_outs = 0;
   local_vars.bAceOnTheRiver = false;
   local_vars.bOnlyWash = false;
   local_vars.sum_quantum = 0;
@@ -621,6 +620,7 @@ int main(int argc,char **argv)
   local_vars.bHutTiesLeValue = false;
   local_vars.bHutTiesEqValue = false;
   local_vars.bHufOuts = false;
+  local_vars.b3tOuts = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
   local_vars.bSmallBlind = false;
@@ -1089,6 +1089,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-huf_outs"))
       local_vars.bHufOuts = true;
+    else if (!strcmp(argv[curr_arg],"-3t_outs"))
+      local_vars.b3tOuts = true;
     else if (!strcmp(argv[curr_arg],"-magic_flush"))
       local_vars.bMagicFlush = true;
     else if (!strcmp(argv[curr_arg],"-any_all_in"))
@@ -1463,7 +1465,11 @@ int main(int argc,char **argv)
     local_vars.bOnlyShowdown = true;
     local_vars.bOnlyShowdownCount = true;
     local_vars.showdown_count = 2;
-    local_vars.show_outs = 1;
+  }
+  else if (local_vars.b3tOuts) {
+    local_vars.bOnlyShowdown = true;
+    local_vars.bOnlyShowdownCount = true;
+    local_vars.showdown_count = 3;
   }
 
   player_name_ix = curr_arg++;
