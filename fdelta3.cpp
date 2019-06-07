@@ -1618,7 +1618,11 @@ int main(int argc,char **argv)
                         printf("%d\t%s\n",local_vars.summary_val,local_vars.date_string);
                       else {
                         if (local_vars.winning_percentage || local_vars.filter_percentage) {
-                          local_vars.dwork = (double)local_vars.summary_val2 / (double)local_vars.summary_val;
+                          if (!local_vars.summary_val)
+                            local_vars.dwork = (double)0;
+                          else
+                            local_vars.dwork = (double)local_vars.summary_val2 / (double)local_vars.summary_val;
+
                           printf("%lf\t%s\t(%d %d)\n",local_vars.dwork,local_vars.date_string,local_vars.summary_val2,local_vars.summary_val);
                         }
                         else
