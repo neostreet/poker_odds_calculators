@@ -72,7 +72,8 @@ static char usage[] =
 "  (-show_opponent_hole_cards) (-show_opponent_hole_card_ixs)\n"
 "  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) (-magic_flush) (-any_all_in) (-no_all_in)\n"
-"  (-hut_outs_diff) (-ace_rag) (-suited_ace) player_name filename\n";
+"  (-hut_outs_diff) (-ace_rag) (-suited_ace) (-ace_non_rag)\n"
+"  player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -158,6 +159,7 @@ static int get_num_hands_in_file(FILE *fptr,char *player_name,int player_name_le
 static bool deuce_or_trey_off(char *hole_cards);
 static bool ace_rag(char *hole_cards);
 static bool suited_ace(char *hole_cards);
+static bool ace_non_rag(char *hole_cards);
 static bool hole_cards_off(char *hole_cards);
 static HandType get_winning_hand_typ_id(char *line,int line_len);
 static void run_filter(struct vars *varspt);
@@ -257,6 +259,7 @@ struct vars {
   bool bNoAllIn;
   bool bAceRag;
   bool bSuitedAce;
+  bool bAceNonRag;
   int show_collected;
   int show_spent;
   int show_opm;
@@ -450,6 +453,7 @@ struct vars {
   bool bHaveAnyAllIn;
   bool bHaveAceRag;
   bool bHaveSuitedAce;
+  bool bHaveAceNonRag;
 };
 
 int main(int argc,char **argv)
@@ -498,7 +502,7 @@ int main(int argc,char **argv)
   char specified_hand[4];
   char specified_winning_hand[4];
 
-  if ((argc < 3) || (argc > 146)) {
+  if ((argc < 3) || (argc > 147)) {
     printf(usage);
     return 1;
   }
@@ -569,6 +573,7 @@ int main(int argc,char **argv)
   local_vars.bNoAllIn = false;
   local_vars.bAceRag = false;
   local_vars.bSuitedAce = false;
+  local_vars.bAceNonRag = false;
   local_vars.quantum_type = QUANTUM_TYPE_DELTA;
   local_vars.show_collected = 0;
   local_vars.show_spent = 0;
@@ -1109,6 +1114,8 @@ int main(int argc,char **argv)
       local_vars.bAceRag = true;
     else if (!strcmp(argv[curr_arg],"-suited_ace"))
       local_vars.bSuitedAce = true;
+    else if (!strcmp(argv[curr_arg],"-ace_non_rag"))
+      local_vars.bAceNonRag = true;
     else
       break;
   }
@@ -1595,6 +1602,7 @@ int main(int argc,char **argv)
     local_vars.bHaveAnyAllIn = false;
     local_vars.bHaveAceRag = false;
     local_vars.bHaveSuitedAce = false;
+    local_vars.bHaveAceNonRag = false;
     bFirstHand = true;
 
     if (local_vars.bWonSidePot)
@@ -1805,6 +1813,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveAnyAllIn = false;
                 local_vars.bHaveAceRag = false;
                 local_vars.bHaveSuitedAce = false;
+                local_vars.bHaveAceNonRag = false;
 
                 if (local_vars.bWonSidePot)
                   local_vars.bHaveWonSidePot = false;
@@ -2078,6 +2087,8 @@ int main(int argc,char **argv)
                   local_vars.bHaveAceRag = ace_rag(local_vars.hole_cards);
                 else if (local_vars.bSuitedAce)
                   local_vars.bHaveSuitedAce = suited_ace(local_vars.hole_cards);
+                else if (local_vars.bAceNonRag)
+                  local_vars.bHaveAceNonRag = ace_non_rag(local_vars.hole_cards);
 
                 if (local_vars.bMagicFlush)
                   local_vars.bHaveMagicFlush = hole_cards_off(local_vars.hole_cards);
@@ -2913,6 +2924,18 @@ static bool suited_ace(char *hole_cards)
   return false;
 }
 
+static bool ace_non_rag(char *hole_cards)
+{
+  // if ace rag, return false
+  if (ace_rag(hole_cards))
+    return false;
+
+  if ((hole_cards[0] == 'A') || (hole_cards[3] == 'A'))
+    return true;
+
+  return false;
+}
+
 static bool hole_cards_off(char *hole_cards)
 {
   // if not offsuit, return false
@@ -3044,6 +3067,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                         if (!varspt->bTwinHands || (varspt->curr_52_2_index == varspt->prev_52_2_index)) {
                                                                                                                                                           if (!varspt->bIdenticalTwinHands || (varspt->curr_52_2_index2 == varspt->prev_52_2_index2)) {
                                                                                                                                                             if (!varspt->bAceRag || (varspt->bHaveAceRag)) {
+                                                                                                                                                            if (!varspt->bAceNonRag || (varspt->bHaveAceNonRag)) {
                                                                                                                                                               if (!varspt->bSuitedAce || (varspt->bHaveSuitedAce)) {
                                                                                                                                                                 if (varspt->bHutOuts || varspt->bHutOutsDiff) {
                                                                                                                                                                   card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
@@ -3407,6 +3431,7 @@ void run_filter(struct vars *varspt)
                                                                                                                                                                   }
                                                                                                                                                                 }
                                                                                                                                                               }
+                                                                                                                                                            }
                                                                                                                                                             }
                                                                                                                                                           }
                                                                                                                                                         }
