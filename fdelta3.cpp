@@ -73,7 +73,7 @@ static char usage[] =
 "  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) (-magic_flush) (-any_all_in) (-no_all_in)\n"
 "  (-hut_outs_diff) (-ace_rag) (-suited_ace) (-ace_non_rag)\n"
-"  player_name filename\n";
+"  (-only_ante) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -260,6 +260,7 @@ struct vars {
   bool bAceRag;
   bool bSuitedAce;
   bool bAceNonRag;
+  bool bOnlyAnte;
   int show_collected;
   int show_spent;
   int show_opm;
@@ -454,6 +455,7 @@ struct vars {
   bool bHaveAceRag;
   bool bHaveSuitedAce;
   bool bHaveAceNonRag;
+  bool bHaveAnte;
 };
 
 int main(int argc,char **argv)
@@ -502,7 +504,7 @@ int main(int argc,char **argv)
   char specified_hand[4];
   char specified_winning_hand[4];
 
-  if ((argc < 3) || (argc > 147)) {
+  if ((argc < 3) || (argc > 148)) {
     printf(usage);
     return 1;
   }
@@ -574,6 +576,7 @@ int main(int argc,char **argv)
   local_vars.bAceRag = false;
   local_vars.bSuitedAce = false;
   local_vars.bAceNonRag = false;
+  local_vars.bOnlyAnte = false;
   local_vars.quantum_type = QUANTUM_TYPE_DELTA;
   local_vars.show_collected = 0;
   local_vars.show_spent = 0;
@@ -1116,6 +1119,8 @@ int main(int argc,char **argv)
       local_vars.bSuitedAce = true;
     else if (!strcmp(argv[curr_arg],"-ace_non_rag"))
       local_vars.bAceNonRag = true;
+    else if (!strcmp(argv[curr_arg],"-only_ante"))
+      local_vars.bOnlyAnte = true;
     else
       break;
   }
@@ -1603,6 +1608,7 @@ int main(int argc,char **argv)
     local_vars.bHaveAceRag = false;
     local_vars.bHaveSuitedAce = false;
     local_vars.bHaveAceNonRag = false;
+    local_vars.bHaveAnte = false;
     bFirstHand = true;
 
     if (local_vars.bWonSidePot)
@@ -1814,6 +1820,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveAceRag = false;
                 local_vars.bHaveSuitedAce = false;
                 local_vars.bHaveAceNonRag = false;
+                local_vars.bHaveAnte = false;
 
                 if (local_vars.bWonSidePot)
                   local_vars.bHaveWonSidePot = false;
@@ -1863,6 +1870,7 @@ int main(int argc,char **argv)
               &ix)) {
               ante = get_work_amount(line,line_len);
               local_vars.spent_this_hand = ante;
+              local_vars.bHaveAnte = true;
 
               if (Contains(true,
                 line,line_len,
@@ -3069,6 +3077,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bAceRag || (varspt->bHaveAceRag)) {
   if (!varspt->bAceNonRag || (varspt->bHaveAceNonRag)) {
   if (!varspt->bSuitedAce || (varspt->bHaveSuitedAce)) {
+  if (!varspt->bOnlyAnte || (varspt->bHaveAnte)) {
   if (varspt->bHutOuts || varspt->bHutOutsDiff) {
     card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
     card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
@@ -3429,6 +3438,7 @@ void run_filter(struct vars *varspt)
       else
         putchar(0x0a);
     }
+  }
   }
   }
   }
