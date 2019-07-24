@@ -73,7 +73,7 @@ static char usage[] =
 "  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) (-magic_flush) (-any_all_in) (-no_all_in)\n"
 "  (-hut_outs_diff) (-ace_rag) (-suited_ace) (-ace_non_rag)\n"
-"  (-only_ante) player_name filename\n";
+"  (-only_ante) (-first_file_only) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -503,8 +503,9 @@ int main(int argc,char **argv)
   int work_hand_index;
   char specified_hand[4];
   char specified_winning_hand[4];
+  bool bFirstFileOnly;
 
-  if ((argc < 3) || (argc > 148)) {
+  if ((argc < 3) || (argc > 149)) {
     printf(usage);
     return 1;
   }
@@ -665,6 +666,7 @@ int main(int argc,char **argv)
   local_vars.hand_number = -1;
   specified_hand[3] = 0;
   specified_winning_hand[3] = 0;
+  bFirstFileOnly = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -1121,6 +1123,8 @@ int main(int argc,char **argv)
       local_vars.bAceNonRag = true;
     else if (!strcmp(argv[curr_arg],"-only_ante"))
       local_vars.bOnlyAnte = true;
+    else if (!strcmp(argv[curr_arg],"-first_file_only"))
+      bFirstFileOnly = true;
     else
       break;
   }
@@ -2573,6 +2577,9 @@ int main(int argc,char **argv)
     }
 
     fclose(fptr);
+
+    if (bFirstFileOnly)
+      break;
   }
 
   fclose(fptr0);
