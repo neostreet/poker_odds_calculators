@@ -73,7 +73,8 @@ static char usage[] =
 "  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) (-magic_flush) (-any_all_in) (-no_all_in)\n"
 "  (-hut_outs_diff) (-ace_rag) (-suited_ace) (-ace_non_rag)\n"
-"  (-only_ante) (-first_file_only) player_name filename\n";
+"  (-only_ante) (-first_file_only) (-show_hand_type_on_flop)\n"
+"  (-show_hand_type_on_turn) (-show_hand_type_on_river) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char pokerstars[] = "PokerStars";
@@ -218,6 +219,9 @@ struct vars {
   bool bOnlyZero;
   bool bShowBoard;
   bool bShowHandType;
+  bool bShowHandTypeOnFlop;
+  bool bShowHandTypeOnTurn;
+  bool bShowHandTypeOnRiver;
   bool bShowHandTypId;
   bool bShowHand;
   bool bSawFlop;
@@ -363,7 +367,9 @@ struct vars {
   bool bHaveOpponentHoleCards;
   bool bHaveFlop;
   bool bHaveFlop2;
+  bool bHaveTurn2;
   bool bHaveRiver;
+  bool bHaveRiver2;
   bool bHaveAceOnTheRiver;
   bool bHaveStealthTwoPair;
   bool bHaveBottomTwo;
@@ -405,6 +411,8 @@ struct vars {
   int delta;
   PokerHand poker_hand;
   PokerHand poker_hand_on_flop;
+  PokerHand poker_hand_on_turn;
+  PokerHand poker_hand_on_river;
   int table_count;
   int table_count_to_match;
   int starting_balance;
@@ -505,7 +513,7 @@ int main(int argc,char **argv)
   char specified_winning_hand[4];
   bool bFirstFileOnly;
 
-  if ((argc < 3) || (argc > 149)) {
+  if ((argc < 3) || (argc > 152)) {
     printf(usage);
     return 1;
   }
@@ -537,6 +545,9 @@ int main(int argc,char **argv)
   local_vars.bOnlyZero = false;
   local_vars.bShowBoard = false;
   local_vars.bShowHandType = false;
+  local_vars.bShowHandTypeOnFlop = false;
+  local_vars.bShowHandTypeOnTurn = false;
+  local_vars.bShowHandTypeOnRiver = false;
   local_vars.bShowHandTypId = false;
   local_vars.bShowHand = false;
   local_vars.bSawFlop = false;
@@ -805,6 +816,12 @@ int main(int argc,char **argv)
       local_vars.bShowBoard = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_type"))
       local_vars.bShowHandType = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand_type_on_flop"))
+      local_vars.bShowHandTypeOnFlop = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand_type_on_turn"))
+      local_vars.bShowHandTypeOnTurn = true;
+    else if (!strcmp(argv[curr_arg],"-show_hand_type_on_river"))
+      local_vars.bShowHandTypeOnRiver = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_typ_id"))
       local_vars.bShowHandTypId = true;
     else if (!strcmp(argv[curr_arg],"-show_hand"))
@@ -1583,7 +1600,9 @@ int main(int argc,char **argv)
     local_vars.bHaveOpponentHoleCards = false;
     local_vars.bHaveFlop = false;
     local_vars.bHaveFlop2 = false;
+    local_vars.bHaveTurn2 = false;
     local_vars.bHaveRiver = false;
+    local_vars.bHaveRiver2 = false;
     local_vars.bHaveAceOnTheRiver = false;
     local_vars.bSpentRiverMoney = false;
     local_vars.bHaveStealthTwoPair = false;
@@ -1795,7 +1814,9 @@ int main(int argc,char **argv)
                 local_vars.bHaveOpponentHoleCards = false;
                 local_vars.bHaveFlop = false;
                 local_vars.bHaveFlop2 = false;
+                local_vars.bHaveTurn2 = false;
                 local_vars.bHaveRiver = false;
+                local_vars.bHaveRiver2 = false;
                 local_vars.bHaveAceOnTheRiver = false;
                 local_vars.bSpentRiverMoney = false;
                 local_vars.bHaveStealthTwoPair = false;
@@ -2397,11 +2418,10 @@ int main(int argc,char **argv)
           local_vars.poker_hand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
           local_vars.poker_hand.Evaluate();
           local_vars.poker_hand_on_flop = local_vars.poker_hand;
+          local_vars.bHaveFlop2 = true;
 
           if (!local_vars.bFolded)
             local_vars.bHaveFlop = true;
-
-          local_vars.bHaveFlop2 = true;
         }
         else if (!strncmp(line,turn,TURN_LEN)) {
           n = 8;
@@ -2425,12 +2445,14 @@ int main(int argc,char **argv)
             return 66;
           }
 
-          if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
-            turn_hand.NewCards(cards[0],cards[1],cards[2],
-              cards[3],cards[4],cards[5]);
+          turn_hand.NewCards(cards[0],cards[1],cards[2],
+            cards[3],cards[4],cards[5]);
 
-            local_vars.poker_hand = turn_hand.BestPokerHand();
-          }
+          local_vars.poker_hand_on_turn = turn_hand.BestPokerHand();
+          local_vars.bHaveTurn2 = true;
+
+          if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand))
+            local_vars.poker_hand = local_vars.poker_hand_on_turn;
 
           if (local_vars.bChasedFlush)
             local_vars.bHaveChasedFlush = four_to_a_flush(cards);
@@ -2461,15 +2483,17 @@ int main(int argc,char **argv)
               return 67;
             }
 
-            if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand)) {
-              holdem_hand.NewCards(cards[0],cards[1],cards[2],
-                cards[3],cards[4],cards[5],cards[6]);
+            holdem_hand.NewCards(cards[0],cards[1],cards[2],
+              cards[3],cards[4],cards[5],cards[6]);
 
-              local_vars.poker_hand = holdem_hand.BestPokerHand();
+            local_vars.poker_hand_on_river = holdem_hand.BestPokerHand();
+            local_vars.bHaveRiver2 = true;
 
-              if (!local_vars.bFolded)
-                local_vars.bHaveRiver = true;
-            }
+            if (!local_vars.bFlopped && (!local_vars.bFolded || local_vars.bVeryBestHand))
+              local_vars.poker_hand = local_vars.poker_hand_on_river;
+
+            if (!local_vars.bFolded)
+              local_vars.bHaveRiver = true;
 
             if (local_vars.bCounterfeit) {
               for (m = 0; m < NUM_COMMUNITY_CARDS - 1; m++) {
@@ -3416,6 +3440,12 @@ void run_filter(struct vars *varspt)
 
       if (varspt->bShowHandType && varspt->bHaveFlop)
         printf(" %s",plain_hand_types[varspt->poker_hand.GetHandType()]);
+      else if (varspt->bShowHandTypeOnFlop && varspt->bHaveFlop2)
+        printf(" %s",plain_hand_types[varspt->poker_hand_on_flop.GetHandType()]);
+      else if (varspt->bShowHandTypeOnTurn && varspt->bHaveTurn2)
+        printf(" %s",plain_hand_types[varspt->poker_hand_on_turn.GetHandType()]);
+      else if (varspt->bShowHandTypeOnRiver && varspt->bHaveRiver2)
+        printf(" %s",plain_hand_types[varspt->poker_hand_on_river.GetHandType()]);
 
       if (varspt->bShowRiver)
         printf(" %s",&varspt->board_cards[12]);
