@@ -21,7 +21,7 @@ static char save_dir[_MAX_PATH];
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: premium_freq (-only_zero) filename\n";
+"usage: premium_freq (-only_zero) (-total_hands_first) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 static char dealt_to[] = "Dealt to ";
@@ -33,6 +33,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bOnlyZero;
+  bool bTotalHandsFirst;
   FILE *fptr;
   int line_len;
   int line_no;
@@ -41,16 +42,19 @@ int main(int argc,char **argv)
   int total_premium_hands;
   double dwork;
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 4)) {
     printf(usage);
     return 1;
   }
 
   bOnlyZero = false;
+  bTotalHandsFirst = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-only_zero"))
       bOnlyZero = true;
+    else if (!strcmp(argv[curr_arg],"-total_hands_first"))
+      bTotalHandsFirst = true;
     else
       break;
   }
@@ -93,8 +97,12 @@ int main(int argc,char **argv)
   dwork = (double)total_premium_hands / dwork;
   dwork /= (double)TOTAL_PREMIUM_HANDS;
 
-  if (!bOnlyZero || !total_premium_hands)
-    printf("%lf (%d %d) %s\n",dwork,total_premium_hands,total_hands,save_dir);
+  if (!bOnlyZero || !total_premium_hands) {
+    if (!bTotalHandsFirst)
+      printf("%lf (%d %d) %s\n",dwork,total_hands,total_premium_hands,save_dir);
+    else
+      printf("%d %d %lf %s\n",total_hands,total_premium_hands,dwork,save_dir);
+  }
 
   fclose(fptr);
 
