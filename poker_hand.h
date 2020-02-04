@@ -234,6 +234,7 @@ class PokerHand {
 
   int GetRank(int card_ix);
   void Sort();
+  void Evaluate0(int *hand_counts_ptr);
   HandType Evaluate();
   HandType EvaluateLow();
   HandType EvaluateQuick(struct hand_and_type *hands_and_types,int debug_level);
@@ -251,6 +252,7 @@ class PokerHand {
   bool ThreeOfAKind();
   bool TwoPair();
   bool OnePair();
+  bool HighCard();
 
   char *GetHand();
   HandType GetHandType();

@@ -223,6 +223,47 @@ int compare1(const void *elem1,const void *elem2)
   return int1 - int2;
 }
 
+void PokerHand::Evaluate0(int *hand_counts_ptr)
+{
+  hand sorted_hand;
+
+  if (!_have_cards)
+    return;
+
+  if (!_hand_sorted) {
+    Sort();
+
+    if (!_hand_sorted)
+      return;
+
+    _hand_evaluated = false;
+  }
+
+  if (_hand_evaluated)
+    return;
+
+  if (RoyalFlush())
+    hand_counts_ptr[ROYAL_FLUSH]++;
+  if (StraightFlush())
+    hand_counts_ptr[STRAIGHT_FLUSH]++;
+  if (FourOfAKind())
+    hand_counts_ptr[FOUR_OF_A_KIND]++;
+  if (FullHouse())
+    hand_counts_ptr[FULL_HOUSE]++;
+  if (Flush())
+    hand_counts_ptr[FLUSH]++;
+  if (Straight())
+    hand_counts_ptr[STRAIGHT]++;
+  if (ThreeOfAKind())
+    hand_counts_ptr[THREE_OF_A_KIND]++;
+  if (TwoPair())
+    hand_counts_ptr[TWO_PAIRS]++;
+  if (OnePair())
+    hand_counts_ptr[ONE_PAIR]++;
+  if (HighCard())
+    hand_counts_ptr[HIGH_CARD]++;
+}
+
 HandType PokerHand::Evaluate()
 {
   hand sorted_hand;
@@ -300,13 +341,13 @@ HandType PokerHand::EvaluateLow()
 
   if (FourOfAKind())
     _hand_type = FOUR_OF_A_KIND;
-  else if (FullHouse())
+  if (FullHouse())
     _hand_type = FULL_HOUSE;
-  else if (ThreeOfAKind())
+  if (ThreeOfAKind())
     _hand_type = THREE_OF_A_KIND;
-  else if (TwoPair())
+  if (TwoPair())
     _hand_type = TWO_PAIRS;
-  else if (OnePair())
+  if (OnePair())
     _hand_type = ONE_PAIR;
   else
     _hand_type = HIGH_CARD;
@@ -505,6 +546,21 @@ bool PokerHand::OnePair()
     return 1;
 
   return 0;
+}
+
+bool PokerHand::HighCard()
+{
+  int n;
+
+  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+    if (_num_cards_with_same_rank.cards[n] > 1)
+      break;
+  }
+
+  if (n < NUM_CARDS_IN_HAND)
+    return 0;
+
+  return 1;
 }
 
 char *PokerHand::GetHand()
