@@ -28,6 +28,7 @@ enum HandType {
   ONE_PAIR,
   TWO_PAIRS,
   THREE_OF_A_KIND,
+  WHEEL,
   STRAIGHT,
   FLUSH,
   FULL_HOUSE,
@@ -77,6 +78,7 @@ char *plain_hand_types[] = {
   "one pair",
   "two pair",
   "three of a kind",
+  "wheel",
   "straight",
   "flush",
   "full house",
@@ -157,6 +159,7 @@ char *hand_type_abbrevs[] = {
   "1p",
   "2p",
   "3k",
+  "wh",
   "st",
   "fl",
   "fh",
@@ -248,6 +251,7 @@ class PokerHand {
   bool FullHouse();
   bool Flush();
   bool Straight();
+  bool Wheel();
   bool Broadway();
   bool ThreeOfAKind();
   bool TwoPair();

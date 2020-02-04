@@ -254,6 +254,8 @@ void PokerHand::Evaluate0(int *hand_counts_ptr)
     hand_counts_ptr[FLUSH]++;
   if (Straight())
     hand_counts_ptr[STRAIGHT]++;
+  if (Wheel())
+    hand_counts_ptr[WHEEL]++;
   if (ThreeOfAKind())
     hand_counts_ptr[THREE_OF_A_KIND]++;
   if (TwoPair())
@@ -304,6 +306,8 @@ HandType PokerHand::Evaluate()
     _hand_type = FLUSH;
   else if (Straight())
     _hand_type = STRAIGHT;
+  else if (Wheel())
+    _hand_type = WHEEL;
   else if (ThreeOfAKind())
     _hand_type = THREE_OF_A_KIND;
   else if (TwoPair())
@@ -436,7 +440,7 @@ bool PokerHand::RoyalFlush()
 
 bool PokerHand::StraightFlush()
 {
-  if (!Straight())
+  if (!Straight() && !Wheel())
     return 0;
 
   if (!Flush())
@@ -481,8 +485,20 @@ bool PokerHand::Straight()
 {
   int n;
 
-  // first, handle the special case of a wheel ({A, 2, 3, 4, 5} in a regular deck
-  // and {A, 6, 7, 8, 9} in a short deck)
+  for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
+    if (_rank.cards[_order.cards[n-1]] != _rank.cards[_order.cards[n]] + 1)
+      break;
+  }
+
+  if (n < NUM_CARDS_IN_HAND)
+    return 0;
+
+  return 1;
+}
+
+bool PokerHand::Wheel()
+{
+  int n;
 
   if (_num_cards_in_deck == NUM_CARDS_IN_DECK) {
     if ((_rank.cards[_order.cards[0]] == ACE) &&
@@ -501,15 +517,7 @@ bool PokerHand::Straight()
       return 1;
   }
 
-  for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
-    if (_rank.cards[_order.cards[n-1]] != _rank.cards[_order.cards[n]] + 1)
-      break;
-  }
-
-  if (n < NUM_CARDS_IN_HAND)
-    return 0;
-
-  return 1;
+  return 0;
 }
 
 bool PokerHand::Broadway()
