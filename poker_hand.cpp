@@ -252,6 +252,8 @@ void PokerHand::Evaluate0(int *hand_counts_ptr)
     hand_counts_ptr[FULL_HOUSE]++;
   if (Flush())
     hand_counts_ptr[FLUSH]++;
+  if (Broadway())
+    hand_counts_ptr[BROADWAY]++;
   if (Straight())
     hand_counts_ptr[STRAIGHT]++;
   if (Wheel())
@@ -304,6 +306,8 @@ HandType PokerHand::Evaluate()
     _hand_type = FULL_HOUSE;
   else if (Flush())
     _hand_type = FLUSH;
+  else if (Broadway())
+    _hand_type = BROADWAY;
   else if (Straight())
     _hand_type = STRAIGHT;
   else if (Wheel())
@@ -481,6 +485,17 @@ bool PokerHand::Flush()
   return 1;
 }
 
+bool PokerHand::Broadway()
+{
+  if (!Straight())
+    return 0;
+
+  if ((_rank.cards[_order.cards[0]] != ACE) || (_rank.cards[_order.cards[1]] != KING))
+    return 0;
+
+  return 1;
+}
+
 bool PokerHand::Straight()
 {
   int n;
@@ -518,17 +533,6 @@ bool PokerHand::Wheel()
   }
 
   return 0;
-}
-
-bool PokerHand::Broadway()
-{
-  if (!Straight())
-    return 0;
-
-  if ((_rank.cards[_order.cards[0]] != ACE) || (_rank.cards[_order.cards[1]] != KING))
-    return 0;
-
-  return 1;
 }
 
 bool PokerHand::ThreeOfAKind()
