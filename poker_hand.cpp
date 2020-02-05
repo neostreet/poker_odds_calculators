@@ -1012,25 +1012,6 @@ static char *rank_strings[] = {
 
 #define MAX_VAR_INFO_VARS 2
 
-struct hand_type_info {
-  char *hand_type_fmt;
-  int num_var_info_vars;
-  int var_info_vars[MAX_VAR_INFO_VARS];
-};
-
-static struct hand_type_info hand_types[] = {
-  "high card %s", 1, { 0, 0 },
-  "a pair of %ss", 1, { 0, 0 },
-  "two pair, %ss and %ss", 2, { 0, 2},
-  "three of a kind, %ss", 1, { 0, 0 },
-  "a straight, %s to %s", 2, { 4, 0 },
-  "a flush, %s high", 1, { 0, 0 },
-  "a full house, %ss full of %ss", 2, { 0, 3 },
-  "four of a kind, %ss", 1, { 0, 0 },
-  "a straight flush, %s to %s", 2, { 4, 0 },
-  "a royal flush", 0, { 0, 0 }
-};
-
 #define PRINT_BUF_LEN 256
 static char print_buf[PRINT_BUF_LEN];
 
@@ -1090,36 +1071,7 @@ void PokerHand::print(ostream& out) const
     }
   }
 
-  if (_plain)
-    out << plain_hand_types[_hand_type];
-  else {
-    switch (hand_types[_hand_type].num_var_info_vars) {
-      case 0:
-        sprintf(print_buf,hand_types[_hand_type].hand_type_fmt);
-
-        break;
-      case 1:
-        sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-          rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[0]]]]);
-
-        break;
-      case 2:
-        // first, handle the special case of a wheel (A, 2, 3, 4, 5)
-        if (((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
-             (_hand_type == ROYAL_FLUSH)) &&
-             (_rank.cards[_order.cards[0]] == ACE) && (_rank.cards[_order.cards[1]] == FIVE))
-          sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-            rank_strings[ACE],
-            rank_strings[FIVE]);
-        else
-          sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
-            rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[0]]]],
-            rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[1]]]]);
-
-        break;
-    }
-  }
-
+  out << plain_hand_types[_hand_type];
   out << print_buf;
 }
 

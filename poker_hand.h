@@ -81,7 +81,7 @@ char *plain_hand_types[] = {
   "three of a kind",
   "wheel",
   "straight",
-  "broadway",
+  "Broadway",
   "flush",
   "full house",
   "four of a kind",
