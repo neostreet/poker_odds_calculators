@@ -13,7 +13,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up (-verbose) (-only_playern) filename";
+"usage: heads_up (-terse) (-verbose) (-only_playern) (-only_wins) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -22,8 +22,10 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
+  bool bTerse;
   bool bVerbose;
   int only_player;
+  int bOnlyWins;
   int m;
   int n;
   int retval;
@@ -38,16 +40,20 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 6)) {
     cout << usage << endl;
     return 1;
   }
 
+  bTerse = false;
   bVerbose = false;
   only_player = -1;
+  bOnlyWins = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-verbose"))
+    if (!strcmp(argv[curr_arg],"-terse"))
+      bTerse = true;
+    else if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
     else if (!strncmp(argv[curr_arg],"-only_player",12)) {
       sscanf(&argv[curr_arg][12],"%d",&only_player);
@@ -59,6 +65,8 @@ int main(int argc,char **argv)
 
       only_player--;
     }
+    else if (!strcmp(argv[curr_arg],"-only_wins"))
+      bOnlyWins = true;
     else
       break;
   }
@@ -83,7 +91,10 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
-    printf("%s\n",line);
+    if (!bTerse)
+      printf("%s\n",line);
+    else
+      printf("%s ",line);
 
     line_no++;
 
@@ -130,15 +141,22 @@ int main(int argc,char **argv)
     hu.Evaluate(bVerbose);
     outcomes = hu.GetOutcomes();
 
-    putchar(0x0a);
+    if (!bTerse)
+      putchar(0x0a);
 
     for (n = 0; n < NUM_PLAYERS; n++) {
       if ((only_player == -1) || (only_player == n)) {
-        printf("player %d\n",n+1);
+        if (!bTerse)
+          printf("player %d\n",n+1);
+
         total = outcomes[n].wins + outcomes[n].losses + outcomes[n].ties;
 
         pct = (double)outcomes[n].wins * (double)100 / (double)total;
-        printf("  wins      %7d (%5.2lf)\n",outcomes[n].wins,pct);
+
+        if (!bTerse)
+          printf("  wins      %7d (%5.2lf)\n",outcomes[n].wins,pct);
+        else
+          printf("%d ",outcomes[n].wins);
 
         if (bVerbose) {
           for (m = 0; m < NUM_HAND_TYPES; m++) {
@@ -150,33 +168,47 @@ int main(int argc,char **argv)
           }
         }
 
-        pct = (double)outcomes[n].losses * (double)100 / (double)total;
-        printf("  losses    %7d (%5.2lf)\n",outcomes[n].losses,pct);
+        if (!bOnlyWins) {
+          pct = (double)outcomes[n].losses * (double)100 / (double)total;
 
-        if (bVerbose) {
-          for (m = 0; m < NUM_HAND_TYPES; m++) {
-            if (outcomes[n].losses_hand_counts[m]) {
-              printf("    %s      %7d\n",
-                hand_type_abbrevs[m],
-                outcomes[n].losses_hand_counts[m]);
+          if (!bTerse)
+            printf("  losses    %7d (%5.2lf)\n",outcomes[n].losses,pct);
+          else
+            printf("%d ",outcomes[n].losses);
+
+          if (bVerbose) {
+            for (m = 0; m < NUM_HAND_TYPES; m++) {
+              if (outcomes[n].losses_hand_counts[m]) {
+                printf("    %s      %7d\n",
+                  hand_type_abbrevs[m],
+                  outcomes[n].losses_hand_counts[m]);
+              }
             }
           }
-        }
 
-        pct = (double)outcomes[n].ties * (double)100 / (double)total;
-        printf("  ties      %7d (%5.2lf)\n",outcomes[n].ties,pct);
+          pct = (double)outcomes[n].ties * (double)100 / (double)total;
 
-        if (bVerbose) {
-          for (m = 0; m < NUM_HAND_TYPES; m++) {
-            if (outcomes[n].ties_hand_counts[m]) {
-              printf("    %s      %7d\n",
-                hand_type_abbrevs[m],
-                outcomes[n].ties_hand_counts[m]);
+          if (!bTerse)
+            printf("  ties      %7d (%5.2lf)\n",outcomes[n].ties,pct);
+          else
+            printf("%d",outcomes[n].ties);
+
+          if (bVerbose) {
+            for (m = 0; m < NUM_HAND_TYPES; m++) {
+              if (outcomes[n].ties_hand_counts[m]) {
+                printf("    %s      %7d\n",
+                  hand_type_abbrevs[m],
+                  outcomes[n].ties_hand_counts[m]);
+              }
             }
           }
+
+          if (!bTerse)
+            printf("  total     %7d\n",total);
         }
 
-        printf("  total     %7d\n",total);
+        if (bTerse)
+          putchar(0x0a);
       }
     }
 
