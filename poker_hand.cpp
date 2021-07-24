@@ -252,12 +252,8 @@ void PokerHand::Evaluate0(int *hand_counts_ptr)
     hand_counts_ptr[FULL_HOUSE]++;
   if (Flush())
     hand_counts_ptr[FLUSH]++;
-  if (Broadway())
-    hand_counts_ptr[BROADWAY]++;
   if (Straight())
     hand_counts_ptr[STRAIGHT]++;
-  if (Wheel())
-    hand_counts_ptr[WHEEL]++;
   if (ThreeOfAKind())
     hand_counts_ptr[THREE_OF_A_KIND]++;
   if (TwoPair())
@@ -306,12 +302,8 @@ HandType PokerHand::Evaluate()
     _hand_type = FULL_HOUSE;
   else if (Flush())
     _hand_type = FLUSH;
-  else if (Broadway())
-    _hand_type = BROADWAY;
   else if (Straight())
     _hand_type = STRAIGHT;
-  else if (Wheel())
-    _hand_type = WHEEL;
   else if (ThreeOfAKind())
     _hand_type = THREE_OF_A_KIND;
   else if (TwoPair())
@@ -444,7 +436,7 @@ bool PokerHand::RoyalFlush()
 
 bool PokerHand::StraightFlush()
 {
-  if (!Straight() && !Wheel())
+  if (!Straight())
     return 0;
 
   if (!Flush())
@@ -485,17 +477,6 @@ bool PokerHand::Flush()
   return 1;
 }
 
-bool PokerHand::Broadway()
-{
-  if (!Straight())
-    return 0;
-
-  if ((_rank.cards[_order.cards[0]] != ACE) || (_rank.cards[_order.cards[1]] != KING))
-    return 0;
-
-  return 1;
-}
-
 bool PokerHand::Straight()
 {
   int n;
@@ -509,30 +490,6 @@ bool PokerHand::Straight()
     return 0;
 
   return 1;
-}
-
-bool PokerHand::Wheel()
-{
-  int n;
-
-  if (_num_cards_in_deck == NUM_CARDS_IN_DECK) {
-    if ((_rank.cards[_order.cards[0]] == ACE) &&
-        (_rank.cards[_order.cards[1]] == FIVE) &&
-        (_rank.cards[_order.cards[2]] == FOUR) &&
-        (_rank.cards[_order.cards[3]] == THREE) &&
-        (_rank.cards[_order.cards[4]] == TWO))
-      return 1;
-  }
-  else if (_num_cards_in_deck == NUM_CARDS_IN_SHORT_DECK) {
-    if ((_rank.cards[_order.cards[0]] == ACE) &&
-        (_rank.cards[_order.cards[1]] == NINE) &&
-        (_rank.cards[_order.cards[2]] == EIGHT) &&
-        (_rank.cards[_order.cards[3]] == SEVEN) &&
-        (_rank.cards[_order.cards[4]] == SIX))
-      return 1;
-  }
-
-  return 0;
 }
 
 bool PokerHand::ThreeOfAKind()
