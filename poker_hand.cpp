@@ -481,12 +481,43 @@ bool PokerHand::Straight()
 {
   int n;
 
+  // first, handle the special case of a wheel ({A, 2, 3, 4, 5} in a regular deck
+  // and {A, 6, 7, 8, 9} in a short deck)
+
+  if (_num_cards_in_deck == NUM_CARDS_IN_DECK) {
+    if ((_rank.cards[_order.cards[0]] == ACE) &&
+        (_rank.cards[_order.cards[1]] == FIVE) &&
+        (_rank.cards[_order.cards[2]] == FOUR) &&
+        (_rank.cards[_order.cards[3]] == THREE) &&
+        (_rank.cards[_order.cards[4]] == TWO))
+      return 1;
+  }
+  else if (_num_cards_in_deck == NUM_CARDS_IN_SHORT_DECK) {
+    if ((_rank.cards[_order.cards[0]] == ACE) &&
+        (_rank.cards[_order.cards[1]] == NINE) &&
+        (_rank.cards[_order.cards[2]] == EIGHT) &&
+        (_rank.cards[_order.cards[3]] == SEVEN) &&
+        (_rank.cards[_order.cards[4]] == SIX))
+      return 1;
+  }
+
   for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
     if (_rank.cards[_order.cards[n-1]] != _rank.cards[_order.cards[n]] + 1)
       break;
   }
 
   if (n < NUM_CARDS_IN_HAND)
+    return 0;
+
+  return 1;
+}
+
+bool PokerHand::Broadway()
+{
+  if (!Straight())
+    return 0;
+
+  if ((_rank.cards[_order.cards[0]] != ACE) || (_rank.cards[_order.cards[1]] != KING))
     return 0;
 
   return 1;
@@ -969,6 +1000,25 @@ static char *rank_strings[] = {
 
 #define MAX_VAR_INFO_VARS 2
 
+struct hand_type_info {
+  char *hand_type_fmt;
+  int num_var_info_vars;
+  int var_info_vars[MAX_VAR_INFO_VARS];
+};
+
+static struct hand_type_info hand_types[] = {
+  "high card %s", 1, { 0, 0 },
+  "a pair of %ss", 1, { 0, 0 },
+  "two pair, %ss and %ss", 2, { 0, 2},
+  "three of a kind, %ss", 1, { 0, 0 },
+  "a straight, %s to %s", 2, { 4, 0 },
+  "a flush, %s high", 1, { 0, 0 },
+  "a full house, %ss full of %ss", 2, { 0, 3 },
+  "four of a kind, %ss", 1, { 0, 0 },
+  "a straight flush, %s to %s", 2, { 4, 0 },
+  "a royal flush", 0, { 0, 0 }
+};
+
 #define PRINT_BUF_LEN 256
 static char print_buf[PRINT_BUF_LEN];
 
@@ -1028,7 +1078,36 @@ void PokerHand::print(ostream& out) const
     }
   }
 
-  out << plain_hand_types[_hand_type];
+  if (_plain)
+    out << plain_hand_types[_hand_type];
+  else {
+    switch (hand_types[_hand_type].num_var_info_vars) {
+      case 0:
+        sprintf(print_buf,hand_types[_hand_type].hand_type_fmt);
+
+        break;
+      case 1:
+        sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
+          rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[0]]]]);
+
+        break;
+      case 2:
+        // first, handle the special case of a wheel (A, 2, 3, 4, 5)
+        if (((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
+             (_hand_type == ROYAL_FLUSH)) &&
+             (_rank.cards[_order.cards[0]] == ACE) && (_rank.cards[_order.cards[1]] == FIVE))
+          sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
+            rank_strings[ACE],
+            rank_strings[FIVE]);
+        else
+          sprintf(print_buf,hand_types[_hand_type].hand_type_fmt,
+            rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[0]]]],
+            rank_strings[_rank.cards[_order.cards[hand_types[_hand_type].var_info_vars[1]]]]);
+
+        break;
+    }
+  }
+
   out << print_buf;
 }
 

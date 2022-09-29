@@ -248,6 +248,7 @@ class PokerHand {
   bool FullHouse();
   bool Flush();
   bool Straight();
+  bool Broadway();
   bool ThreeOfAKind();
   bool TwoPair();
   bool OnePair();
