@@ -65,7 +65,7 @@ static char usage[] =
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
 "  (-hut_outs) (-hut_wins_ge_value) (-hut_wins_le_value) (-hut_wins_eq_value\n"
-"  (-huf_outs) (-3t_outs\n"
+"  (-huf_outs) (-3t_outs)\n"
 "  (-hut_losses_ge_value) (-hut_losses_le_value) (-hut_losses_eq_value\n"
 "  (-hut_ties_ge_value) (-hut_ties_le_value) (-hut_ties_eq_value\n"
 "  (-show_winning_hand_hole_card_ixs) (-show_winning_hand_hole_cards_abbrev)\n"
@@ -147,6 +147,11 @@ static char board[] = "Board [";
 #define BOARD_LEN (sizeof (board) - 1)
 
 #define MAX_TABLE_COUNT 9
+
+static int file_no;
+static int dbg_file_no;
+static int hand_no;
+static int dbg_hand_no;
 
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 static int Contains(bool bCaseSens,char *line,int line_len,
@@ -494,8 +499,6 @@ int main(int argc,char **argv)
   int bring_in;
   int spent_this_street;
   int end_ix;
-  int file_no;
-  int dbg_file_no;
   int dbg;
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
   HoldemTurnHand turn_hand;
@@ -1532,6 +1535,7 @@ int main(int argc,char **argv)
 
   file_no = 0;
   dbg_file_no = -1;
+  hand_no = 0;
 
   local_vars.hole_cards_abbrev[3] = 0;
   local_vars.winning_hand_hole_cards_abbrev[3] = 0;
@@ -1657,6 +1661,7 @@ int main(int argc,char **argv)
 
       if (feof(fptr)) {
         run_filter(&local_vars);
+        hand_no++;
 
         if (local_vars.bSummarizing) {
           if (!local_vars.bSkipZero || local_vars.summary_val) {
@@ -1739,8 +1744,10 @@ int main(int argc,char **argv)
       else if (!strncmp(line,"Table '",7)) {
         if (bFirstHand)
           bFirstHand = false;
-        else
+        else {
           run_filter(&local_vars);
+          hand_no++;
+        }
 
         if (local_vars.bTwinAbbrevs)
           local_vars.prev_abbrev_index = local_vars.curr_abbrev_index;
@@ -3019,11 +3026,15 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
 
 void run_filter(struct vars *varspt)
 {
+  int dbg;
   double dwork;
   HeadsUpTurn hut;
   HeadsUpFlop huf;
   int cards[NUM_HEADS_UP_TURN_CARDS];
   bool bSkip;
+
+  if (hand_no == dbg_hand_no)
+    dbg = 1;
 
   if (varspt->filter_percentage)
     varspt->summary_val++;
@@ -3465,7 +3476,7 @@ void run_filter(struct vars *varspt)
       if (varspt->bVerbose) {
         if (!varspt->bGetDateFromFilename) {
           if (!varspt->bVerboseStyle2)
-            printf(" %s %3d\n",filename,varspt->num_hands);
+            printf(" %s %3d (%3d)\n",filename,varspt->num_hands,hand_no+1);
           else
             printf(" %s%d.txt\n",style2(filename),varspt->num_hands);
         }
