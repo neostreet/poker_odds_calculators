@@ -3086,7 +3086,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bNoUncalled || (varspt->uncalled_bet_amount == 0)) {
   if (!varspt->bNoCollected || (varspt->collected_from_pot == 0)) {
   if (!varspt->bOnlySuited || (varspt->hole_cards[1] == varspt->hole_cards[4])) {
-  if (!varspt->bPocketPair || (varspt->hole_cards[0] == varspt->hole_cards[3])) {
+  if (!varspt->bPocketPair || (!varspt->bAbbrev && (varspt->hole_cards[0] == varspt->hole_cards[3])) || (varspt->bAbbrev && (varspt->hole_cards_abbrev[0] == varspt->hole_cards_abbrev[1]))) {
   if ((varspt->hand_number == -1) || (varspt->num_hands == varspt->hand_number)) {
   if (!varspt->bDeltaGe || (varspt->delta >= varspt->delta_ge_val)) {
   if (!varspt->bCollectedGe || (varspt->collected_from_pot >= varspt->collected_ge_val)) {
