@@ -42,7 +42,7 @@ static char usage[] =
 "  (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
-"  (-only_suited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
+"  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
 "  (-hand_typ_idid)\n"
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
@@ -289,6 +289,7 @@ struct vars {
   bool bNoDelta;
   bool bHoleCardsUsed;
   bool bOnlySuited;
+  bool bOnlyNonsuited;
   bool bFlopped;
   bool bPocketPair;
   bool bDidntSeeFlop;
@@ -516,7 +517,7 @@ int main(int argc,char **argv)
   char specified_winning_hand[4];
   bool bFirstFileOnly;
 
-  if ((argc < 3) || (argc > 152)) {
+  if ((argc < 3) || (argc > 153)) {
     printf(usage);
     return 1;
   }
@@ -618,6 +619,7 @@ int main(int argc,char **argv)
   local_vars.bNoDelta = false;
   local_vars.bHoleCardsUsed = false;
   local_vars.bOnlySuited = false;
+  local_vars.bOnlyNonsuited = false;
   local_vars.bFlopped = false;
   local_vars.bPocketPair = false;
   local_vars.bDidntSeeFlop = false;
@@ -958,6 +960,8 @@ int main(int argc,char **argv)
       local_vars.bHoleCardsUsed = true;
     else if (!strcmp(argv[curr_arg],"-only_suited"))
       local_vars.bOnlySuited = true;
+    else if (!strcmp(argv[curr_arg],"-only_nonsuited"))
+      local_vars.bOnlyNonsuited = true;
     else if (!strcmp(argv[curr_arg],"-flopped"))
       local_vars.bFlopped = true;
     else if (!strcmp(argv[curr_arg],"-pocket_pair"))
@@ -3086,6 +3090,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bNoUncalled || (varspt->uncalled_bet_amount == 0)) {
   if (!varspt->bNoCollected || (varspt->collected_from_pot == 0)) {
   if (!varspt->bOnlySuited || (varspt->hole_cards[1] == varspt->hole_cards[4])) {
+  if (!varspt->bOnlyNonsuited || (varspt->hole_cards[1] != varspt->hole_cards[4])) {
   if (!varspt->bPocketPair || (!varspt->bAbbrev && (varspt->hole_cards[0] == varspt->hole_cards[3])) || (varspt->bAbbrev && (varspt->hole_cards_abbrev[0] == varspt->hole_cards_abbrev[1]))) {
   if ((varspt->hand_number == -1) || (varspt->num_hands == varspt->hand_number)) {
   if (!varspt->bDeltaGe || (varspt->delta >= varspt->delta_ge_val)) {
@@ -3486,6 +3491,7 @@ void run_filter(struct vars *varspt)
       else
         putchar(0x0a);
     }
+  }
   }
   }
   }
