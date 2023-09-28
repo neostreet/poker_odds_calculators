@@ -537,6 +537,10 @@ bool PokerHand::TwoPair()
       (_num_cards_with_same_rank.cards[_order.cards[2]] == 2))
     return 1;
 
+  if ((_num_cards_with_same_rank.cards[_order.cards[0]] == 3) &&
+      (_num_cards_with_same_rank.cards[_order.cards[3]] == 2))
+    return 1;
+
   return 0;
 }
 
@@ -550,16 +554,6 @@ bool PokerHand::OnePair()
 
 bool PokerHand::HighCard()
 {
-  int n;
-
-  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
-    if (_num_cards_with_same_rank.cards[n] > 1)
-      break;
-  }
-
-  if (n < NUM_CARDS_IN_HAND)
-    return 0;
-
   return 1;
 }
 
