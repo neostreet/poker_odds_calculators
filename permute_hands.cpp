@@ -31,6 +31,7 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
   int hand_type_ixs[NUM_HAND_TYPES];
+  int total;
 
   if (argc > 2) {
     printf(usage);
@@ -81,13 +82,18 @@ int main(int argc,char **argv)
 
   qsort(hand_type_ixs,NUM_HAND_TYPES,sizeof (int),compare);
 
+  total = 0;
+
+  for (n = 0; n < NUM_HAND_TYPES; n++)
+    total += hand_counts[n];
+
   for (n = 0; n < NUM_HAND_TYPES; n++) {
-    pct = (double)hand_counts[hand_type_ixs[n]] / (double)POKER_52_5_PERMUTATIONS;
+    pct = (double)hand_counts[hand_type_ixs[n]] / (double)total;
     printf("%s %9d %9.6lf\n",hand_type_abbrevs[hand_type_ixs[n]],hand_counts[hand_type_ixs[n]],pct);
   }
 
   printf("============\n");
-  printf("   %9d\n",POKER_52_5_PERMUTATIONS);
+  printf("   %9d\n",total);
 
   printf("\ncomputation time: %d seconds\n",end_time - start_time);
 
