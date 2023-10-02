@@ -29,7 +29,10 @@ static int *ixs;
 static int *ixs2;
 static vector<PokerHand> hands;
 
+static int hand_counts[NUM_HAND_TYPES];
+
 int elem_compare(const void *elem1,const void *elem2);
+int compare(const void *elem1,const void *elem2);
 
 int main(int argc,char **argv)
 {
@@ -55,6 +58,10 @@ int main(int argc,char **argv)
   hand work_hand;
   struct hand_and_type *found;
   int fhndl;
+  size_t malloc_size;
+  int hand_type_ixs[NUM_HAND_TYPES];
+  int total;
+  double pct;
 
   if (argc > 7) {
     printf(usage);
@@ -110,7 +117,8 @@ int main(int argc,char **argv)
   }
 
   if (bBinFile) {
-    hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * count);
+    malloc_size = sizeof (struct hand_and_type) * count;
+    hands_and_types = (struct hand_and_type *)malloc(malloc_size);
 
     if (hands_and_types == NULL) {
       printf("malloc of hands_and_types failed\n");
@@ -118,7 +126,7 @@ int main(int argc,char **argv)
     }
 
     if (bWriteSorted) {
-      sorted_hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * count);
+      sorted_hands_and_types = (struct hand_and_type *)malloc(malloc_size);
 
       if (sorted_hands_and_types == NULL) {
         printf("malloc of hands_and_types failed\n");
@@ -131,6 +139,11 @@ int main(int argc,char **argv)
 
   time(&start_time);
 
+  for (n = 0; n < NUM_HAND_TYPES; n++) {
+    hand_counts[n] = 0;
+    hand_type_ixs[n] = n;
+  }
+
   for (m = 0; m < count; m++) {
     get_permutation_instance_five(
       NUM_CARDS_IN_DECK,
@@ -138,6 +151,7 @@ int main(int argc,char **argv)
 
     myhand.NewCards(cards[0],cards[1],cards[2],cards[3],cards[4]);
     myhand.Evaluate();
+    hand_counts[myhand.GetHandType()]++;
     hands.push_back(myhand);
     ixs[m] = m;
 
@@ -157,7 +171,7 @@ int main(int argc,char **argv)
     ties = 0;
 
     for (m = 0; m < count - 1; m++) {
-      if (!hands[ixs[m]].Compare(hands[ixs[m+1]],0,false))
+      if (!hands[ixs[m]].Compare(hands[ixs[m+1]],0))
         ties++;
     }
   }
@@ -167,7 +181,7 @@ int main(int argc,char **argv)
 
   for (m = 0; m < count - 1; ) {
     for (n = m + 1; n < count; n++) {
-      if (hands[ixs[m]].Compare(hands[ixs[n]],0,false))
+      if (hands[ixs[m]].Compare(hands[ixs[n]],0))
         break;
     }
 
@@ -186,8 +200,6 @@ int main(int argc,char **argv)
   }
 
   time(&end_time);
-
-  printf("computation time: %d seconds\n",end_time - start_time);
 
   if (bCountTies)
     printf("%d ties\n",ties);
@@ -221,6 +233,23 @@ int main(int argc,char **argv)
     free(hands_and_types);
   }
 
+  qsort(hand_type_ixs,NUM_HAND_TYPES,sizeof (int),compare);
+
+  total = 0;
+
+  for (n = 0; n < NUM_HAND_TYPES; n++)
+    total += hand_counts[n];
+
+  for (n = 0; n < NUM_HAND_TYPES; n++) {
+    pct = (double)hand_counts[hand_type_ixs[n]] / (double)total;
+    printf("%s %9d %9.6lf\n",hand_type_abbrevs[hand_type_ixs[n]],hand_counts[hand_type_ixs[n]],pct);
+  }
+
+  printf("============\n");
+  printf("   %9d\n",total);
+
+  printf("\ncomputation time: %d seconds\n",end_time - start_time);
+
   free(ixs2);
   free(ixs);
 
@@ -235,5 +264,16 @@ int elem_compare(const void *elem1,const void *elem2)
   ix1 = *(int *)elem1;
   ix2 = *(int *)elem2;
 
-  return hands[ix1].Compare(hands[ix2],0,false);
+  return hands[ix1].Compare(hands[ix2],0);
+}
+
+int compare(const void *elem1,const void *elem2)
+{
+  int int1;
+  int int2;
+
+  int1 = *(int *)elem1;
+  int2 = *(int *)elem2;
+
+  return hand_counts[int1] - hand_counts[int2];
 }
