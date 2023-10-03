@@ -11,7 +11,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: get_quick_ix2 (-verbose) (-card_ixs) hands_and_types_filename\n"
+"usage: get_quick_ix2 (-verbose) (-card_ixs) (-no_ixs) hands_and_types_filename\n"
 "  card_ix card_ix card_ix card_ix card_ix\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
@@ -30,7 +30,7 @@ int main(int argc,char **argv)
   char card_string[3];
   struct hand_and_type *found;
 
-  if ((argc < 7) || (argc > 9)) {
+  if ((argc < 7) || (argc > 10)) {
     printf(usage);
     return 1;
   }
