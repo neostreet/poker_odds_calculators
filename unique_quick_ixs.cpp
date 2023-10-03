@@ -11,7 +11,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: unique_quick_ixs (-verbose) hands_and_types_filename\n";
+"usage: unique_quick_ixs (-verbose) (-no_quick_ix) hands_and_types_filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -27,22 +27,26 @@ int main(int argc,char **argv)
   int n;
   int curr_arg;
   bool bVerbose;
+  bool bNoQuickIx;
   int retval;
   struct hand_and_type *hands_and_types;
   int unique_count;
   int total_count;
   int last_ix;
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 4)) {
     printf(usage);
     return 1;
   }
 
   bVerbose = false;
+  bNoQuickIx = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
+    else if (!strcmp(argv[curr_arg],"-no_quick_ix"))
+      bNoQuickIx = true;
     else
       break;
   }
@@ -80,10 +84,16 @@ int main(int argc,char **argv)
   for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
     if (quick_ix_counts[n].quick_ix_count) {
       if (bVerbose) {
-        printf("%7d %4d %7d %d %s\n",n,quick_ix_counts[n].quick_ix_count,
-          quick_ix_counts[n].first_hand_ix,
-          hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type,
-          plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
+        if (!bNoQuickIx) {
+          printf("%7d %4d %7d %s\n",n,quick_ix_counts[n].quick_ix_count,
+            quick_ix_counts[n].first_hand_ix,
+            plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
+        }
+        else {
+          printf("%4d %7d %s\n",quick_ix_counts[n].quick_ix_count,
+            quick_ix_counts[n].first_hand_ix,
+            plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
+        }
       }
       else {
         unique_count++;
