@@ -70,7 +70,7 @@ int main(int argc,char **argv)
         printf("%d\n",n);
       else {
         if (!bNoIxs)
-          printf("%d ",n);
+          printf("%7d ",n);
 
         for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
           if (!bCardIxs) {
