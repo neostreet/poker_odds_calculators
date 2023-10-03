@@ -24,12 +24,14 @@ static struct quick_ix_count_info quick_ix_counts[POKER_52_5_PERMUTATIONS];
 
 int main(int argc,char **argv)
 {
+  int m;
   int n;
   int curr_arg;
   bool bVerbose;
   bool bNoQuickIx;
   int retval;
   struct hand_and_type *hands_and_types;
+  char card_string[3];
   int unique_count;
   int total_count;
   int last_ix;
@@ -81,19 +83,29 @@ int main(int argc,char **argv)
   unique_count = 0;
   total_count = 0;
 
+  card_string[2] = 0;
+
   for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
     if (quick_ix_counts[n].quick_ix_count) {
       if (bVerbose) {
         if (!bNoQuickIx) {
-          printf("%7d %4d %7d %s\n",n,quick_ix_counts[n].quick_ix_count,
-            quick_ix_counts[n].first_hand_ix,
-            plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
+          printf("%7d %4d %7d ",n,quick_ix_counts[n].quick_ix_count,
+            quick_ix_counts[n].first_hand_ix);
         }
         else {
-          printf("%4d %7d %s\n",quick_ix_counts[n].quick_ix_count,
-            quick_ix_counts[n].first_hand_ix,
-            plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
+          printf("%4d %7d ",quick_ix_counts[n].quick_ix_count,
+            quick_ix_counts[n].first_hand_ix);
         }
+
+        for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
+          card_string_from_card_value(
+            hands_and_types[quick_ix_counts[n].first_hand_ix].cards[m],
+            card_string);
+          printf("%s ",card_string);
+        }
+
+        printf("%s\n",
+          plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
       }
       else {
         unique_count++;
