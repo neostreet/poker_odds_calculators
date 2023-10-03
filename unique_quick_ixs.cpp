@@ -72,7 +72,7 @@ int main(int argc,char **argv)
   for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
     if (quick_ixs[n]) {
       if (bVerbose) {
-        printf("%d\n",quick_ixs[n]);
+        printf("%d %s\n",quick_ixs[n],plain_hand_types[hands_and_types[n].hand_type]);
       }
       else {
         unique_count++;
