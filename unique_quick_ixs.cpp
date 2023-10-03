@@ -15,7 +15,12 @@ static char usage[] =
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
-static int quick_ixs[POKER_52_5_PERMUTATIONS];
+struct quick_ix_count_info {
+  int quick_ix_count;
+  int first_hand_ix;
+};
+
+static struct quick_ix_count_info quick_ix_counts[POKER_52_5_PERMUTATIONS];
 
 int main(int argc,char **argv)
 {
@@ -58,7 +63,10 @@ int main(int argc,char **argv)
     if (hands_and_types[n].hand_ix != n)
       break;
 
-    quick_ixs[hands_and_types[n].quick_ix] += 1;
+    quick_ix_counts[hands_and_types[n].quick_ix].quick_ix_count += 1;
+
+    if (quick_ix_counts[hands_and_types[n].quick_ix].quick_ix_count == 1)
+      quick_ix_counts[hands_and_types[n].quick_ix].first_hand_ix = n;
   }
 
   if (n < POKER_52_5_PERMUTATIONS) {
@@ -70,13 +78,16 @@ int main(int argc,char **argv)
   total_count = 0;
 
   for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
-    if (quick_ixs[n]) {
+    if (quick_ix_counts[n].quick_ix_count) {
       if (bVerbose) {
-        printf("%d %s\n",quick_ixs[n],plain_hand_types[hands_and_types[n].hand_type]);
+        printf("%7d %4d %7d %d %s\n",n,quick_ix_counts[n].quick_ix_count,
+          quick_ix_counts[n].first_hand_ix,
+          hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type,
+          plain_hand_types[hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type]);
       }
       else {
         unique_count++;
-        total_count += quick_ixs[n];
+        total_count += quick_ix_counts[n].quick_ix_count;
         last_ix = n;
       }
     }
