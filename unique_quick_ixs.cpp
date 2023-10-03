@@ -25,6 +25,7 @@ int main(int argc,char **argv)
   int retval;
   struct hand_and_type *hands_and_types;
   int unique_count;
+  int total_count;
   int last_ix;
 
   if ((argc < 2) || (argc > 3)) {
@@ -66,15 +67,23 @@ int main(int argc,char **argv)
   }
 
   unique_count = 0;
+  total_count = 0;
 
   for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
     if (quick_ixs[n]) {
-      unique_count++;
-      last_ix = n;
+      if (bVerbose) {
+        printf("%d\n",quick_ixs[n]);
+      }
+      else {
+        unique_count++;
+        total_count += quick_ixs[n];
+        last_ix = n;
+      }
     }
   }
 
-  printf("%d (%d)\n",unique_count,last_ix);
+  if (!bVerbose)
+    printf("%d (%d %d)\n",unique_count,total_count,last_ix);
 
   return 0;
 }
