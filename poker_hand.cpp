@@ -2842,10 +2842,12 @@ int read_hands_and_types(
   struct hand_and_type **hands_and_types
 )
 {
+  size_t malloc_size;
   int fhndl;
   int bytes_read;
 
-  *hands_and_types = (struct hand_and_type *)malloc(sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+  malloc_size = sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS;
+  *hands_and_types = (struct hand_and_type *)malloc(malloc_size);
 
   if (*hands_and_types == NULL)
     return 1;
@@ -2855,9 +2857,9 @@ int read_hands_and_types(
     return 2;
   }
 
-  bytes_read = read(fhndl,*hands_and_types,sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS);
+  bytes_read = read(fhndl,*hands_and_types,malloc_size);
 
-  if (bytes_read != sizeof (struct hand_and_type) * POKER_52_5_PERMUTATIONS) {
+  if (bytes_read != malloc_size) {
     close(fhndl);
     free(*hands_and_types);
     return 3;
