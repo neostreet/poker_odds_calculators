@@ -160,7 +160,6 @@ int main(int argc,char **argv)
         hands_and_types[m].cards[n] = (char)cards[n];
 
       hands_and_types[m].hand_type = (char)myhand.GetHandType();
-      hands_and_types[m].hand_ix = m;
     }
   }
 
@@ -196,7 +195,7 @@ int main(int argc,char **argv)
     /* calculate ixs */
 
     for (m = 0; m < count; m++)
-      hands_and_types[hands_and_types[ixs[m]].hand_ix].quick_ix = ixs2[m];
+      hands_and_types[ixs[m]].quick_ix = ixs2[m];
   }
 
   time(&end_time);
