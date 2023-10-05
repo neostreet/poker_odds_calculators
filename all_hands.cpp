@@ -11,7 +11,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: all_hands hands_and_types_filename\n";
+"usage: all_hands (-countcount) hands_and_types_filename\n";
 
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -19,26 +19,46 @@ int main(int argc,char **argv)
 {
   int m;
   int n;
+  int curr_arg;
+  int count;
   int retval;
   struct hand_and_type *hands_and_types;
   char card_string[3];
 
-  if (argc != 2) {
+  if ((argc < 2) || (argc > 3)) {
     printf(usage);
     return 1;
   }
 
-  retval = read_hands_and_types(argv[1],&hands_and_types);
+  count = POKER_52_5_PERMUTATIONS;
+
+  for (curr_arg = 1; curr_arg < argc; curr_arg++) {
+    if (!strncmp(argv[curr_arg],"-count",6)) {
+      sscanf(&argv[curr_arg][6],"%d",&count);
+
+      if (count > POKER_52_5_PERMUTATIONS)
+        count = POKER_52_5_PERMUTATIONS;
+    }
+    else
+      break;
+  }
+
+  if (argc - curr_arg != 1) {
+    printf(usage);
+    return 2;
+  }
+
+  retval = read_hands_and_types(argv[curr_arg],&hands_and_types);
 
   if (retval) {
     printf("read_hands_and_types() failed: %d\n",retval);
-    return 2;
+    return 3;
   }
 
   card_string[2] = 0;
 
-  for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
-    printf("%7d %4d ",hands_and_types[n].hand_ix,hands_and_types[n].quick_ix);
+  for (n = 0; n < count; n++) {
+    printf("%4d ",hands_and_types[n].quick_ix);
 
     for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
       card_string_from_card_value(
