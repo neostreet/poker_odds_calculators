@@ -11,7 +11,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: unique_quick_ixs (-verbose) (-no_quick_ix) hands_and_types_filename\n";
+"usage: unique_quick_ixs (-verbose) (-no_quick_ix) (-hand_type_ix) hands_and_types_filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -29,6 +29,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bVerbose;
   bool bNoQuickIx;
+  bool bHandTypeIx;
   int retval;
   struct hand_and_type *hands_and_types;
   char card_string[3];
@@ -36,19 +37,22 @@ int main(int argc,char **argv)
   int total_count;
   int last_ix;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     printf(usage);
     return 1;
   }
 
   bVerbose = false;
   bNoQuickIx = false;
+  bHandTypeIx = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
       bVerbose = true;
     else if (!strcmp(argv[curr_arg],"-no_quick_ix"))
       bNoQuickIx = true;
+    else if (!strcmp(argv[curr_arg],"-hand_type_ix"))
+      bHandTypeIx = true;
     else
       break;
   }
@@ -66,18 +70,10 @@ int main(int argc,char **argv)
   }
 
   for (n = 0; n < POKER_52_5_PERMUTATIONS; n++) {
-    if (hands_and_types[n].hand_ix != n)
-      break;
-
     quick_ix_counts[hands_and_types[n].quick_ix].quick_ix_count += 1;
 
     if (quick_ix_counts[hands_and_types[n].quick_ix].quick_ix_count == 1)
       quick_ix_counts[hands_and_types[n].quick_ix].first_hand_ix = n;
-  }
-
-  if (n < POKER_52_5_PERMUTATIONS) {
-    printf("invalid %s\n",argv[curr_arg]);
-    return 4;
   }
 
   unique_count = 0;
@@ -89,12 +85,26 @@ int main(int argc,char **argv)
     if (quick_ix_counts[n].quick_ix_count) {
       if (bVerbose) {
         if (!bNoQuickIx) {
-          printf("%7d %4d %7d ",n,quick_ix_counts[n].quick_ix_count,
-            quick_ix_counts[n].first_hand_ix);
+          if (!bHandTypeIx) {
+            printf("%7d %4d %7d ",n,quick_ix_counts[n].quick_ix_count,
+              quick_ix_counts[n].first_hand_ix);
+          }
+          else {
+            printf("%d %7d %4d %7d ",hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type,
+              n,quick_ix_counts[n].quick_ix_count,
+              quick_ix_counts[n].first_hand_ix);
+          }
         }
         else {
-          printf("%4d %7d ",quick_ix_counts[n].quick_ix_count,
-            quick_ix_counts[n].first_hand_ix);
+          if (!bHandTypeIx) {
+            printf("%4d %7d ",quick_ix_counts[n].quick_ix_count,
+              quick_ix_counts[n].first_hand_ix);
+          }
+          else {
+            printf("%d %4d %7d ",hands_and_types[quick_ix_counts[n].first_hand_ix].hand_type,
+              quick_ix_counts[n].quick_ix_count,
+              quick_ix_counts[n].first_hand_ix);
+          }
         }
 
         for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
