@@ -73,7 +73,7 @@ int main(int argc,char **argv)
   retval = find_hand(&sorted_hand,hands_and_types,debug_level,&found);
 
   if (retval)
-    printf("hand_ix = %d, quick_ix = %d\n",found->hand_ix,found->quick_ix);
+    printf("quick_ix = %d\n",found->quick_ix);
 
   return 0;
 }
