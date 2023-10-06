@@ -98,12 +98,14 @@ char *premium_hand_abbrevs[] = {
   "AJs",
   "KQs"
 };
+int compare_key_called;
 #else
 extern char suit_chars[];
 extern char rank_chars[];
 extern char *plain_hand_types[];
 extern int plain_hand_type_lens[];
 extern char *premium_hand_abbrevs[];
+extern int compare_key_called;
 #endif
 #define NUM_PREMIUM_HANDS 10
 
