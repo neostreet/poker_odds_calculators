@@ -81,6 +81,7 @@ int main(int argc,char **argv)
   free(hands_and_types);
 
   printf("computation time: %d seconds\n",end_time - start_time);
+  printf("compare_key() called %d times\n",compare_key_called);
 
   return 0;
 }
