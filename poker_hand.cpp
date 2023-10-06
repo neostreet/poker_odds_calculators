@@ -2876,6 +2876,7 @@ int compare_key(const void *vkey,const void *velem)
   hand *key;
   struct hand_and_type *elem;
 
+  compare_key_called++;
   key = (hand *)vkey;
   elem = (struct hand_and_type *)velem;
 
