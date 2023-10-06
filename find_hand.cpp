@@ -20,8 +20,8 @@ using namespace std;
 #include "poker_hand.h"
 
 static char usage[] =
-"usage: find_hand (-debug_levellevel) (-verbose) hands_and_types\n"
-"  card1 card2 card3 card4 card5\n";
+"usage: find_hand (-debug_levellevel) hands_and_types\n"
+"  card_str card_str card_str card_str card_str\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
 int main(int argc,char **argv)
@@ -30,25 +30,21 @@ int main(int argc,char **argv)
   int n;
   int curr_arg;
   int debug_level;
-  bool bVerbose;
   int retval;
   struct hand_and_type *hands_and_types;
-  hand sorted_hand;
+  hand work_hand;
   struct hand_and_type *found;
 
-  if ((argc < 7) || (argc > 9)) {
+  if ((argc < 7) || (argc > 8)) {
     printf(usage);
     return 1;
   }
 
   debug_level = 0;
-  bVerbose = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strncmp(argv[curr_arg],"-debug_level",12))
       sscanf(&argv[curr_arg][12],"%d",&debug_level);
-    else if (!strcmp(argv[curr_arg],"-verbose"))
-      bVerbose = true;
     else
       break;
   }
@@ -67,10 +63,16 @@ int main(int argc,char **argv)
 
   curr_arg++;
 
-  for (n = 0; n < NUM_CARDS_IN_HAND; n++)
-    sscanf(argv[curr_arg+n],"%d",&sorted_hand.cards[n]);
+  for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
+    retval = card_value_from_card_string(argv[curr_arg+n],&work_hand.cards[n]);
 
-  retval = find_hand(&sorted_hand,hands_and_types,debug_level,&found);
+    if (retval) {
+      printf("card_value_from_cards_string() failed on card %s: %d\n",argv[curr_arg+n],retval);
+      return 4;
+    }
+  }
+
+  retval = find_hand(&work_hand,hands_and_types,debug_level,&found);
 
   if (retval)
     printf("quick_ix = %d\n",found->quick_ix);
