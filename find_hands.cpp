@@ -25,6 +25,7 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
   struct hand_and_type *found;
+  double avg_compares;
 
   if ((argc < 2) || (argc > 4)) {
     printf(usage);
@@ -80,8 +81,11 @@ int main(int argc,char **argv)
   time(&end_time);
   free(hands_and_types);
 
+  avg_compares = (double)compare_key_called / (double)count;
+
   printf("computation time: %d seconds\n",end_time - start_time);
   printf("compare_key() called %d times\n",compare_key_called);
+  printf("average number of compares: %lf\n",avg_compares);
 
   return 0;
 }
