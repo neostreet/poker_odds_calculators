@@ -2,18 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#ifdef FREEBSD
-#define O_BINARY 0
-#endif
-#endif
 using namespace std;
 
 #define MAIN_MODULE
