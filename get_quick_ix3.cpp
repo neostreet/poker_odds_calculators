@@ -75,12 +75,10 @@ int main(int argc,char **argv)
     }
   }
 
-  found = (struct hand_and_type *)bsearch(&work_hand,hands_and_types,
-    POKER_52_5_PERMUTATIONS,
-    sizeof (struct hand_and_type),compare_key);
+  retval = find_hand(&work_hand,hands_and_types,0,&found);
 
-  if (found == NULL) {
-    printf("bsearch failed\n");
+  if (!retval) {
+    printf("find_hand() failed\n");
     return 5;
   }
 
