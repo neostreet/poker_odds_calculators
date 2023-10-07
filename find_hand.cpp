@@ -62,8 +62,10 @@ int main(int argc,char **argv)
 
   retval = find_hand(&work_hand,hands_and_types,debug_level,&found);
 
-  if (retval)
+  if (retval) {
     printf("quick_ix = %d\n",found->quick_ix);
+    printf("compare_key() called %d times\n",compare_key_called);
+  }
 
   return 0;
 }
