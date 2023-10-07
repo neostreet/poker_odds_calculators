@@ -355,51 +355,6 @@ HandType PokerHand::EvaluateLow()
   return _hand_type;
 }
 
-HandType PokerHand::EvaluateQuick(struct hand_and_type *hands_and_types,int debug_level)
-{
-  int retval;
-  hand sorted_hand;
-  struct hand_and_type *found;
-  static int dbg_num_evaluations;
-  int dbg;
-
-  num_evaluations++;
-
-  if (num_evaluations >= dbg_num_evaluations)
-    dbg = 1;
-
-  if (!_have_cards)
-    return HIGH_CARD;
-
-  if (!_hand_sorted) {
-    Sort();
-
-    if (!_hand_sorted)
-      return HIGH_CARD;
-
-    _hand_evaluated = false;
-  }
-
-  if (_hand_evaluated)
-    return _hand_type;
-
-  num_unique_evaluations++;
-
-  sorted_hand = _card;
-  qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
-
-  retval = find_hand(&sorted_hand,hands_and_types,debug_level,&found);
-
-  if (!retval)
-    return HIGH_CARD;
-
-  _hand_type = (HandType)found->hand_type;
-  _quick_ix = found->quick_ix;
-  _hand_evaluated = true;
-
-  return _hand_type;
-}
-
 int PokerHand::GetQuickIx()
 {
   return _quick_ix;
@@ -919,45 +874,6 @@ int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   return 0;
 }
 
-int PokerHand::CompareQuick(PokerHand& compare_hand,int in_holdem_best_poker_hand,struct hand_and_type *hands_and_types)
-{
-  int compare_quick_ix;
-
-  if (!in_holdem_best_poker_hand)
-    num_comparisons++;
-  else
-    num_holdem_best_poker_hand_comparisons++;
-
-  if (!_hand_evaluated) {
-    if (_debug_level == 1)
-      cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 1" << endl;
-
-    EvaluateQuick(hands_and_types,_debug_level);
-  }
-
-  if (!compare_hand.Evaluated()) {
-    if (_debug_level == 1)
-      cout << "dbg: PokerHand::CompareQuick(): calling EvaluateQuick() 2" << endl;
-
-    compare_hand.EvaluateQuick(hands_and_types,_debug_level);
-  }
-
-  compare_quick_ix = compare_hand.GetQuickIx();
-
-  if (_debug_level == 1)
-    cout << "dbg: PokerHand::CompareQuick(): " <<
-      ", _quick_ix = " << _quick_ix <<
-      ", compare_quick_ix = " << compare_quick_ix << endl;
-
-  if (_quick_ix > compare_quick_ix)
-    return 1;
-
-  if (_quick_ix < compare_quick_ix)
-    return -1;
-
-  return 0;
-}
-
 static char *suit_strings[] = {
   "clubs",
   "diamonds",
@@ -1232,51 +1148,6 @@ PokerHand& HoldemPokerHand::BestPokerHand()
         cout << "dbg: HoldemPokerHand::BestPokerHand(): hand             = " << hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHand(): _best_poker_hand = " << _best_poker_hand << endl;
         cout << "dbg: HoldemPokerHand::BestPokerHand(): ret_compare = " <<
-          ret_compare << ", num_evaluations = " << num_evaluations << endl;
-      }
-
-      if (ret_compare == 1)
-        _best_poker_hand = hand;
-    }
-  }
-
-  return _best_poker_hand;
-}
-
-PokerHand& HoldemPokerHand::BestPokerHandQuick(struct hand_and_type *hands_and_types)
-{
-  int m;
-  int n;
-  int o;
-  int p;
-  int q;
-  int r;
-  PokerHand hand;
-  int ret_compare;
-  int dbg_loop_count = -1;
-  int dbg;
-
-  hand.SetDebugLevel(_debug_level);
-
-  for (r = 0; r < POKER_7_5_PERMUTATIONS; r++) {
-    get_permutation_instance_five(
-      NUM_CARDS_IN_HOLDEM_POOL,
-      &m,&n,&o,&p,&q,r);
-
-    hand.NewCards(_card.cards[m],_card.cards[n],_card.cards[o],_card.cards[p],_card.cards[q]);
-
-    if (r == dbg_loop_count)
-      dbg = 1;
-
-    if (!r)
-      _best_poker_hand = hand;
-    else {
-      ret_compare = hand.CompareQuick(_best_poker_hand,1,hands_and_types);
-
-      if (_debug_level == 1) {
-        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): hand             = " << hand << endl;
-        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): _best_poker_hand = " << _best_poker_hand << endl;
-        cout << "dbg: HoldemPokerHand::BestPokerHandQuick(): ret_compare = " <<
           ret_compare << ", num_evaluations = " << num_evaluations << endl;
       }
 
