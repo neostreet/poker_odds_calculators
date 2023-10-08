@@ -163,35 +163,35 @@ int main(int argc,char **argv)
     }
   }
 
-  if (!bSkipSort)
-    qsort(ixs,count,sizeof (int),elem_compare);
-
-  if (bCountTies) {
-    ties = 0;
-
-    for (m = 0; m < count - 1; m++) {
-      if (!hands[ixs[m]].Compare(hands[ixs[m+1]],0))
-        ties++;
-    }
-  }
-
-  /* normalize for ties */
-  p = 0;
-
-  for (m = 0; m < count - 1; ) {
-    for (n = m + 1; n < count; n++) {
-      if (hands[ixs[m]].Compare(hands[ixs[n]],0))
-        break;
-    }
-
-    for ( ; m < n; m++)
-      ixs2[m] = p;
-
-    p++;
-    m = n;
-  }
-
   if (bBinFile) {
+    if (!bSkipSort)
+      qsort(ixs,count,sizeof (int),elem_compare);
+
+    if (bCountTies) {
+      ties = 0;
+
+      for (m = 0; m < count - 1; m++) {
+        if (!hands[ixs[m]].Compare(hands[ixs[m+1]],0))
+          ties++;
+      }
+    }
+
+    /* normalize for ties */
+    p = 0;
+
+    for (m = 0; m < count - 1; ) {
+      for (n = m + 1; n < count; n++) {
+        if (hands[ixs[m]].Compare(hands[ixs[n]],0))
+          break;
+      }
+
+      for ( ; m < n; m++)
+        ixs2[m] = p;
+
+      p++;
+      m = n;
+    }
+
     /* calculate ixs */
 
     for (m = 0; m < count; m++)
