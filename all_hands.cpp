@@ -13,7 +13,7 @@ static char line[MAX_LINE_LEN];
 static struct hand_and_type *hands_and_types;
 
 static char usage[] =
-"usage: all_hands (-countcount) (-sort) hands_and_types_filename\n";
+"usage: all_hands (-countcount) (-sort) (-hand_type_ix) hands_and_types_filename\n";
 
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -26,17 +26,19 @@ int main(int argc,char **argv)
   int curr_arg;
   int count;
   bool bSort;
+  bool bHandTypeIx;
   int retval;
   char card_string[3];
   int *ixs;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     printf(usage);
     return 1;
   }
 
   count = POKER_52_5_PERMUTATIONS;
   bSort = false;
+  bHandTypeIx = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strncmp(argv[curr_arg],"-count",6)) {
@@ -47,6 +49,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-sort"))
       bSort = true;
+    else if (!strcmp(argv[curr_arg],"-hand_type_ix"))
+      bHandTypeIx = true;
     else
       break;
   }
@@ -79,6 +83,9 @@ int main(int argc,char **argv)
     qsort(ixs,count,sizeof (int),elem_compare);
 
   for (n = 0; n < count; n++) {
+    if (bHandTypeIx)
+      printf("%d ",hands_and_types[ixs[n]].hand_type);
+
     printf("%4d ",hands_and_types[ixs[n]].quick_ix);
 
     for (m = 0; m < NUM_CARDS_IN_HAND; m++) {
