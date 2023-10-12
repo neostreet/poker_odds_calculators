@@ -236,7 +236,7 @@ class PokerHand {
   int GetRank(int card_ix);
   void Sort();
   void Evaluate0(int *hand_counts_ptr);
-  HandType Evaluate();
+  HandType Evaluate(bool bQuick);
   HandType EvaluateLow();
   int GetQuickIx();
   void UnEvaluate();
