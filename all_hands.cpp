@@ -10,8 +10,6 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static struct hand_and_type *hands_and_types;
-
 static char usage[] =
 "usage: all_hands (-countcount) (-sort) (-hand_type_ix) hands_and_types_filename\n";
 
