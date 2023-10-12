@@ -12,10 +12,8 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static struct hand_and_type *hands_and_types;
-
 static char usage[] =
-"usage: heads_up (-terse) (-verbose) (-only_playern) (-only_wins) filename hands_and_types_filename";
+"usage: heads_up (-terse) (-verbose) (-only_playern) (-only_wins) (-quick) filename hands_and_types_filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -42,7 +40,7 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 3) || (argc > 7)) {
+  if ((argc < 3) || (argc > 8)) {
     cout << usage << endl;
     return 1;
   }
@@ -51,6 +49,7 @@ int main(int argc,char **argv)
   bVerbose = false;
   only_player = -1;
   bOnlyWins = false;
+  bQuick = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -69,6 +68,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-only_wins"))
       bOnlyWins = true;
+    else if (!strcmp(argv[curr_arg],"-quick"))
+      bQuick = true;
     else
       break;
   }
