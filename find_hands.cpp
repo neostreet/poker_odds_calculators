@@ -18,7 +18,6 @@ int main(int argc,char **argv)
   int n;
   int curr_arg;
   int debug_level;
-  struct hand_and_type *hands_and_types;
   int retval;
   int count;
   hand work_hand;
