@@ -24,7 +24,6 @@ int main(int argc,char **argv)
   bool bCardIxs;
   bool bNoIxs;
   int retval;
-  struct hand_and_type *hands_and_types;
   int quick_ix;
   char card_string[3];
 
