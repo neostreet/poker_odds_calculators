@@ -99,6 +99,8 @@ char *premium_hand_abbrevs[] = {
   "KQs"
 };
 int compare_key_called;
+bool bQuick;
+struct hand_and_type *hands_and_types;
 #else
 extern char suit_chars[];
 extern char rank_chars[];
@@ -106,6 +108,8 @@ extern char *plain_hand_types[];
 extern int plain_hand_type_lens[];
 extern char *premium_hand_abbrevs[];
 extern int compare_key_called;
+extern bool bQuick;
+extern struct hand_and_type *hands_and_types;
 #endif
 #define NUM_PREMIUM_HANDS 10
 
@@ -236,7 +240,7 @@ class PokerHand {
   int GetRank(int card_ix);
   void Sort();
   void Evaluate0(int *hand_counts_ptr);
-  HandType Evaluate(bool bQuick);
+  HandType Evaluate();
   HandType EvaluateLow();
   int GetQuickIx();
   void UnEvaluate();
