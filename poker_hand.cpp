@@ -262,7 +262,7 @@ void PokerHand::Evaluate0(int *hand_counts_ptr)
     hand_counts_ptr[HIGH_CARD]++;
 }
 
-HandType PokerHand::Evaluate()
+HandType PokerHand::Evaluate(bool bQuick)
 {
   hand sorted_hand;
 
@@ -512,7 +512,7 @@ char *PokerHand::GetHand()
   static char hand_string[15];
 
   if (!_hand_evaluated)
-    Evaluate();
+    Evaluate(false);
 
   for (n = 0; n < NUM_CARDS_IN_HAND; n++) {
     if ((_hand_type == STRAIGHT) || (_hand_type == STRAIGHT_FLUSH) ||
@@ -553,7 +553,7 @@ char *PokerHand::GetHand()
 HandType PokerHand::GetHandType()
 {
   if (!_hand_evaluated)
-    Evaluate();
+    Evaluate(false);
 
   return _hand_type;
 }
@@ -575,7 +575,7 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
     if (_debug_level == 1)
       cout << "dbg: PokerHand::Compare(): calling Evaluate() 1" << endl;
 
-    hand_type = Evaluate();
+    hand_type = Evaluate(false);
   }
   else
     hand_type = _hand_type;
@@ -584,7 +584,7 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
     if (_debug_level == 1)
       cout << "dbg: PokerHand::Compare(): calling Evaluate() 2" << endl;
 
-    compare_hand_type = compare_hand.Evaluate();
+    compare_hand_type = compare_hand.Evaluate(false);
   }
   else
     compare_hand_type = compare_hand.GetHandType();
@@ -734,12 +734,12 @@ int PokerHand::CompareLow(PokerHand& compare_hand,int in_holdem_best_poker_hand)
     num_holdem_best_poker_hand_comparisons++;
 
   if (!_hand_evaluated)
-    hand_type = Evaluate();
+    hand_type = Evaluate(false);
   else
     hand_type = _hand_type;
 
   if (!compare_hand.Evaluated())
-    compare_hand_type = compare_hand.Evaluate();
+    compare_hand_type = compare_hand.Evaluate(false);
   else
     compare_hand_type = compare_hand.GetHandType();
 
@@ -1749,7 +1749,7 @@ PokerHand& OmahaPokerHand::BestPokerHand()
         _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + q],
         _card.cards[NUM_HOLE_CARDS_IN_OMAHA_HAND + r]);
 
-      hand.Evaluate();
+      hand.Evaluate(false);
 
       if (_debug_level == 1)
         cout << hand << endl;
