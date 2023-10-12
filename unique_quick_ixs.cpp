@@ -31,7 +31,6 @@ int main(int argc,char **argv)
   bool bNoQuickIx;
   bool bHandTypeIx;
   int retval;
-  struct hand_and_type *hands_and_types;
   char card_string[3];
   int unique_count;
   int total_count;
