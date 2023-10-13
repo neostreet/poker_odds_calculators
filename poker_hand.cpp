@@ -264,20 +264,24 @@ void PokerHand::Evaluate0(int *hand_counts_ptr)
 
 HandType PokerHand::Evaluate()
 {
+  int retval;
   hand sorted_hand;
+  struct hand_and_type *found;
 
   num_evaluations++;
 
   if (!_have_cards)
     return HIGH_CARD;
 
-  if (!_hand_sorted) {
-    Sort();
+  if (!bQuick) {
+    if (!_hand_sorted) {
+      Sort();
 
-    if (!_hand_sorted)
-      return HIGH_CARD;
+      if (!_hand_sorted)
+        return HIGH_CARD;
 
-    _hand_evaluated = false;
+      _hand_evaluated = false;
+    }
   }
 
   if (_hand_evaluated)
@@ -285,9 +289,20 @@ HandType PokerHand::Evaluate()
 
   num_unique_evaluations++;
 
-  if (_debug_level == 10) {
+  if (bQuick) {
     sorted_hand = _card;
     qsort(&sorted_hand.cards[0],NUM_CARDS_IN_HAND,sizeof (int),compare1);
+
+    retval = find_hand(&sorted_hand,hands_and_types,0,&found);
+
+    if (!retval)
+      return HIGH_CARD;
+
+    _hand_type = (HandType)found->hand_type;
+    _quick_ix = found->quick_ix;
+    _hand_evaluated = true;
+
+    return _hand_type;
   }
 
   if (RoyalFlush())
@@ -565,6 +580,7 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   HandType compare_hand_type;
   int rank;
   int compare_rank;
+  int compare_quick_ix;
 
   if (!in_holdem_best_poker_hand)
     num_comparisons++;
@@ -588,6 +604,17 @@ int PokerHand::Compare(PokerHand& compare_hand,int in_holdem_best_poker_hand)
   }
   else
     compare_hand_type = compare_hand.GetHandType();
+
+  if (bQuick) {
+    compare_quick_ix = compare_hand.GetQuickIx();
+
+    if (_quick_ix > compare_quick_ix)
+      return 1;
+    else if (_quick_ix < compare_quick_ix)
+      return -1;
+    else
+      return 0;
+  }
 
   if (hand_type > compare_hand_type)
     return 1;
