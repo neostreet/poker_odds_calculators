@@ -13,7 +13,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] =
-"usage: heads_up (-terse) (-verbose) (-only_playern) (-only_wins) (-quick) filename hands_and_types_filename";
+"usage: heads_up (-terse) (-verbose) (-only_playern) (-only_wins) filename";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -40,7 +40,7 @@ int main(int argc,char **argv)
   time_t start_time;
   time_t end_time;
 
-  if ((argc < 3) || (argc > 8)) {
+  if ((argc < 2) || (argc > 6)) {
     cout << usage << endl;
     return 1;
   }
@@ -49,7 +49,6 @@ int main(int argc,char **argv)
   bVerbose = false;
   only_player = -1;
   bOnlyWins = false;
-  bQuick = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-terse"))
@@ -68,27 +67,18 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-only_wins"))
       bOnlyWins = true;
-    else if (!strcmp(argv[curr_arg],"-quick"))
-      bQuick = true;
     else
       break;
   }
 
-  if (argc - curr_arg != 2) {
+  if (argc - curr_arg != 1) {
     cout << usage << endl;
     return 3;
   }
 
-  retval = read_hands_and_types(argv[curr_arg+1],&hands_and_types);
-
-  if (retval) {
-    printf("read_hands_and_types() failed: %d\n",retval);
-    return 4;
-  }
-
   if ((fptr = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 5;
+    return 4;
   }
 
   time(&start_time);
@@ -119,7 +109,7 @@ int main(int argc,char **argv)
 
     if (m == line_len) {
       printf(parse_error,line_no,-1,4);
-      return 6;
+      return 5;
     }
 
     for (n = 0; n < NUM_HEADS_UP_CARDS; n++) {
@@ -127,7 +117,7 @@ int main(int argc,char **argv)
 
       if (retval) {
         printf(parse_error,line_no,n,5);
-        return 7;
+        return 6;
       }
 
       m += 2;
@@ -142,7 +132,7 @@ int main(int argc,char **argv)
 
         if (m == line_len) {
           printf(parse_error,line_no,n,6);
-          return 8;
+          return 7;
         }
       }
     }
