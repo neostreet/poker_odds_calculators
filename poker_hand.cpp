@@ -3107,7 +3107,7 @@ void get_abbrev(char *line,char *abbrev)
   }
 
   if (abbrev[0] == abbrev[1])
-    abbrev[2] = ' ';
+    abbrev[2] = 0;
   else {
     if (line[1] == line[4])
       abbrev[2] = 's';
