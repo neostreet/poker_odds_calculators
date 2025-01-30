@@ -87,12 +87,12 @@ char *plain_hand_types[] = {
 int plain_hand_type_lens[NUM_HAND_TYPES];
 
 char *premium_hand_abbrevs[] = {
-  "AA ",
-  "KK ",
-  "QQ ",
+  "AA",
+  "KK",
+  "QQ",
   "AKs",
-  "JJ ",
-  "TT ",
+  "JJ",
+  "TT",
   "AQs",
   "AKo",
   "AJs",
