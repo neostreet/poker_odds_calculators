@@ -21,6 +21,7 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_no;
   int line_len;
+  int premium_ix;
 
   if (argc != 2) {
     cout << usage << endl;
@@ -40,7 +41,7 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
-    if (is_premium_hand(line))
+    if (is_premium_hand(line,&premium_ix))
       printf("1 %s\n",line);
     else
       printf("0 %s\n",line);
