@@ -3116,14 +3116,20 @@ void get_abbrev(char *line,char *abbrev)
   }
 }
 
-bool is_premium_hand(char *abbrev)
+bool is_premium_hand(char *abbrev,int *premium_ix)
 {
   int m;
+  bool bRetVal;
 
   for (m = 0; m < NUM_PREMIUM_HANDS; m++) {
     if (!strcmp(abbrev,premium_hand_abbrevs[m]))
       break;
   }
 
-  return (m < NUM_PREMIUM_HANDS);
+  bRetVal = (m < NUM_PREMIUM_HANDS);
+
+  if (bRetVal)
+    *premium_ix = m;
+
+  return bRetVal;
 }
