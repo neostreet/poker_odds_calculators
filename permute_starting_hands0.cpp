@@ -9,7 +9,7 @@ using namespace std;
 
 static char usage[] =
 "usage: permute_starting_hands0 (-card_strings) (-print_offset)\n"
-"  (-unique_first_cards) (-abbrev) (-premium)\n";
+"  (-unique_first_cards) (-abbrev) (-premium) (-aggreg)\n";
 
 int main(int argc,char **argv)
 {
@@ -21,12 +21,13 @@ int main(int argc,char **argv)
   bool bUniqueFirstCards;
   bool bAbbrev;
   bool bPremium;
+  bool bAggreg;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   char hole_cards[6];
   char hole_cards_abbrev[4];
   int prev_first_card;
 
-  if (argc > 6) {
+  if (argc > 7) {
     printf(usage);
     return 1;
   }
@@ -36,6 +37,7 @@ int main(int argc,char **argv)
   bUniqueFirstCards = false;
   bAbbrev = false;
   bPremium = false;
+  bAggreg = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-card_strings"))
@@ -48,6 +50,8 @@ int main(int argc,char **argv)
       bAbbrev = true;
     else if (!strcmp(argv[curr_arg],"-premium"))
       bPremium = true;
+    else if (!strcmp(argv[curr_arg],"-premium"))
+      bAggreg = true;
     else
       break;
   }
