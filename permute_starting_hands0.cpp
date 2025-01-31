@@ -22,6 +22,8 @@ int main(int argc,char **argv)
   bool bAbbrev;
   bool bPremium;
   bool bAggreg;
+  int premium_hand_counts[NUM_PREMIUM_HAND_ABBREVS];
+  int premium_ix;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   char hole_cards[6];
   char hole_cards_abbrev[4];
@@ -56,6 +58,11 @@ int main(int argc,char **argv)
       break;
   }
 
+  if (bAbbrev && bPremium && bAggreg) {
+    for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
+      premium_hand_counts[n] = 0;
+  }
+
   hole_cards[2] = ' ';
   hole_cards[5] = 0;
   hole_cards_abbrev[3] = 0;
@@ -81,8 +88,13 @@ int main(int argc,char **argv)
         get_abbrev(hole_cards,hole_cards_abbrev);
 
       if (bPremium) {
-        if (!is_premium_hand(hole_cards_abbrev))
+        if (!is_premium_hand(hole_cards_abbrev,&premium_ix)) {
           goto end_loop;
+        }
+        else if (bAggreg) {
+          premium_hand_counts[premium_ix]++;
+          goto end_loop;
+        }
       }
 
       if (bCardStrings) {
@@ -105,6 +117,11 @@ end_loop:
 
     if (cards[0] == NUM_CARDS_IN_DECK - 2)
       break;
+  }
+
+  if (bAbbrev && bPremium && bAggreg) {
+    for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
+      printf("%2d %s\n",premium_hand_counts[n],premium_hand_abbrevs[n]);
   }
 
   return 0;
