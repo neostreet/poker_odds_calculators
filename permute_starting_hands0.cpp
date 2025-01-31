@@ -50,7 +50,7 @@ int main(int argc,char **argv)
       bAbbrev = true;
     else if (!strcmp(argv[curr_arg],"-premium"))
       bPremium = true;
-    else if (!strcmp(argv[curr_arg],"-premium"))
+    else if (!strcmp(argv[curr_arg],"-aggreg"))
       bAggreg = true;
     else
       break;
