@@ -98,6 +98,7 @@ char *premium_hand_abbrevs[] = {
   "AJs",
   "KQs"
 };
+#define NUM_PREMIUM_HAND_ABBREVS (sizeof premium_hand_abbrevs / sizeof (char *))
 int compare_key_called;
 bool bQuick;
 struct hand_and_type *hands_and_types;
