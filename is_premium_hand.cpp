@@ -42,7 +42,7 @@ int main(int argc,char **argv)
       break;
 
     if (is_premium_hand(line,&premium_ix))
-      printf("1 %s\n",line);
+      printf("1 %s %d\n",line,premium_ix);
     else
       printf("0 %s\n",line);
   }
