@@ -516,6 +516,7 @@ int main(int argc,char **argv)
   char specified_hand[4];
   char specified_winning_hand[4];
   bool bFirstFileOnly;
+  int premium_ix;
 
   if ((argc < 3) || (argc > 153)) {
     printf(usage);
@@ -2166,7 +2167,7 @@ int main(int argc,char **argv)
             }
 
             if (local_vars.bOnlyPremiumHands)
-              local_vars.bHavePremiumHand = is_premium_hand(local_vars.hole_cards_abbrev);
+              local_vars.bHavePremiumHand = is_premium_hand(local_vars.hole_cards_abbrev,&premium_ix);
 
             if (local_vars.bTwinAbbrevs) {
               retval = abbrev_index_of_hand(&line[n],&local_vars.curr_abbrev_index);
