@@ -599,4 +599,4 @@ int get_52_2_index_of_hole_cards(char *hole_cards,int *index);
 int get_52_2_index_of_hand2(int *cards);
 int get_52_2_index_of_hole_cards2(char *hole_cards,int *index);
 void get_abbrev(char *line,char *abbrev);
-bool is_premium_hand(char *abbrev);
+bool is_premium_hand(char *abbrev,int *premium_ix);
