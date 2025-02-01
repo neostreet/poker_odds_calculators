@@ -158,6 +158,8 @@ extern struct hand_and_type *hands_and_types;
 
 #define MAX_STREET_MARKERS 6
 
+#define NUM_HAND_ABBREVS 169
+
 #ifdef MAIN_MODULE
 char *hand_type_abbrevs[] = {
   "hc",
