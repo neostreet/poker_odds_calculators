@@ -7,6 +7,9 @@ using namespace std;
 #define MAIN_MODULE
 #include "poker_hand.h"
 
+static int hand_counts[NUM_HAND_ABBREVS];
+static int premium_hand_counts[NUM_PREMIUM_HAND_ABBREVS];
+
 static char usage[] =
 "usage: permute_starting_hands0 (-card_strings) (-print_offset)\n"
 "  (-unique_first_cards) (-abbrev) (-premium) (-aggreg)\n";
@@ -22,8 +25,8 @@ int main(int argc,char **argv)
   bool bAbbrev;
   bool bPremium;
   bool bAggreg;
-  int premium_hand_counts[NUM_PREMIUM_HAND_ABBREVS];
   int premium_ix;
+  int abbrev_ix;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   char hole_cards[6];
   char hole_cards_abbrev[4];
@@ -58,9 +61,15 @@ int main(int argc,char **argv)
       break;
   }
 
-  if (bAbbrev && bPremium && bAggreg) {
-    for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
-      premium_hand_counts[n] = 0;
+  if (bAbbrev && bAggreg) {
+    if (bPremium) {
+      for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
+        premium_hand_counts[n] = 0;
+    }
+    else {
+      for (n = 0; n < NUM_HAND_ABBREVS; n++)
+        hand_counts[n] = 0;
+    }
   }
 
   hole_cards[2] = ' ';
@@ -96,6 +105,12 @@ int main(int argc,char **argv)
           goto end_loop;
         }
       }
+      else {
+        index_of_hand_abbrev(hole_cards_abbrev,&abbrev_ix);
+
+        hand_counts[abbrev_ix]++;
+        goto end_loop;
+      }
 
       if (bCardStrings) {
         if (!bAbbrev)
@@ -119,9 +134,16 @@ end_loop:
       break;
   }
 
-  if (bAbbrev && bPremium && bAggreg) {
-    for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
-      printf("%2d %s\n",premium_hand_counts[n],premium_hand_abbrevs[n]);
+  if (bAbbrev && bAggreg) {
+    if (bPremium) {
+      for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
+        printf("%2d %s\n",premium_hand_counts[n],premium_hand_abbrevs[n]);
+    }
+    else {
+      for (n = 0; n < NUM_HAND_ABBREVS; n++) {
+        printf("%2d %s\n",hand_counts[n],hand_abbrevs[n]);
+      }
+    }
   }
 
   return 0;
