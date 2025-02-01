@@ -115,7 +115,7 @@ int main(int argc,char **argv)
 
 end_loop:
 
-    if (cards[0] == NUM_CARDS_IN_DECK - 2)
+    if (m == POKER_52_2_PERMUTATIONS)
       break;
   }
 
