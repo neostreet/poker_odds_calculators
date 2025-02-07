@@ -3122,7 +3122,7 @@ bool is_premium_hand(char *abbrev,int *premium_ix)
   bool bRetVal;
 
   for (m = 0; m < NUM_PREMIUM_HANDS; m++) {
-    if (!strcmp(abbrev,premium_hand_abbrevs[m]))
+    if (!strncmp(abbrev,premium_hand_abbrevs[m],premium_hand_abbrev_lens[m]))
       break;
   }
 
