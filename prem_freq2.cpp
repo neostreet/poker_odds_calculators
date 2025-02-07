@@ -9,7 +9,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: prem_freq (-hole_cards) filename\n";
+static char usage[] = "usage: prem_freq2 (-hole_cards) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
