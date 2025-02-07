@@ -271,6 +271,18 @@ char *premium_hand_abbrevs[] = {
   "KQs"
 };
 #define NUM_PREMIUM_HAND_ABBREVS (sizeof premium_hand_abbrevs / sizeof (char *))
+int premium_hand_abbrev_lens[] = {
+  2,
+  2,
+  2,
+  3,
+  2,
+  2,
+  3,
+  3,
+  3,
+  3
+};
 int compare_key_called;
 bool bQuick;
 struct hand_and_type *hands_and_types;
@@ -281,6 +293,7 @@ extern char *plain_hand_types[];
 extern int plain_hand_type_lens[];
 extern char *hand_abbrevs[];
 extern char *premium_hand_abbrevs[];
+extern int premium_hand_abbrev_lens[];
 extern int compare_key_called;
 extern bool bQuick;
 extern struct hand_and_type *hands_and_types;
