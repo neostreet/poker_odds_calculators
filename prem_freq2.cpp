@@ -17,17 +17,16 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 
 int main(int argc,char **argv)
 {
-  int n;
   int curr_arg;
   bool bHoleCards;
   bool bPremiumHand;
   FILE *fptr;
   int line_len;
   int premium_ix;
-  char hole_cards[6];
-  char hole_cards_abbrev[4];
   int total_premium_hands;
   int total_hands;
+  char hole_cards[6];
+  char hole_cards_abbrev[4];
   double ratio1;
   double ratio2;
   double dwork;
