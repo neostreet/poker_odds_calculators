@@ -32,7 +32,7 @@ int main(int argc,char **argv)
   char hole_cards_abbrev[4];
   int prev_first_card;
 
-  if (argc > 7) {
+  if ((argc < 2) || (argc > 7)) {
     printf(usage);
     return 1;
   }
@@ -55,13 +55,15 @@ int main(int argc,char **argv)
       bAbbrev = true;
     else if (!strcmp(argv[curr_arg],"-premium"))
       bPremium = true;
-    else if (!strcmp(argv[curr_arg],"-aggreg"))
+    else if (!strcmp(argv[curr_arg],"-aggreg")) {
       bAggreg = true;
+      bAbbrev = true;
+    }
     else
       break;
   }
 
-  if (bAbbrev && bAggreg) {
+  if (bAggreg) {
     if (bPremium) {
       for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
         premium_hand_counts[n] = 0;
@@ -105,7 +107,7 @@ int main(int argc,char **argv)
           goto end_loop;
         }
       }
-      else {
+      else if (bAggreg) {
         index_of_hand_abbrev(hole_cards_abbrev,&abbrev_ix);
 
         hand_counts[abbrev_ix]++;
@@ -134,7 +136,7 @@ end_loop:
       break;
   }
 
-  if (bAbbrev && bAggreg) {
+  if (bAggreg) {
     if (bPremium) {
       for (n = 0; n < NUM_PREMIUM_HAND_ABBREVS; n++)
         printf("%2d %s\n",premium_hand_counts[n],premium_hand_abbrevs[n]);
