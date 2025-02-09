@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_premium_hands2 (-hole_cards) filename\n";
+static char usage[] = "usage: print_premium_hands2 (-debug) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -21,8 +21,7 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bHoleCards;
-  bool bPremiumHand;
+  bool bDebug;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -37,11 +36,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bHoleCards = false;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-hole_cards"))
-      bHoleCards = true;
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
     else
       break;
   }
@@ -58,11 +57,9 @@ int main(int argc,char **argv)
 
   total_hands = 0;
 
-  if (bHoleCards) {
-    hole_cards[2] = ' ';
-    hole_cards[5] = 0;
-    hole_cards_abbrev[3] = 0;
-  }
+  hole_cards[2] = ' ';
+  hole_cards[5] = 0;
+  hole_cards_abbrev[3] = 0;
 
   for ( ; ; ) {
     GetLine(fptr0,filename,&filename_len,MAX_FILENAME_LEN);
@@ -83,25 +80,19 @@ int main(int argc,char **argv)
 
       total_hands++;
 
-      if (!bHoleCards)
-        bPremiumHand = is_premium_hand(line,&premium_ix);
-      else {
-        if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
-          printf("invalid hole card delimiters in line %d\n",total_hands);
-          return 5;
-        }
-
-        hole_cards[0] = line[0];
-        hole_cards[1] = line[1];
-        hole_cards[3] = line[3];
-        hole_cards[4] = line[4];
-
-        get_abbrev(hole_cards,hole_cards_abbrev);
-
-        bPremiumHand = is_premium_hand(hole_cards_abbrev,&premium_ix);
+      if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
+        printf("invalid hole card delimiters in line %d\n",total_hands);
+        return 5;
       }
 
-      if (bPremiumHand)
+      hole_cards[0] = line[0];
+      hole_cards[1] = line[1];
+      hole_cards[3] = line[3];
+      hole_cards[4] = line[4];
+
+      get_abbrev(hole_cards,hole_cards_abbrev);
+
+      if (is_premium_hand(hole_cards_abbrev,&premium_ix))
         printf("%s\n",line);
     }
 
