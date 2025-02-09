@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_premium_hands2 (-debug) filename\n";
+static char usage[] = "usage: print_premium_hands2 (-verbose) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -21,13 +21,13 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bDebug;
+  bool bVerbose;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
   int line_len;
   int premium_ix;
-  int total_hands;
+  int hands;
   char hole_cards[6];
   char hole_cards_abbrev[4];
 
@@ -36,11 +36,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bDebug = false;
+  bVerbose = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug"))
-      bDebug = true;
+    if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
     else
       break;
   }
@@ -54,8 +54,6 @@ int main(int argc,char **argv)
     printf(couldnt_open,argv[curr_arg]);
     return 3;
   }
-
-  total_hands = 0;
 
   hole_cards[2] = ' ';
   hole_cards[5] = 0;
@@ -72,16 +70,18 @@ int main(int argc,char **argv)
       return 4;
     }
 
+    hands = 0;
+
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
       if (feof(fptr))
         break;
 
-      total_hands++;
+      hands++;
 
       if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
-        printf("invalid hole card delimiters in line %d\n",total_hands);
+        printf("invalid hole card delimiters in line %d\n",hands);
         return 5;
       }
 
@@ -92,8 +92,12 @@ int main(int argc,char **argv)
 
       get_abbrev(hole_cards,hole_cards_abbrev);
 
-      if (is_premium_hand(hole_cards_abbrev,&premium_ix))
-        printf("%s\n",line);
+      if (is_premium_hand(hole_cards_abbrev,&premium_ix)) {
+        if (!bVerbose)
+          printf("%s\n",line);
+        else
+          printf("%s %s hand %d\n",line,filename,hands);
+      }
     }
 
     fclose(fptr);
