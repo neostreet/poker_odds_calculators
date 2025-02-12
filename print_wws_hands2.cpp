@@ -14,7 +14,7 @@ static char line[MAX_LINE_LEN];
 
 static char usage[] = "usage: print_wws_hands2 (-verbose) filename\n";
 
-static char wws_str[] = "wws";
+static char wws_str[] = ", wws";
 #define WWS_STR_LEN (sizeof (wws_str) - 1)
 
 static char couldnt_open[] = "couldn't open %s\n";
