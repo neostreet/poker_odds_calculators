@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: showdown_pct (-debug) filename\n";
+static char usage[] = "usage: showdown_pct (-verbose) filename\n";
 
 static char ws_str[] = ", ws";
 #define WS_STR_LEN (sizeof (ws_str) - 1)
@@ -30,7 +30,7 @@ static bool Contains(bool bCaseSens,char *line,int line_len,
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bDebug;
+  bool bVerbose;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -50,11 +50,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bDebug = false;
+  bVerbose = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-debug"))
-      bDebug = true;
+    if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
     else
       break;
   }
@@ -119,10 +119,17 @@ int main(int argc,char **argv)
       dwork1 = (double)ws_hands / (double) showdown_hands * (double)100;
       dwork2 = (double)showdown_hands / (double) hands * (double)100;
 
-      printf("%6.2lf (won %6d of %6d showdowns) %6.2lf (went to showdown %6d times in %6d hands) %s\n",
-        dwork1,ws_hands,showdown_hands,
-        dwork2,showdown_hands,hands,
-        filename);
+      if (!bVerbose) {
+        printf("%6.2lf%% (won %3d of %3d showdowns) %6.2lf%% (went to showdown %3d times in %3d hands)\n",
+          dwork1,ws_hands,showdown_hands,
+          dwork2,showdown_hands,hands);
+      }
+      else {
+        printf("%6.2lf%% (won %3d of %3d showdowns) %6.2lf%% (went to showdown %3d times in %3d hands) %s\n",
+          dwork1,ws_hands,showdown_hands,
+          dwork2,showdown_hands,hands,
+          filename);
+      }
     }
 
     total_ws_hands += ws_hands;
@@ -134,12 +141,18 @@ int main(int argc,char **argv)
     dwork1 = (double)total_ws_hands / (double) total_showdown_hands * (double)100;
     dwork2 = (double)total_showdown_hands / (double) total_hands * (double)100;
 
-    printf("\n%6.2lf (won %6d of %6d total showdowns) %6.2lf (went to showdown %6d times in %6d total hands) %s\n",
-      dwork1,total_ws_hands,total_showdown_hands,
-      dwork2,total_showdown_hands,total_hands,
-      filename);
+    if (!bVerbose) {
+      printf("\n%6.2lf%% (won %6d of %6d total showdowns) %6.2lf%% (went to showdown %6d times in %6d total hands)\n",
+        dwork1,total_ws_hands,total_showdown_hands,
+        dwork2,total_showdown_hands,total_hands);
+    }
+    else {
+      printf("\n%6.2lf%% (won %6d of %6d total showdowns) %6.2lf%% (went to showdown %6d times in %6d total hands) %s\n",
+        dwork1,total_ws_hands,total_showdown_hands,
+        dwork2,total_showdown_hands,total_hands,
+        filename);
+    }
   }
-
 
   return 0;
 }
