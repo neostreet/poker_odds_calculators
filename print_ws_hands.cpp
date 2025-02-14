@@ -72,7 +72,7 @@ int main(int argc,char **argv)
       if (!bVerbose)
         printf("%s\n",line);
       else
-        printf("%s %s hand %d\n",line,argv[curr_arg],hands);
+        printf("%s hand %d\n",line,hands);
     }
   }
 
