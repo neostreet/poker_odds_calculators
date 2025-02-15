@@ -85,6 +85,12 @@ int main(int argc,char **argv)
         return 5;
       }
 
+      if ((line[0] >= 'a') && (line[0] <= 'z'))
+        line[0] -= 'a' - 'A';
+
+      if ((line[3] >= 'a') && (line[3] <= 'z'))
+        line[3] -= 'a' - 'A';
+
       hole_cards[0] = line[0];
       hole_cards[1] = line[1];
       hole_cards[3] = line[3];
