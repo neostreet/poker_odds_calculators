@@ -12,10 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_rare_hands2 (-debug) filename\n";
-
-static char fbf_str[] = ", fbf";
-#define FBF_STR_LEN (sizeof (fbf_str) - 1)
+static char usage[] = "usage: print_sf_hands2 (-debug) filename\n";
 
 static char sf_str[] = ", sf";
 #define SF_STR_LEN (sizeof (sf_str) - 1)
@@ -83,11 +80,7 @@ int main(int argc,char **argv)
 
       hands++;
 
-      if (!Contains(true,
-        line,line_len,
-        fbf_str,FBF_STR_LEN,
-        &ix) &&
-        !Contains(true,
+      if (Contains(true,
         line,line_len,
         sf_str,SF_STR_LEN,
         &ix)) {
