@@ -12,7 +12,10 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_sf_hands2 (-verbose) filename\n";
+static char usage[] = "usage: print_rare_hands2 (-debug) filename\n";
+
+static char fbf_str[] = ", fbf";
+#define FBF_STR_LEN (sizeof (fbf_str) - 1)
 
 static char sf_str[] = ", sf";
 #define SF_STR_LEN (sizeof (sf_str) - 1)
@@ -27,7 +30,7 @@ static bool Contains(bool bCaseSens,char *line,int line_len,
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bVerbose;
+  bool bDebug;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -40,11 +43,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bVerbose = false;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-verbose"))
-      bVerbose = true;
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
     else
       break;
   }
@@ -80,15 +83,16 @@ int main(int argc,char **argv)
 
       hands++;
 
-      if (Contains(true,
+      if (!Contains(true,
+        line,line_len,
+        fbf_str,FBF_STR_LEN,
+        &ix) &&
+        !Contains(true,
         line,line_len,
         sf_str,SF_STR_LEN,
         &ix)) {
 
-        if (!bVerbose)
-          printf("%s\n",line);
-        else
-          printf("%s %s hand %d\n",line,filename,hands);
+        printf("%s %s hand %d\n",line,filename,hands);
       }
     }
 
