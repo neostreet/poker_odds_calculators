@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_won_pot_hands2 (-verbose) filename\n";
+static char usage[] = "usage: print_won_pot_hands2 (-debug) filename\n";
 
 static char ws_str[] = ", ws";
 #define WS_STR_LEN (sizeof (ws_str) - 1)
@@ -30,7 +30,7 @@ static bool Contains(bool bCaseSens,char *line,int line_len,
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bVerbose;
+  bool bDebug;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -43,11 +43,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bVerbose = false;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-verbose"))
-      bVerbose = true;
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
     else
       break;
   }
@@ -91,10 +91,7 @@ int main(int argc,char **argv)
         wws_str,WWS_STR_LEN,
         &ix)) {
 
-        if (!bVerbose)
-          printf("%s\n",line);
-        else
-          printf("%s %s hand %d\n",line,filename,hands);
+        printf("%s %s hand %d\n",line,filename,hands);
       }
     }
 
