@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_premium_hands2 (-verbose) (-not) (-saw_flop)\n"
+static char usage[] = "usage: print_premium_hands2 (-debug) (-not) (-saw_flop)\n"
 "  (-won_pot) (-lost_pot) filename\n";
 
 static char sf_str[] = ", sf";
@@ -34,7 +34,7 @@ static bool Contains(bool bCaseSens,char *line,int line_len,
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bVerbose;
+  bool bDebug;
   bool bNot;
   bool bSawFlop;
   bool bWonPot;
@@ -55,15 +55,15 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bVerbose = false;
+  bDebug = false;
   bNot = false;
   bSawFlop = false;
   bWonPot = false;
   bLostPot = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-verbose"))
-      bVerbose = true;
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
     else if (!strcmp(argv[curr_arg],"-not"))
       bNot = true;
     else if (!strcmp(argv[curr_arg],"-saw_flop"))
@@ -174,12 +174,8 @@ int main(int argc,char **argv)
       else
         bPrint = !is_premium_hand(hole_cards_abbrev,&premium_ix);
 
-      if (bPrint) {
-        if (!bVerbose)
-          printf("%s\n",line);
-        else
-          printf("%s %s hand %d\n",line,filename,hands);
-      }
+      if (bPrint)
+        printf("%s %s hand %d\n",line,filename,hands);
     }
 
     fclose(fptr);
