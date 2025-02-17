@@ -85,8 +85,16 @@ int main(int argc,char **argv)
 
       get_abbrev(hole_cards,hole_cards_abbrev);
 
-      if (!strcmp(hole_cards_abbrev,argv[1]))
-        printf("%s hand %s %d\n",line,filename,hands);
+      if ((strlen(argv[1]) == 3) && (argv[1][2] == 'x')) {
+        // disregard whether or not the hand is suited
+
+        if (!strncmp(hole_cards_abbrev,argv[1],2))
+          printf("%s hand %d\n",line,hands);
+      }
+      else {
+        if (!strcmp(hole_cards_abbrev,argv[1]))
+          printf("%s hand %d\n",line,hands);
+      }
     }
 
     fclose(fptr);
