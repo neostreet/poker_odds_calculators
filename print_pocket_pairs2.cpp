@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_pocket_pairs2 (-verbose) filename\n";
+static char usage[] = "usage: print_pocket_pairs2 (-debug) filename\n";
 
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
@@ -22,7 +22,7 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
 int main(int argc,char **argv)
 {
   int curr_arg;
-  bool bVerbose;
+  bool bDebug;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -35,11 +35,11 @@ int main(int argc,char **argv)
     return 1;
   }
 
-  bVerbose = false;
+  bDebug = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-verbose"))
-      bVerbose = true;
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
     else
       break;
   }
@@ -75,12 +75,8 @@ int main(int argc,char **argv)
 
       hands++;
 
-      if (line[0] == line[3]) {
-        if (!bVerbose)
-          printf("%s\n",line);
-        else
-          printf("%s %s hand %d\n",line,filename,hands);
-      }
+      if (line[0] == line[3])
+        printf("%s %s hand %d\n",line,filename,hands);
     }
 
     fclose(fptr);
