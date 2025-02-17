@@ -89,11 +89,11 @@ int main(int argc,char **argv)
         // disregard whether or not the hand is suited
 
         if (!strncmp(hole_cards_abbrev,argv[1],2))
-          printf("%s hand %d\n",line,hands);
+          printf("%s %s hand %d\n",line,filename,hands);
       }
       else {
         if (!strcmp(hole_cards_abbrev,argv[1]))
-          printf("%s hand %d\n",line,hands);
+          printf("%s %s hand %d\n",line,filename,hands);
       }
     }
 
