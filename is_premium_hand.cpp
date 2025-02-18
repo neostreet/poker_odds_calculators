@@ -23,7 +23,7 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_len;
   int premium_ix;
-  int total_hands;
+  int hands;
   char hole_cards[6];
   char hole_cards_abbrev[4];
 
@@ -51,7 +51,7 @@ int main(int argc,char **argv)
     return 3;
   }
 
-  total_hands = 0;
+  hands = 0;
 
   if (bHoleCards) {
     hole_cards[2] = ' ';
@@ -65,15 +65,21 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
-    total_hands++;
+    hands++;
 
     if (!bHoleCards)
       bPremiumHand = is_premium_hand(line,&premium_ix);
     else {
       if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
-        printf("invalid hole card delimiters in line %d\n",total_hands);
+        printf("invalid hole card delimiters in line %d\n",hands);
         return 4;
       }
+
+      if ((line[0] >= 'a') && (line[0] <= 'z'))
+        line[0] -= 'a' - 'A';
+
+      if ((line[3] >= 'a') && (line[3] <= 'z'))
+        line[3] -= 'a' - 'A';
 
       hole_cards[0] = line[0];
       hole_cards[1] = line[1];
@@ -86,9 +92,9 @@ int main(int argc,char **argv)
     }
 
     if (bPremiumHand)
-      printf("1 %s %d\n",line,premium_ix);
+      printf("1 %s %d line %d\n",line,premium_ix,hands);
     else
-      printf("0 %s\n",line);
+      printf("0 %s line %d\n",line,hands);
   }
 
   fclose(fptr);
