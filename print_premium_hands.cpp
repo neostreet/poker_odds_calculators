@@ -9,7 +9,7 @@ using namespace std;
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: print_premium_hands (-hole_cards) (-not) (-saw_flop)\n"
+static char usage[] = "usage: print_premium_hands (-verbose) (-hole_cards) (-not) (-saw_flop)\n"
 "  (-won_pot) (-lost_pot) filename\n";
 
 static char sf_str[] = ", sf";
@@ -31,6 +31,7 @@ static bool Contains(bool bCaseSens,char *line,int line_len,
 int main(int argc,char **argv)
 {
   int curr_arg;
+  bool bVerbose;
   bool bHoleCards;
   bool bNot;
   bool bSawFlop;
@@ -45,11 +46,12 @@ int main(int argc,char **argv)
   char hole_cards_abbrev[4];
   int ix;
 
-  if ((argc < 2) || (argc > 7)) {
+  if ((argc < 2) || (argc > 8)) {
     printf(usage);
     return 1;
   }
 
+  bVerbose = false;
   bHoleCards = false;
   bNot = false;
   bSawFlop = false;
@@ -57,7 +59,9 @@ int main(int argc,char **argv)
   bLostPot = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-hole_cards"))
+    if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
+    else if (!strcmp(argv[curr_arg],"-hole_cards"))
       bHoleCards = true;
     else if (!strcmp(argv[curr_arg],"-not"))
       bNot = true;
@@ -168,8 +172,12 @@ int main(int argc,char **argv)
         bPrint = !is_premium_hand(hole_cards_abbrev,&premium_ix);
     }
 
-    if (bPrint)
-      printf("%s line %d\n",line,hands);
+    if (bPrint) {
+      if (!bVerbose)
+        printf("%s\n",line);
+      else
+        printf("%s hand %d\n",line,hands);
+    }
   }
 
   fclose(fptr);
