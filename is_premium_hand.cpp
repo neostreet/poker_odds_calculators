@@ -92,9 +92,9 @@ int main(int argc,char **argv)
     }
 
     if (bPremiumHand)
-      printf("1 %s %d line %d\n",line,premium_ix,hands);
+      printf("1 %s %d hand %d\n",line,premium_ix,hands);
     else
-      printf("0 %s line %d\n",line,hands);
+      printf("0 %s hand %d\n",line,hands);
   }
 
   fclose(fptr);
