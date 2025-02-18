@@ -40,7 +40,7 @@ int main(int argc,char **argv)
   FILE *fptr;
   int line_len;
   int premium_ix;
-  int total_hands;
+  int hands;
   char hole_cards[6];
   char hole_cards_abbrev[4];
   int ix;
@@ -86,7 +86,7 @@ int main(int argc,char **argv)
     return 4;
   }
 
-  total_hands = 0;
+  hands = 0;
 
   if (bHoleCards) {
     hole_cards[2] = ' ';
@@ -100,7 +100,7 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
-    total_hands++;
+    hands++;
 
     if (bSawFlop) {
       if (!Contains(true,
@@ -145,7 +145,7 @@ int main(int argc,char **argv)
     }
     else {
       if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
-        printf("invalid hole card delimiters in line %d\n",total_hands);
+        printf("invalid hole card delimiters in line %d\n",hands);
         return 5;
       }
 
@@ -169,7 +169,7 @@ int main(int argc,char **argv)
     }
 
     if (bPrint)
-      printf("%s\n",line);
+      printf("%s line %d\n",line,hands);
   }
 
   fclose(fptr);
