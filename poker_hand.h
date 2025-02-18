@@ -66,7 +66,7 @@ enum FlopType {
 #define NUM_POCKS_PER_DENOM 6
 #define NUM_POCKS_IN_DECK (NUM_POCKS_PER_DENOM * NUM_CARDS_IN_SUIT)
 
-#define NUM_PREMIUM_HANDS_IN_DECK 58
+#define NUM_PREMIUM_HANDS_IN_DECK 60
 
 #ifdef MAIN_MODULE
 char suit_chars[] = "cdhs";
@@ -262,13 +262,13 @@ char *premium_hand_abbrevs[] = {
   "AA",
   "KK",
   "QQ",
-  "AKs",
   "JJ",
+  "AKs",
   "TT",
-  "AQs",
   "AKo",
-  "AJs",
-  "KQs"
+  "AQs",
+  "99",
+  "AJs"
 };
 #define NUM_PREMIUM_HAND_ABBREVS (sizeof premium_hand_abbrevs / sizeof (char *))
 int premium_hand_abbrev_lens[] = {
