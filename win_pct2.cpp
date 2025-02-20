@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: win_pct2 (-saw_flop) (-premium) filename\n";
+static char usage[] = "usage: win_pct2 (-saw_flop) (-premium) (-not_premium) filename\n";
 
 static char sf_str[] = ", sf";
 #define SF_STR_LEN (sizeof (sf_str) - 1)
@@ -35,6 +35,7 @@ int main(int argc,char **argv)
   int curr_arg;
   bool bSawFlop;
   bool bPremium;
+  bool bNotPremium;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -50,19 +51,22 @@ int main(int argc,char **argv)
   char hole_cards_abbrev[4];
   double dwork;
 
-  if ((argc < 2) || (argc > 4)) {
+  if ((argc < 2) || (argc > 5)) {
     printf(usage);
     return 1;
   }
 
   bSawFlop = false;
   bPremium = false;
+  bNotPremium = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-saw_flop"))
       bSawFlop = true;
     else if (!strcmp(argv[curr_arg],"-premium"))
       bPremium = true;
+    else if (!strcmp(argv[curr_arg],"-not_premium"))
+      bNotPremium = true;
     else
       break;
   }
@@ -72,12 +76,17 @@ int main(int argc,char **argv)
     return 2;
   }
 
-  if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
-    printf(couldnt_open,argv[curr_arg]);
+  if (bPremium && bNotPremium) {
+    printf("can't specify both -premium and -not_premium\n");
     return 3;
   }
 
-  if (bPremium) {
+  if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
+    printf(couldnt_open,argv[curr_arg]);
+    return 4;
+  }
+
+  if (bPremium || bNotPremium) {
     hole_cards[2] = ' ';
     hole_cards[5] = 0;
     hole_cards_abbrev[3] = 0;
@@ -94,7 +103,7 @@ int main(int argc,char **argv)
 
     if ((fptr = fopen(filename,"r")) == NULL) {
       printf(couldnt_open,filename);
-      return 4;
+      return 5;
     }
 
     line_no = 0;
@@ -119,10 +128,10 @@ int main(int argc,char **argv)
         }
       }
 
-      if (bPremium) {
+      if (bPremium || bNotPremium) {
         if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
           printf("invalid hole card delimiters in line %d\n",line_no);
-          return 4;
+          return 6;
         }
 
         if ((line[0] >= 'a') && (line[0] <= 'z'))
@@ -138,8 +147,14 @@ int main(int argc,char **argv)
 
         get_abbrev(hole_cards,hole_cards_abbrev);
 
-        if (!is_premium_hand(hole_cards_abbrev,&premium_ix))
-          continue;
+        if (bPremium) {
+          if (!is_premium_hand(hole_cards_abbrev,&premium_ix))
+            continue;
+        }
+        else if (bNotPremium) {
+          if (is_premium_hand(hole_cards_abbrev,&premium_ix))
+            continue;
+        }
       }
 
       hands++;
