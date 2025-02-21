@@ -12,7 +12,8 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: win_pct2 (-saw_flop) (-premium) (-not_premium) filename\n";
+static char usage[] = "usage: win_pct2 (-debug) (-saw_flop) (-premium) (-not_premium)\n"
+"  (-showdown) (-no_showdown) filename\n";
 
 static char sf_str[] = ", sf";
 #define SF_STR_LEN (sizeof (sf_str) - 1)
@@ -22,6 +23,9 @@ static char ws_str[] = ", ws";
 
 static char wws_str[] = ", wws";
 #define WWS_STR_LEN (sizeof (wws_str) - 1)
+
+static char ls_str[] = ", ls";
+#define LS_STR_LEN (sizeof (ls_str) - 1)
 
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
@@ -33,9 +37,12 @@ static bool Contains(bool bCaseSens,char *line,int line_len,
 int main(int argc,char **argv)
 {
   int curr_arg;
+  bool bDebug;
   bool bSawFlop;
   bool bPremium;
   bool bNotPremium;
+  bool bShowdown;
+  bool bNoShowdown;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -51,22 +58,31 @@ int main(int argc,char **argv)
   char hole_cards_abbrev[4];
   double dwork;
 
-  if ((argc < 2) || (argc > 5)) {
+  if ((argc < 2) || (argc > 8)) {
     printf(usage);
     return 1;
   }
 
+  bDebug = false;
   bSawFlop = false;
   bPremium = false;
   bNotPremium = false;
+  bShowdown = false;
+  bNoShowdown = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-saw_flop"))
+    if (!strcmp(argv[curr_arg],"-debug"))
+      bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-saw_flop"))
       bSawFlop = true;
     else if (!strcmp(argv[curr_arg],"-premium"))
       bPremium = true;
     else if (!strcmp(argv[curr_arg],"-not_premium"))
       bNotPremium = true;
+    else if (!strcmp(argv[curr_arg],"-showdown"))
+      bShowdown = true;
+    else if (!strcmp(argv[curr_arg],"-no_showdown"))
+      bNoShowdown = true;
     else
       break;
   }
@@ -81,9 +97,14 @@ int main(int argc,char **argv)
     return 3;
   }
 
+  if (bShowdown && bNoShowdown) {
+    printf("can't specify both -showdown and -no_showdown\n");
+    return 4;
+  }
+
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 4;
+    return 5;
   }
 
   if (bPremium || bNotPremium) {
@@ -103,7 +124,7 @@ int main(int argc,char **argv)
 
     if ((fptr = fopen(filename,"r")) == NULL) {
       printf(couldnt_open,filename);
-      return 5;
+      return 6;
     }
 
     line_no = 0;
@@ -131,7 +152,7 @@ int main(int argc,char **argv)
       if (bPremium || bNotPremium) {
         if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
           printf("invalid hole card delimiters in line %d\n",line_no);
-          return 6;
+          return 7;
         }
 
         if ((line[0] >= 'a') && (line[0] <= 'z'))
@@ -154,6 +175,31 @@ int main(int argc,char **argv)
         else if (bNotPremium) {
           if (is_premium_hand(hole_cards_abbrev,&premium_ix))
             continue;
+        }
+      }
+
+      if (bShowdown) {
+        if (!Contains(true,
+          line,line_len,
+          ws_str,WS_STR_LEN,
+          &ix) && !Contains(true,
+          line,line_len,
+          ls_str,LS_STR_LEN,
+          &ix)) {
+
+          continue;
+        }
+      }
+      else if (bNoShowdown) {
+        if (Contains(true,
+          line,line_len,
+          ws_str,WS_STR_LEN,
+          &ix) || Contains(true,
+          line,line_len,
+          ls_str,LS_STR_LEN,
+          &ix)) {
+
+          continue;
         }
       }
 
