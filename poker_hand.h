@@ -272,16 +272,16 @@ char *premium_hand_abbrevs[] = {
 };
 #define NUM_PREMIUM_HAND_ABBREVS (sizeof premium_hand_abbrevs / sizeof (char *))
 int premium_hand_abbrev_lens[] = {
-  2,
-  2,
-  2,
-  3,
-  2,
-  2,
-  3,
-  3,
-  3,
-  3
+  2,  // AA
+  2,  // KK
+  2,  // QQ
+  2,  // JJ
+  3,  // AKs
+  2,  // TT
+  3,  // AKo
+  3,  // AQs
+  2,  // 99
+  3   // AJs
 };
 int compare_key_called;
 bool bQuick;
