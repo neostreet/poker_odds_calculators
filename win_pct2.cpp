@@ -47,7 +47,6 @@ int main(int argc,char **argv)
   int filename_len;
   FILE *fptr;
   int line_len;
-  int line_no;
   int hands;
   int pots_won;
   int total_hands;
@@ -127,7 +126,6 @@ int main(int argc,char **argv)
       return 6;
     }
 
-    line_no = 0;
     hands = 0;
     pots_won = 0;
 
@@ -137,7 +135,7 @@ int main(int argc,char **argv)
       if (feof(fptr))
         break;
 
-      line_no++;
+      hands++;
 
       if (bSawFlop) {
         if (!Contains(true,
@@ -151,7 +149,7 @@ int main(int argc,char **argv)
 
       if (bPremium || bNotPremium) {
         if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
-          printf("invalid hole card delimiters in line %d\n",line_no);
+          printf("invalid hole card delimiters in line %d\n",hands);
           return 7;
         }
 
@@ -202,8 +200,6 @@ int main(int argc,char **argv)
           continue;
         }
       }
-
-      hands++;
 
       if (Contains(true,
         line,line_len,
