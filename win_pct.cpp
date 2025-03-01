@@ -42,7 +42,6 @@ int main(int argc,char **argv)
   bool bNoShowdown;
   FILE *fptr;
   int line_len;
-  int line_no;
   int hands;
   int ix;
   int premium_ix;
@@ -100,7 +99,6 @@ int main(int argc,char **argv)
     return 5;
   }
 
-  line_no = 0;
   hands = 0;
   pots_won = 0;
 
@@ -116,7 +114,7 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
-    line_no++;
+    hands++;
 
     if (bSawFlop) {
       if (!Contains(true,
@@ -130,7 +128,7 @@ int main(int argc,char **argv)
 
     if (bPremium || bNotPremium) {
       if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
-        printf("invalid hole card delimiters in line %d\n",line_no);
+        printf("invalid hole card delimiters in line %d\n",hands);
         return 6;
       }
 
@@ -182,10 +180,8 @@ int main(int argc,char **argv)
       }
     }
 
-    hands++;
-
     if (bDebug)
-      printf("%d: %s\n",line_no,line);
+      printf("%d: %s\n",hands,line);
 
     if (Contains(true,
       line,line_len,
