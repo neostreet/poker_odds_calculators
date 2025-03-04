@@ -169,6 +169,10 @@ int main(int argc,char **argv)
 
       get_abbrev(hole_cards,hole_cards_abbrev);
 
+      if (bDebug) {
+        printf("debugging: %s %s %s hand %d\n",hole_cards_abbrev,line,filename,hands);
+      }
+
       if (!bNot)
         bPrint = is_premium_hand(hole_cards_abbrev,&premium_ix);
       else
