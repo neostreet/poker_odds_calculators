@@ -12,7 +12,7 @@ static char filename[MAX_FILENAME_LEN];
 #define MAX_LINE_LEN 1024
 static char line[MAX_LINE_LEN];
 
-static char usage[] = "usage: prem_freq3 (-debug) filename\n";
+static char usage[] = "usage: prem_freq3 (-debug) (-verbose) filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 static char parse_error[] = "couldn't parse line %d, card %d: %d\n";
 
@@ -22,6 +22,7 @@ int main(int argc,char **argv)
 {
   int curr_arg;
   bool bDebug;
+  bool bVerbose;
   FILE *fptr0;
   int filename_len;
   FILE *fptr;
@@ -29,22 +30,26 @@ int main(int argc,char **argv)
   int premium_ix;
   int total_premium_hands;
   int total_hands;
+  int hands;
   char hole_cards[6];
   char hole_cards_abbrev[4];
   double ratio1;
   double ratio2;
   double dwork;
 
-  if ((argc < 2) || (argc > 3)) {
+  if ((argc < 2) || (argc > 4)) {
     printf(usage);
     return 1;
   }
 
   bDebug = false;
+  bVerbose = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-debug"))
       bDebug = true;
+    else if (!strcmp(argv[curr_arg],"-verbose"))
+      bVerbose = true;
     else
       break;
   }
@@ -77,18 +82,27 @@ int main(int argc,char **argv)
       return 4;
     }
 
+    hands = 0;
+
     for ( ; ; ) {
       GetLine(fptr,line,&line_len,MAX_LINE_LEN);
 
       if (feof(fptr))
         break;
 
+      hands++;
       total_hands++;
 
       if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
         printf("invalid hole card delimiters in line %d\n",total_hands);
         return 5;
       }
+
+      if ((line[0] >= 'a') && (line[0] <= 'z'))
+        line[0] -= 'a' - 'A';
+
+      if ((line[3] >= 'a') && (line[3] <= 'z'))
+        line[3] -= 'a' - 'A';
 
       hole_cards[0] = line[0];
       hole_cards[1] = line[1];
@@ -97,8 +111,17 @@ int main(int argc,char **argv)
 
       get_abbrev(hole_cards,hole_cards_abbrev);
 
-      if (is_premium_hand(hole_cards_abbrev,&premium_ix))
+      if (bDebug && bVerbose) {
+        printf("debugging: %s %s %s hand %d\n",hole_cards_abbrev,line,filename,hands);
+      }
+
+      if (is_premium_hand(hole_cards_abbrev,&premium_ix)) {
         total_premium_hands++;
+
+        if (bDebug && !bVerbose) {
+          printf("%s %s hand %d\n",line,filename,hands);
+        }
+      }
     }
 
     fclose(fptr);
