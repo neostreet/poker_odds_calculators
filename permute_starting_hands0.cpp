@@ -11,7 +11,7 @@ static int hand_counts[NUM_HAND_ABBREVS];
 static int premium_hand_counts[NUM_PREMIUM_HAND_ABBREVS];
 
 static char usage[] =
-"usage: permute_starting_hands0 (-card_strings) (-print_offset)\n"
+"usage: permute_starting_hands0 (-usage) (-card_strings) (-print_offset)\n"
 "  (-unique_first_cards) (-abbrev) (-premium) (-aggreg)\n";
 
 int main(int argc,char **argv)
@@ -19,6 +19,7 @@ int main(int argc,char **argv)
   int m;
   int n;
   int curr_arg;
+  bool bUsage;
   bool bCardStrings;
   bool bPrintOffset;
   bool bUniqueFirstCards;
@@ -32,11 +33,7 @@ int main(int argc,char **argv)
   char hole_cards_abbrev[4];
   int prev_first_card;
 
-  if ((argc < 2) || (argc > 7)) {
-    printf(usage);
-    return 1;
-  }
-
+  bUsage = false;
   bCardStrings = false;
   bPrintOffset = false;
   bUniqueFirstCards = false;
@@ -45,7 +42,9 @@ int main(int argc,char **argv)
   bAggreg = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-card_strings"))
+    if (!strcmp(argv[curr_arg],"-usage"))
+      bUsage = true;
+    else if (!strcmp(argv[curr_arg],"-card_strings"))
       bCardStrings = true;
     else if (!strcmp(argv[curr_arg],"-print_offset"))
       bPrintOffset = true;
@@ -61,6 +60,11 @@ int main(int argc,char **argv)
     }
     else
       break;
+  }
+
+  if (bUsage) {
+    printf(usage);
+    return 0;
   }
 
   if (bAggreg) {
