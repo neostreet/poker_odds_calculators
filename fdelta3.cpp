@@ -3029,6 +3029,9 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
   return HIGH_CARD;
 }
 
+static int run_filter_calls1;
+static int run_filter_calls2;
+
 void run_filter(struct vars *varspt)
 {
   int dbg;
@@ -3037,12 +3040,17 @@ void run_filter(struct vars *varspt)
   HeadsUpFlop huf;
   int cards[NUM_HEADS_UP_TURN_CARDS];
   bool bSkip;
+  int print_location;
+
+  run_filter_calls1++;
 
   if (hand_no == dbg_hand_no)
     dbg = 1;
 
   if (varspt->filter_percentage)
     varspt->summary_val++;
+
+  print_location = 0;
 
   if (varspt->bSummarizing || !varspt->bSkipZero || (varspt->delta != 0)) {
   if (!varspt->bOnlyZero || (varspt->delta == 0)) {
@@ -3210,6 +3218,8 @@ void run_filter(struct vars *varspt)
           else
             printf("%d %d\n",varspt->quantum,varspt->table_count);
         }
+
+        print_location = 1;
       }
       else if (!varspt->bSumByTableCount) {
         varspt->total_delta += varspt->quantum;
@@ -3287,6 +3297,8 @@ void run_filter(struct vars *varspt)
                       varspt->winning_hand_hole_card_ixs[0],
                       varspt->winning_hand_hole_card_ixs[1]);
                   }
+
+                  print_location = 2;
                 }
                 else if (varspt->bShowWinningHandHoleCardsAbbrev) {
                   if (!varspt->bNoDelta) {
@@ -3299,6 +3311,8 @@ void run_filter(struct vars *varspt)
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                       varspt->winning_hand_hole_cards_abbrev);
                   }
+
+                  print_location = 3;
                 }
                 else {
                   if (!varspt->bNoDelta) {
@@ -3311,6 +3325,8 @@ void run_filter(struct vars *varspt)
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                       varspt->winning_hand_hole_cards);
                   }
+
+                  print_location = 4;
                 }
               }
               else if (varspt->bShowOpponentHoleCards && varspt->bHaveOpponentHoleCards) {
@@ -3327,6 +3343,8 @@ void run_filter(struct vars *varspt)
                       varspt->opponent_hole_card_ixs[0],
                       varspt->opponent_hole_card_ixs[1]);
                   }
+
+                  print_location = 5;
                 }
                 else if (varspt->bShowOpponentHoleCardsAbbrev) {
                   if (!varspt->bNoDelta) {
@@ -3339,6 +3357,8 @@ void run_filter(struct vars *varspt)
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                       varspt->opponent_hole_cards_abbrev);
                   }
+
+                  print_location = 6;
                 }
                 else {
                   if (!varspt->bNoDelta) {
@@ -3351,6 +3371,8 @@ void run_filter(struct vars *varspt)
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                       varspt->opponent_hole_cards);
                   }
+
+                  print_location = 7;
                 }
               }
               else {
@@ -3369,6 +3391,8 @@ void run_filter(struct vars *varspt)
                       varspt->outcomes[0].ties,
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                   }
+
+                  print_location = 8;
                 }
                 else if (varspt->bHutOutsDiff) {
                   if (!varspt->bNoDelta) {
@@ -3385,21 +3409,27 @@ void run_filter(struct vars *varspt)
                       varspt->outcomes[0].ties,
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                   }
+
+                  print_location = 9;
                 }
                 else {
                   if (!varspt->bNoDelta) {
-                    printf("%10d %s",varspt->delta,
+                    printf("%10d (%10d %10d) %s",varspt->delta,varspt->ending_balance,varspt->starting_balance,
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                   }
                   else {
                     printf("%s",
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                   }
+
+                  print_location = 10;
                 }
               }
             }
-            else if (!varspt->bNoDelta)
+            else if (!varspt->bNoDelta) {
               printf("%10d",varspt->delta);
+              print_location = 11;
+            }
           }
           else {
             if (!varspt->bNoHoleCards) {
@@ -3413,12 +3443,16 @@ void run_filter(struct vars *varspt)
                   (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
                   varspt->hole_cards_used);
               }
+
+              print_location = 12;
             }
             else {
               if (!varspt->bNoDelta)
                 printf("%10d (%d)",varspt->delta,varspt->hole_cards_used);
               else
                 printf("(%d)",varspt->hole_cards_used);
+
+              print_location = 13;
             }
           }
 
@@ -3426,6 +3460,7 @@ void run_filter(struct vars *varspt)
         case QUANTUM_TYPE_OPM:
           printf("%6.4lf (%10d %10d) %s",varspt->dwork,
             varspt->delta,varspt->collected_from_pot,varspt->hole_cards);
+          print_location = 14;
 
           break;
         case QUANTUM_TYPE_COLLECTED:
@@ -3438,6 +3473,7 @@ void run_filter(struct vars *varspt)
         case QUANTUM_TYPE_NUM_POSITIVE_DELTAS:
         case QUANTUM_TYPE_DISCREPANCY:
           printf("%10d %s",varspt->quantum,varspt->hole_cards);
+          print_location = 15;
 
           break;
         case QUANTUM_TYPE_ROI:
@@ -3448,6 +3484,7 @@ void run_filter(struct vars *varspt)
 
           printf("%lf (%d %d) %s",dwork,
             varspt->delta,varspt->wagered_amount,varspt->hole_cards);
+          print_location = 16;
 
           break;
       }
@@ -3575,6 +3612,9 @@ void run_filter(struct vars *varspt)
   }
   }
   }
+
+  if (print_location)
+    run_filter_calls2++;
 }
 
 static void do_balance_processing(struct vars *varspt)
