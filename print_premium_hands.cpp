@@ -10,7 +10,7 @@ using namespace std;
 static char line[MAX_LINE_LEN];
 
 static char usage[] = "usage: print_premium_hands (-verbose) (-hole_cards) (-not) (-saw_flop)\n"
-"  (-won_pot) (-lost_pot) filename\n";
+"  (-won_pot) (-lost_pot) (-offsetval) filename\n";
 
 static char sf_str[] = ", sf";
 #define SF_STR_LEN (sizeof (sf_str) - 1)
@@ -37,6 +37,7 @@ int main(int argc,char **argv)
   bool bSawFlop;
   bool bWonPot;
   bool bLostPot;
+  int offset;
   bool bPrint;
   FILE *fptr;
   int line_len;
@@ -46,7 +47,7 @@ int main(int argc,char **argv)
   char hole_cards_abbrev[4];
   int ix;
 
-  if ((argc < 2) || (argc > 8)) {
+  if ((argc < 2) || (argc > 9)) {
     printf(usage);
     return 1;
   }
@@ -57,6 +58,7 @@ int main(int argc,char **argv)
   bSawFlop = false;
   bWonPot = false;
   bLostPot = false;
+  offset = 0;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-verbose"))
@@ -71,6 +73,8 @@ int main(int argc,char **argv)
       bWonPot = true;
     else if (!strcmp(argv[curr_arg],"-lost_pot"))
       bLostPot = true;
+    else if (!strncmp(argv[curr_arg],"-offset",7))
+      sscanf(&argv[curr_arg][7],"%d",&offset);
     else
       break;
   }
@@ -148,7 +152,7 @@ int main(int argc,char **argv)
         bPrint = !is_premium_hand(line,&premium_ix);
     }
     else {
-      if ((line[2] != ' ') || (line[5] && (line[5] != ' ') && (line[5] != ','))) {
+      if ((line[offset+2] != ' ') || (line[offset+5] && (line[offset+5] != ' ') && (line[offset+5] != ','))) {
         printf("invalid hole card delimiters in line %d\n",hands);
         return 5;
       }
@@ -159,10 +163,10 @@ int main(int argc,char **argv)
       if ((line[3] >= 'a') && (line[3] <= 'z'))
         line[3] -= 'a' - 'A';
 
-      hole_cards[0] = line[0];
-      hole_cards[1] = line[1];
-      hole_cards[3] = line[3];
-      hole_cards[4] = line[4];
+      hole_cards[0] = line[offset+0];
+      hole_cards[1] = line[offset+1];
+      hole_cards[3] = line[offset+3];
+      hole_cards[4] = line[offset+4];
 
       get_abbrev(hole_cards,hole_cards_abbrev);
 
