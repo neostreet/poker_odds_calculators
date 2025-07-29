@@ -28,7 +28,7 @@ static char line[MAX_LINE_LEN];
 static char table_name[MAX_TABLE_NAME_LEN+1];
 
 static char usage[] =
-"usage: fdelta3 (-terse) (-verbose) (-debug) (-hand_typehand_type) (-handhand)\n"
+"usage: fdelta3 (-terse) (-verbose) (-debug_levelval) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-only_lost)\n"
@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-small_blind) (-big_blind) (-small_or_big_blind) (-no_blind)\n"
+"  (-button) (-small_blind) (-big_blind) (-small_or_big_blind) (-other)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -154,7 +154,7 @@ static int hand_no;
 static int dbg_hand_no;
 
 static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen);
-static int Contains(bool bCaseSens,char *line,int line_len,
+static bool Contains(bool bCaseSens,char *line,int line_len,int line_no,int code_line_no,int debug_level,
   char *string,int string_len,int *index);
 static int get_work_amount(char *line,int line_len);
 static void normalize_hole_cards(char *hole_cards);
@@ -172,6 +172,7 @@ static void run_filter(struct vars *varspt);
 static void do_balance_processing(struct vars *varspt);
 static char *style2(char *filename);
 int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs);
+int get_button_seat(char *line);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -189,10 +190,13 @@ enum quantum_typ {
 };
 
 struct vars {
+  int line_no;
+  int button_seat;
+  bool bAmButton;
   bool bTerse;
   bool bVerbose;
   bool bVerboseStyle2;
-  bool bDebug;
+  int debug_level;
   bool bHandTypeSpecified;
   bool bHandTypeOnFlopSpecified;
   bool bWinningHandTypeSpecified;
@@ -335,13 +339,16 @@ struct vars {
   bool b3tOuts;
   bool bGetDateFromFilename;
   bool bNoHoleCards;
+  bool bButton;
+  int button;
   bool bSmallBlind;
   int small_blind;
   bool bBigBlind;
   int big_blind;
   bool bSmallOrBigBlind;
   int small_or_big_blind;
-  bool bNoBlind;
+  bool bOther;
+  int other;
   bool bDeuceOrTreyOff;
   bool bVoluntaryBet;
   bool bNoVoluntaryBet;
@@ -359,7 +366,6 @@ struct vars {
   bool bOnlyKnockout;
   bool bOnlyDoubleUp;
   int am_table_boss;
-  int no_blind;
   int collected_ge_val;
   bool bStud;
   bool bRazz;
@@ -472,6 +478,8 @@ struct vars {
   bool bHaveAnte;
 };
 
+static int dbg_line_no;
+
 int main(int argc,char **argv)
 {
   int m;
@@ -486,8 +494,6 @@ int main(int argc,char **argv)
   int filename_len;
   FILE *fptr;
   int line_len;
-  int line_no;
-  int dbg_line_no;
   int showdown_count;
   int ix;
   int pot_ix;
@@ -508,6 +514,7 @@ int main(int argc,char **argv)
   int retval;
   int *poker_hand_cards;
   bool bFirstHand;
+  int curr_seat;
   int curr_stack;
   int boss_stack;
   int boss_seat_ix;
@@ -518,17 +525,20 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 153)) {
+  if ((argc < 3) || (argc > 154)) {
     printf(usage);
     return 1;
   }
 
   init_plain_hand_type_lens();
 
+  local_vars.line_no = 0;
+  local_vars.button_seat = 0;
+  local_vars.bAmButton = false;
   local_vars.bTerse = false;
   local_vars.bVerbose = false;
   local_vars.bVerboseStyle2 = false;
-  local_vars.bDebug = false;
+  local_vars.debug_level = 0;
   local_vars.bHandTypeSpecified = false;
   local_vars.bHandTypeOnFlopSpecified = false;
   local_vars.bWinningHandTypeSpecified = false;
@@ -657,14 +667,16 @@ int main(int argc,char **argv)
   local_vars.b3tOuts = false;
   local_vars.bGetDateFromFilename = false;
   local_vars.bNoHoleCards = false;
+  local_vars.bButton = false;
+  local_vars.button = 0;
   local_vars.bSmallBlind = false;
   local_vars.small_blind = 0;
   local_vars.bBigBlind = false;
   local_vars.big_blind = 0;
   local_vars.bSmallOrBigBlind = false;
   local_vars.small_or_big_blind = 0;
-  local_vars.bNoBlind = false;
-  local_vars.no_blind = 0;
+  local_vars.bOther = false;
+  local_vars.other = 0;
   local_vars.bDeuceOrTreyOff = false;
   local_vars.bVoluntaryBet = false;
   local_vars.bNoVoluntaryBet = false;
@@ -694,8 +706,8 @@ int main(int argc,char **argv)
       local_vars.bVerbose = true;
       local_vars.bVerboseStyle2 = true;
     }
-    else if (!strcmp(argv[curr_arg],"-debug"))
-      local_vars.bDebug = true;
+    else if (!strncmp(argv[curr_arg],"-debug_level",12))
+      sscanf(&argv[curr_arg][12],"%d",&local_vars.debug_level);
     else if (!strncmp(argv[curr_arg],"-hand_type_on_flop",18)) {
       local_vars.hand_typ_on_flop_id = get_hand_type(&argv[curr_arg][18]);
       local_vars.bHandTypeOnFlopSpecified = true;
@@ -1019,9 +1031,13 @@ int main(int argc,char **argv)
       local_vars.bGetDateFromFilename = true;
     else if (!strcmp(argv[curr_arg],"-no_hole_cards"))
       local_vars.bNoHoleCards = true;
+    else if (!strcmp(argv[curr_arg],"-button")) {
+      local_vars.bButton = true;
+      local_vars.button = 1;
+    }
     else if (!strcmp(argv[curr_arg],"-small_blind")) {
       local_vars.bSmallBlind = true;
-      local_vars.small_blind = 0;
+      local_vars.small_blind = 1;
     }
     else if (!strcmp(argv[curr_arg],"-big_blind")) {
       local_vars.bBigBlind = true;
@@ -1031,9 +1047,9 @@ int main(int argc,char **argv)
       local_vars.bSmallOrBigBlind = true;
       local_vars.small_or_big_blind = 1;
     }
-    else if (!strcmp(argv[curr_arg],"-no_blind")) {
-      local_vars.bNoBlind = true;
-      local_vars.no_blind = 1;
+    else if (!strcmp(argv[curr_arg],"-other")) {
+      local_vars.bOther = true;
+      local_vars.other = 1;
     }
     else if (!strcmp(argv[curr_arg],"-deuce_or_trey_off"))
       local_vars.bDeuceOrTreyOff = true;
@@ -1394,8 +1410,8 @@ int main(int argc,char **argv)
     return 37;
   }
 
-  if (local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind + local_vars.no_blind > 1) {
-    printf("can only specify one of -local_vars.small_blind, -big_blind, -local_vars.small_or_big_blind, and -local_vars.no_blind\n");
+  if (local_vars.button + local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind + local_vars.other > 1) {
+    printf("can only specify one of -button, -small_blind, -big_blind, -small_or_big_blind, and -other\n");
     return 38;
   }
 
@@ -1596,7 +1612,7 @@ int main(int argc,char **argv)
         argv[player_name_ix],player_name_len);
     }
 
-    line_no = 0;
+    local_vars.line_no = 0;
     local_vars.bFolded = false;
     local_vars.bFoldedPreflop = false;
     local_vars.bSkipping = false;
@@ -1710,31 +1726,32 @@ int main(int argc,char **argv)
         break;
       }
 
-      line_no++;
+      local_vars.line_no++;
 
-      if (line_no == dbg_line_no)
+      if (local_vars.line_no == dbg_line_no)
         dbg = 1;
 
-      if (local_vars.bDebug)
-        printf("line %d %s\n",line_no,line);
+      if (local_vars.debug_level == 1)
+        printf("line %d %s\n",local_vars.line_no,line);
 
       if (Contains(true,
-        line,line_len,
+        line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
         pokerstars,POKERSTARS_LEN,
         &ix)) {
 
+#ifdef STUD_AND_RAZZ
         local_vars.bStud = false;
         local_vars.bRazz = false;
 
         if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           stud,STUD_LEN,
           &ix)) {
 
           local_vars.bStud = true;
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           razz,RAZZ_LEN,
           &ix)) {
 
@@ -1744,9 +1761,12 @@ int main(int argc,char **argv)
         if (local_vars.bStud || local_vars.bRazz)
           max_streets = 4;
         else
+#endif
           max_streets = 3;
       }
       else if (!strncmp(line,"Table '",7)) {
+        local_vars.button_seat = get_button_seat(line);
+
         if (bFirstHand)
           bFirstHand = false;
         else {
@@ -1776,7 +1796,10 @@ int main(int argc,char **argv)
           if (feof(fptr))
             break;
 
-          line_no++;
+          local_vars.line_no++;
+
+          if (local_vars.line_no == dbg_line_no)
+            dbg = 1;
 
           if (!strncmp(line,"*** ",4)) {
             num_street_markers++;
@@ -1789,9 +1812,10 @@ int main(int argc,char **argv)
 
           if (!strncmp(line,"Seat ",5)) {
             local_vars.table_count++;
+            sscanf(&line[5],"%d",&curr_seat);
 
             if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               in_chips,IN_CHIPS_LEN,
               &ix)) {
 
@@ -1808,9 +1832,12 @@ int main(int argc,char **argv)
               }
 
               if (Contains(true,
-                line,line_len,
+                line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                 argv[player_name_ix],player_name_len,
                 &ix)) {
+
+                if (curr_seat == local_vars.button_seat)
+                  local_vars.bAmButton = true;
 
                 my_seat_ix = local_vars.table_count - 1;
                 local_vars.starting_balance = curr_stack;
@@ -1884,11 +1911,11 @@ int main(int argc,char **argv)
                 local_vars.collected_from_pot = 0;
                 local_vars.collected_from_pot_count = 0;
 
-                if (local_vars.bDebug)
-                  printf("line %d starting_balance = %d\n",line_no,local_vars.starting_balance);
+                if (local_vars.debug_level == 1)
+                  printf("line %d starting_balance = %d\n",local_vars.line_no,local_vars.starting_balance);
 
                 if (Contains(true,
-                  line,line_len,
+                  line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                   sitting_out,SITTING_OUT_LEN,
                   &ix)) {
                   local_vars.bIsSittingOut = true;
@@ -1897,12 +1924,12 @@ int main(int argc,char **argv)
             }
           }
           else if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             argv[player_name_ix],player_name_len,
             &ix)) {
 
             if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               posts_the_ante,POSTS_THE_ANTE_LEN,
               &ix)) {
               ante = get_work_amount(line,line_len);
@@ -1910,7 +1937,7 @@ int main(int argc,char **argv)
               local_vars.bHaveAnte = true;
 
               if (Contains(true,
-                line,line_len,
+                line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                 all_in,ALL_IN_LEN,
                 &ix)) {
 
@@ -1920,34 +1947,39 @@ int main(int argc,char **argv)
               }
             }
             else if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               posts,POSTS_LEN,
               &ix)) {
               local_vars.work = get_work_amount(line,line_len);
               spent_this_street += local_vars.work;
 
               if (Contains(true,
-                line,line_len,
+                line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                 posts_small_blind,POSTS_SMALL_BLIND_LEN,
                 &ix)) {
 
                 local_vars.bPostedSmallBlind = true;
+
+                if (local_vars.debug_level == 2) {
+                  printf("set bPostedSmallBlind\n");
+                  printf("line %d: line %d\n",__LINE__,local_vars.line_no);
+                }
               }
               else if (Contains(true,
-                line,line_len,
+                line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                 posts_big_blind,POSTS_BIG_BLIND_LEN,
                 &ix)) {
 
                 local_vars.bPostedBigBlind = true;
               }
 
-              if (local_vars.bDebug) {
+              if (local_vars.debug_level == 1) {
                 printf("line %d street %d POSTS work = %d, spent_this_street = %d\n",
-                  line_no,street,local_vars.work,spent_this_street);
+                  local_vars.line_no,street,local_vars.work,spent_this_street);
               }
 
               if (Contains(true,
-                line,line_len,
+                line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                 all_in,ALL_IN_LEN,
                 &ix)) {
 
@@ -1969,7 +2001,7 @@ int main(int argc,char **argv)
       else if (local_vars.bSkipping) {
         if (local_vars.bWinningHandTypeSpecified) {
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             won,WON_LEN,
             &ix)) {
 
@@ -1978,7 +2010,7 @@ int main(int argc,char **argv)
         }
         else if (local_vars.bShowdownHandSpecified && !local_vars.bHaveSpecifiedShowdownHand) {
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             showed,SHOWED_LEN,
             &ix)) {
 
@@ -1992,7 +2024,7 @@ int main(int argc,char **argv)
         }
         else if (local_vars.bShowdownHand2Specified && !local_vars.bHaveSpecifiedShowdownHand2) {
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             showed,SHOWED_LEN,
             &ix)) {
 
@@ -2006,12 +2038,12 @@ int main(int argc,char **argv)
         }
         else if (local_vars.bWinningHandSpecified && !local_vars.bHaveSpecifiedWinningHand) {
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             showed,SHOWED_LEN,
             &showed_ix)) {
 
             if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               and_won,AND_WON_LEN,
               &ix)) {
               retval = index_of_hand(&line[showed_ix+SHOWED_LEN],&work_hand_index);
@@ -2025,12 +2057,12 @@ int main(int argc,char **argv)
         }
         else if (local_vars.bShowWinningHandHoleCards && !local_vars.bHaveWinningHandHoleCards) {
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             showed,SHOWED_LEN,
             &showed_ix)) {
 
             if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               and_won,AND_WON_LEN,
               &ix)) {
 
@@ -2048,17 +2080,17 @@ int main(int argc,char **argv)
         }
         else if (!local_vars.bHaveOpponentHoleCards) {
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             "[",1,
             &bracket_ix)) {
 
             if (!Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               argv[player_name_ix],player_name_len,
               &ix)) {
 
               if (!Contains(true,
-                line,line_len,
+                line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
                 board,BOARD_LEN,
                 &ix)) {
 
@@ -2079,12 +2111,12 @@ int main(int argc,char **argv)
         continue;
       }
       else if (Contains(true,
-        line,line_len,
+        line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
         argv[player_name_ix],player_name_len,
         &ix)) {
 
         if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           all_in,ALL_IN_LEN,
           &ix)) {
 
@@ -2150,7 +2182,7 @@ int main(int argc,char **argv)
 
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
-                      card_string,line_no);
+                      card_string,local_vars.line_no);
                     return 64;
                   }
                 }
@@ -2181,13 +2213,13 @@ int main(int argc,char **argv)
           }
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           collected,COLLECTED_LEN,
           &ix)) {
 
           if (local_vars.bWonSidePot) {
             if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               side_pot,SIDE_POT_LEN,
               &pot_ix)) {
               local_vars.bHaveWonSidePot = true;
@@ -2196,7 +2228,7 @@ int main(int argc,char **argv)
 
           if (local_vars.bWonMainPot) {
             if (Contains(true,
-              line,line_len,
+              line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
               main_pot,MAIN_POT_LEN,
               &pot_ix)) {
               local_vars.bHaveWonMainPot = true;
@@ -2220,9 +2252,9 @@ int main(int argc,char **argv)
           local_vars.collected_from_pot += local_vars.work;
           local_vars.collected_from_pot_count++;
 
-          if (local_vars.bDebug) {
+          if (local_vars.debug_level == 1) {
             printf("line %d street %d COLLECTED work = %d, collected_from_pot = %d\n",
-              line_no,street,local_vars.work,local_vars.collected_from_pot);
+              local_vars.line_no,street,local_vars.work,local_vars.collected_from_pot);
           }
 
           continue;
@@ -2231,15 +2263,15 @@ int main(int argc,char **argv)
           sscanf(&line[UNCALLED_BET_LEN],"%d",&local_vars.uncalled_bet_amount);
           spent_this_street -= local_vars.uncalled_bet_amount;
 
-          if (local_vars.bDebug) {
+          if (local_vars.debug_level == 1) {
             printf("line %d street %d UNCALLED uncalled_bet_amount = %d, spent_this_street = %d\n",
-              line_no,street,local_vars.uncalled_bet_amount,spent_this_street);
+              local_vars.line_no,street,local_vars.uncalled_bet_amount,spent_this_street);
           }
 
           continue;
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           folds,FOLDS_LEN,
           &ix)) {
 
@@ -2247,9 +2279,9 @@ int main(int argc,char **argv)
 
           spent_this_street = 0;
 
-          if (local_vars.bDebug) {
+          if (local_vars.debug_level == 1) {
             printf("line %d street %d FOLDS spent_this_street = %d, local_vars.spent_this_hand = %d\n",
-              line_no,street,spent_this_street,local_vars.spent_this_hand);
+              local_vars.line_no,street,spent_this_street,local_vars.spent_this_hand);
           }
 
           local_vars.bFolded = true;
@@ -2265,7 +2297,7 @@ int main(int argc,char **argv)
           continue;
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           bets,BETS_LEN,
           &ix)) {
           local_vars.work = get_work_amount(line,line_len);
@@ -2274,9 +2306,9 @@ int main(int argc,char **argv)
           if (street == 3)
             local_vars.bSpentRiverMoney = true;
 
-          if (local_vars.bDebug) {
+          if (local_vars.debug_level == 1) {
             printf("line %d street %d BETS work = %d, spent_this_street = %d\n",
-              line_no,street,local_vars.work,spent_this_street);
+              local_vars.line_no,street,local_vars.work,spent_this_street);
           }
 
           if (local_vars.show_num_decisions)
@@ -2288,7 +2320,7 @@ int main(int argc,char **argv)
           local_vars.bHaveVoluntaryBet = true;
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           calls,CALLS_LEN,
           &ix)) {
           local_vars.work = get_work_amount(line,line_len);
@@ -2297,9 +2329,9 @@ int main(int argc,char **argv)
           if (street == 3)
             local_vars.bSpentRiverMoney = true;
 
-          if (local_vars.bDebug) {
+          if (local_vars.debug_level == 1) {
             printf("line %d street %d CALLS work = %d, spent_this_street = %d\n",
-              line_no,street,local_vars.work,spent_this_street);
+              local_vars.line_no,street,local_vars.work,spent_this_street);
           }
 
           if (local_vars.show_num_decisions)
@@ -2308,7 +2340,7 @@ int main(int argc,char **argv)
           local_vars.bHaveVoluntaryBet = true;
 
           if (Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             all_in,ALL_IN_LEN,
             &ix)) {
 
@@ -2319,7 +2351,7 @@ int main(int argc,char **argv)
           }
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           raises,RAISES_LEN,
           &ix)) {
           local_vars.work = get_work_amount(line,line_len);
@@ -2328,9 +2360,9 @@ int main(int argc,char **argv)
           if (street == 3)
             local_vars.bSpentRiverMoney = true;
 
-          if (local_vars.bDebug) {
+          if (local_vars.debug_level == 1) {
             printf("line %d street %d RAISES work = %d, spent_this_street = %d\n",
-              line_no,street,local_vars.work,spent_this_street);
+              local_vars.line_no,street,local_vars.work,spent_this_street);
           }
 
           if (local_vars.show_num_decisions)
@@ -2339,7 +2371,7 @@ int main(int argc,char **argv)
           local_vars.bHaveVoluntaryBet = true;
         }
         else if (Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           checks,CHECKS_LEN,
           &ix)) {
 
@@ -2350,7 +2382,7 @@ int main(int argc,char **argv)
             local_vars.num_possible_checks++;
         }
         else if ((local_vars.bStud || local_vars.bRazz) && Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           brings_in_for,BRINGS_IN_FOR_LEN,
           &ix)) {
           bring_in = get_work_amount(line,line_len);
@@ -2359,7 +2391,7 @@ int main(int argc,char **argv)
         }
         else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
           Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": shows",7,
           &ix)) {
 
@@ -2367,14 +2399,14 @@ int main(int argc,char **argv)
         }
         else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
           Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": mucks",7,
           &ix)) {
 
           showdown_count++;
         }
         else if (local_vars.bOnlyKnockout && Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             finished,FINISHED_LEN,
             &ix)) {
 
@@ -2382,7 +2414,7 @@ int main(int argc,char **argv)
         }
       }
       else if (Contains(true,
-        line,line_len,
+        line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
         all_in,ALL_IN_LEN,
         &ix)) {
 
@@ -2422,7 +2454,7 @@ int main(int argc,char **argv)
 
             if (retval) {
               printf("invalid card string %s on line %d\n",
-                card_string,line_no);
+                card_string,local_vars.line_no);
               return 65;
             }
           }
@@ -2453,7 +2485,7 @@ int main(int argc,char **argv)
 
           if (retval) {
             printf("invalid card string %s on line %d\n",
-              card_string,line_no);
+              card_string,local_vars.line_no);
             return 66;
           }
 
@@ -2491,7 +2523,7 @@ int main(int argc,char **argv)
 
             if (retval) {
               printf("invalid card string %s on line %d\n",
-                card_string,line_no);
+                card_string,local_vars.line_no);
               return 67;
             }
 
@@ -2523,7 +2555,7 @@ int main(int argc,char **argv)
         }
         else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
           Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": shows",7,
           &ix)) {
 
@@ -2531,22 +2563,22 @@ int main(int argc,char **argv)
         }
         else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
           Contains(true,
-          line,line_len,
+          line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": mucks",7,
           &ix)) {
 
           showdown_count++;
         }
         else if (local_vars.bOnlyKnockout && Contains(true,
-            line,line_len,
+            line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
             finished,FINISHED_LEN,
             &ix)) {
 
           local_vars.bHaveKnockout = true;
         }
         else if (!strncmp(line,summary,SUMMARY_LEN)) {
-          if (local_vars.bDebug)
-            printf("line %d SUMMARY line detected; skipping\n",line_no);
+          if (local_vars.debug_level == 1)
+            printf("line %d SUMMARY line detected; skipping\n",local_vars.line_no);
 
           local_vars.bSkipping = true;
 
@@ -2654,18 +2686,25 @@ static void GetLine(FILE *fptr,char *line,int *line_len,int maxllen)
   *line_len = local_line_len;
 }
 
-static int Contains(bool bCaseSens,char *line,int line_len,
+static bool Contains(bool bCaseSens,char *line,int line_len,int line_no,int code_line_no,int debug_level,
   char *string,int string_len,int *index)
 {
   int m;
   int n;
   int tries;
   char chara;
+  int dbg;
+  bool retval;
+
+  retval = false;
+
+  if (code_line_no == dbg_line_no)
+    dbg = 1;
 
   tries = line_len - string_len + 1;
 
   if (tries <= 0)
-    return false;
+    goto do_return;
 
   for (m = 0; m < tries; m++) {
     for (n = 0; n < string_len; n++) {
@@ -2682,11 +2721,20 @@ static int Contains(bool bCaseSens,char *line,int line_len,
 
     if (n == string_len) {
       *index = m;
-      return true;
+      retval = true;
+      goto do_return;
     }
   }
 
-  return false;
+  do_return:
+
+  if (debug_level == 2) {
+    printf("%d: %d: %s %s %s\n",
+      code_line_no,line_no,line,string,
+      (retval ? "true" : "false"));
+  }
+
+  return retval;
 }
 
 static int get_work_amount(char *line,int line_len)
@@ -2908,12 +2956,12 @@ static int get_num_hands_in_file(FILE *fptr,char *player_name,int player_name_le
       break;
 
     if (Contains(true,
-      line,line_len,
+      line,line_len,-1,__LINE__,-1,
       player_name,player_name_len,
       &ix)) {
 
       if (Contains(true,
-        line,line_len,
+        line,line_len,-1,__LINE__,-1,
         in_chips,IN_CHIPS_LEN,
         &ix)) {
 
@@ -3003,12 +3051,12 @@ static HandType get_winning_hand_typ_id(char *line,int line_len)
   int ix2;
 
   if (Contains(true,
-    line,line_len,
+    line,line_len,-1,__LINE__,-1,
     with,WITH_LEN,
     &ix)) {
 
     if (Contains(true,
-      line,line_len,
+      line,line_len,-1,__LINE__,-1,
       with_a,WITH_A_LEN,
       &ix2)) {
 
@@ -3051,6 +3099,11 @@ void run_filter(struct vars *varspt)
     varspt->summary_val++;
 
   print_location = 0;
+
+  if (varspt->debug_level == 2) {
+    printf("top of run_filter()\n");
+    printf("line %d: line %d\n",__LINE__,varspt->line_no);
+  }
 
   if (varspt->bSummarizing || !varspt->bSkipZero || (varspt->delta != 0)) {
   if (!varspt->bOnlyZero || (varspt->delta == 0)) {
@@ -3110,10 +3163,11 @@ void run_filter(struct vars *varspt)
   if (!varspt->bLastHandOnly || (varspt->num_hands == varspt->num_hands_in_file)) {
   if (!varspt->bExceptLastHand || (varspt->num_hands < varspt->num_hands_in_file)) {
   if (!varspt->bFirstHandOnly || (varspt->num_hands == 1)) {
+  if (!varspt->bButton || varspt->bAmButton) {
   if (!varspt->bSmallBlind || varspt->bPostedSmallBlind) {
   if (!varspt->bBigBlind || varspt->bPostedBigBlind) {
   if (!varspt->bSmallOrBigBlind || varspt->bPostedSmallBlind || varspt->bPostedBigBlind) {
-  if (!varspt->bNoBlind || (!varspt->bPostedSmallBlind && !varspt->bPostedBigBlind)) {
+  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind)) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
@@ -3612,6 +3666,7 @@ void run_filter(struct vars *varspt)
   }
   }
   }
+  }
 
   if (print_location)
     run_filter_calls2++;
@@ -3726,4 +3781,17 @@ int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs)
   }
 
   return 0;
+}
+
+int get_button_seat(char *line)
+{
+  char *cpt;
+  int button_seat;
+
+  if (cpt = strstr(line,"Seat #")) {
+    sscanf(&cpt[6],"%d",&button_seat);
+    return button_seat;
+  }
+
+  return 0; // should never get here
 }
