@@ -1645,6 +1645,7 @@ int main(int argc,char **argv)
     local_vars.bHaveCounterfeit = false;
     local_vars.bPostedSmallBlind = false;
     local_vars.bPostedBigBlind = false;
+    local_vars.bAmButton = false;
     local_vars.bHaveDeuceOrTreyOff = false;
     local_vars.bHaveVoluntaryBet = false;
     local_vars.bHaveChasedFlush = false;
@@ -1838,6 +1839,8 @@ int main(int argc,char **argv)
 
                 if (curr_seat == local_vars.button_seat)
                   local_vars.bAmButton = true;
+                else
+                  local_vars.bAmButton = false;
 
                 my_seat_ix = local_vars.table_count - 1;
                 local_vars.starting_balance = curr_stack;
