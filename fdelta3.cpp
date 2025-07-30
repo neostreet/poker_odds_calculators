@@ -32,8 +32,8 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-only_lost)\n"
-"  (-only_count) (-only_won) (-only_showdown) (-only_no_showdown)\n"
-"  (-only_showdown_countcount) (-only_showdown_count_gtcount)\n"
+"  (-only_count) (-only_won) (-showdown) (-no_showdown)\n"
+"  (-showdown_countcount) (-showdown_count_gtcount)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
 "  (-call_in_on_the_river) (-fall_in) (-not_fall_in)\n"
@@ -246,10 +246,10 @@ struct vars {
   bool bExactCount;
   int exact_count;
   bool bOnlyWon;
-  bool bOnlyShowdown;
-  bool bOnlyNoShowdown;
-  bool bOnlyShowdownCount;
-  bool bOnlyShowdownCountGt;
+  bool bShowdown;
+  bool bNoShowdown;
+  bool bShowdownCount;
+  bool bShowdownCountGt;
   int showdown_count;
   bool bVeryBestHand;
   bool bTableCount;
@@ -577,10 +577,10 @@ int main(int argc,char **argv)
   local_vars.only_count = 0;
   local_vars.bExactCount = false;
   local_vars.bOnlyWon = false;
-  local_vars.bOnlyShowdown = false;
-  local_vars.bOnlyNoShowdown = false;
-  local_vars.bOnlyShowdownCount = false;
-  local_vars.bOnlyShowdownCountGt = false;
+  local_vars.bShowdown = false;
+  local_vars.bNoShowdown = false;
+  local_vars.bShowdownCount = false;
+  local_vars.bShowdownCountGt = false;
   local_vars.bVeryBestHand = false;
   local_vars.bTableCount = false;
   local_vars.bAllIn = false;
@@ -719,7 +719,7 @@ int main(int argc,char **argv)
     else if (!strncmp(argv[curr_arg],"-winning_hand_type",18)) {
       local_vars.winning_hand_typ_id = get_hand_type(&argv[curr_arg][18]);
       local_vars.bWinningHandTypeSpecified = true;
-      local_vars.bOnlyShowdown = true;
+      local_vars.bShowdown = true;
     }
     else if (!strncmp(argv[curr_arg],"-hand_typ_id_ge",15)) {
       sscanf(&argv[curr_arg][15],"%d",&local_vars.hand_typ_id_ge);
@@ -871,16 +871,16 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-only_won"))
       local_vars.bOnlyWon = true;
-    else if (!strcmp(argv[curr_arg],"-only_showdown"))
-      local_vars.bOnlyShowdown = true;
-    else if (!strcmp(argv[curr_arg],"-only_no_showdown"))
-      local_vars.bOnlyNoShowdown = true;
-    else if (!strncmp(argv[curr_arg],"-only_showdown_count_gt",23)) {
-      local_vars.bOnlyShowdownCountGt = true;
+    else if (!strcmp(argv[curr_arg],"-showdown"))
+      local_vars.bShowdown = true;
+    else if (!strcmp(argv[curr_arg],"-no_showdown"))
+      local_vars.bNoShowdown = true;
+    else if (!strncmp(argv[curr_arg],"-showdown_count_gt",23)) {
+      local_vars.bShowdownCountGt = true;
       sscanf(&argv[curr_arg][23],"%d",&local_vars.showdown_count);
     }
-    else if (!strncmp(argv[curr_arg],"-only_showdown_count",20)) {
-      local_vars.bOnlyShowdownCount = true;
+    else if (!strncmp(argv[curr_arg],"-showdown_count",20)) {
+      local_vars.bShowdownCount = true;
       sscanf(&argv[curr_arg][20],"%d",&local_vars.showdown_count);
     }
     else if (!strcmp(argv[curr_arg],"-very_best_hand"))
@@ -1302,8 +1302,8 @@ int main(int argc,char **argv)
     return 20;
   }
 
-  if (local_vars.bOnlyShowdown && local_vars.bOnlyNoShowdown) {
-    printf("can't specify both -only_showdown and -only_no_showdown\n");
+  if (local_vars.bShowdown && local_vars.bNoShowdown) {
+    printf("can't specify both -showdown and -no_showdown\n");
     return 21;
   }
 
@@ -1531,13 +1531,13 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.bHutOuts || local_vars.bHutOutsDiff || local_vars.bHufOuts) {
-    local_vars.bOnlyShowdown = true;
-    local_vars.bOnlyShowdownCount = true;
+    local_vars.bShowdown = true;
+    local_vars.bShowdownCount = true;
     local_vars.showdown_count = 2;
   }
   else if (local_vars.b3tOuts) {
-    local_vars.bOnlyShowdown = true;
-    local_vars.bOnlyShowdownCount = true;
+    local_vars.bShowdown = true;
+    local_vars.bShowdownCount = true;
     local_vars.showdown_count = 3;
   }
 
@@ -2392,7 +2392,7 @@ int main(int argc,char **argv)
           spent_this_street += bring_in;
           continue;
         }
-        else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
+        else if ((local_vars.bShowdownCount || local_vars.bShowdownCountGt) &&
           Contains(true,
           line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": shows",7,
@@ -2400,7 +2400,7 @@ int main(int argc,char **argv)
 
           showdown_count++;
         }
-        else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
+        else if ((local_vars.bShowdownCount || local_vars.bShowdownCountGt) &&
           Contains(true,
           line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": mucks",7,
@@ -2556,7 +2556,7 @@ int main(int argc,char **argv)
           if (!local_vars.bFolded)
             local_vars.bHaveShowdown = true;
         }
-        else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
+        else if ((local_vars.bShowdownCount || local_vars.bShowdownCountGt) &&
           Contains(true,
           line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": shows",7,
@@ -2564,7 +2564,7 @@ int main(int argc,char **argv)
 
           showdown_count++;
         }
-        else if ((local_vars.bOnlyShowdownCount || local_vars.bOnlyShowdownCountGt) &&
+        else if ((local_vars.bShowdownCount || local_vars.bShowdownCountGt) &&
           Contains(true,
           line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
           ": mucks",7,
@@ -2624,10 +2624,10 @@ int main(int argc,char **argv)
             }
           }
 
-          if (local_vars.bOnlyShowdownCount && (showdown_count == local_vars.showdown_count))
+          if (local_vars.bShowdownCount && (showdown_count == local_vars.showdown_count))
             local_vars.bHaveShowdownCount = true;
 
-          if (local_vars.bOnlyShowdownCountGt && (showdown_count > local_vars.showdown_count))
+          if (local_vars.bShowdownCountGt && (showdown_count > local_vars.showdown_count))
             local_vars.bHaveShowdownCountGt = true;
 
           continue;
@@ -3137,10 +3137,10 @@ void run_filter(struct vars *varspt)
   if (!varspt->bOnlyLost || (varspt->delta < 0)) {
   if (!varspt->bOnlyWon || (varspt->delta > 0)) {
   if (!varspt->bOnlyWash || (varspt->delta == 0)) {
-  if (!varspt->bOnlyShowdown || varspt->bHaveShowdown) {
-  if (!varspt->bOnlyShowdownCount || varspt->bHaveShowdownCount) {
-  if (!varspt->bOnlyShowdownCountGt || varspt->bHaveShowdownCountGt) {
-  if (!varspt->bOnlyNoShowdown || !varspt->bHaveShowdown) {
+  if (!varspt->bShowdown || varspt->bHaveShowdown) {
+  if (!varspt->bShowdownCount || varspt->bHaveShowdownCount) {
+  if (!varspt->bShowdownCountGt || varspt->bHaveShowdownCountGt) {
+  if (!varspt->bNoShowdown || !varspt->bHaveShowdown) {
   if (!varspt->bTableCount || (varspt->table_count == varspt->table_count_to_match)) {
   if (!varspt->bAllIn || varspt->bHaveAllIn) {
   if (!varspt->bNotAllIn || !varspt->bHaveAllIn) {
