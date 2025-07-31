@@ -47,7 +47,7 @@ static char usage[] =
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_gevalue) (-sum_by_table_count)\n"
-"  (-show_table_name) (-show_table_count) (-show_hand_count) (-bottom_two)\n"
+"  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
 "  (-button) (-small_blind) (-big_blind) (-small_or_big_blind) (-other)\n"
@@ -189,10 +189,13 @@ enum quantum_typ {
   QUANTUM_TYPE_ROI
 };
 
+#define MAX_SEATS 9
+
 struct vars {
   int line_no;
   int button_seat;
   bool bAmButton;
+  char seat_numbers[MAX_SEATS+1];
   bool bTerse;
   bool bVerbose;
   bool bVerboseStyle2;
@@ -304,6 +307,7 @@ struct vars {
   bool bSumByTableCount;
   bool bShowTableName;
   bool bShowTableCount;
+  bool bShowSeatNumbers;
   bool bShowHandCount;
   bool bBottomTwo;
   bool bCounterfeit;
@@ -525,7 +529,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 154)) {
+  if ((argc < 3) || (argc > 155)) {
     printf(usage);
     return 1;
   }
@@ -641,6 +645,7 @@ int main(int argc,char **argv)
   local_vars.bSumByTableCount = false;
   local_vars.bShowTableName = false;
   local_vars.bShowTableCount = false;
+  local_vars.bShowSeatNumbers = false;
   local_vars.bShowHandCount = false;
   local_vars.bBottomTwo = false;
   local_vars.bCounterfeit = false;
@@ -1001,6 +1006,8 @@ int main(int argc,char **argv)
       local_vars.bShowTableName = true;
     else if (!strcmp(argv[curr_arg],"-show_table_count"))
       local_vars.bShowTableCount = true;
+    else if (!strcmp(argv[curr_arg],"-show_seat_numbers"))
+      local_vars.bShowSeatNumbers = true;
     else if (!strcmp(argv[curr_arg],"-show_hand_count"))
       local_vars.bShowHandCount = true;
     else if (!strcmp(argv[curr_arg],"-bottom_two"))
@@ -1812,8 +1819,9 @@ int main(int argc,char **argv)
           }
 
           if (!strncmp(line,"Seat ",5)) {
-            local_vars.table_count++;
             sscanf(&line[5],"%d",&curr_seat);
+            local_vars.seat_numbers[local_vars.table_count++] = line[5];
+            local_vars.seat_numbers[local_vars.table_count] = 0;
 
             if (Contains(true,
               line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
@@ -3264,16 +3272,32 @@ void run_filter(struct vars *varspt)
     if (varspt->bTerse) {
       if (!varspt->bSummarizing && !varspt->bSumByTableCount) {
         if (varspt->quantum_type == QUANTUM_TYPE_OPM) {
-          if (!varspt->bShowTableCount)
-            printf("%lf\n",varspt->dwork);
-          else
-            printf("%lf %d\n",varspt->dwork,varspt->table_count);
+          if (!varspt->bShowTableCount) {
+            if (!varspt->bShowSeatNumbers)
+              printf("%lf\n",varspt->dwork);
+            else
+              printf("%lf %s\n",varspt->dwork,varspt->seat_numbers);
+          }
+          else {
+            if (!varspt->bShowSeatNumbers)
+              printf("%lf %d\n",varspt->dwork,varspt->table_count);
+            else
+              printf("%lf %d %s\n",varspt->dwork,varspt->table_count,varspt->seat_numbers);
+          }
         }
         else {
-          if (!varspt->bShowTableCount)
-            printf("%d\n",varspt->quantum);
-          else
-            printf("%d %d\n",varspt->quantum,varspt->table_count);
+          if (!varspt->bShowTableCount) {
+            if (!varspt->bShowSeatNumbers)
+              printf("%d\n",varspt->quantum);
+            else
+              printf("%d %s\n",varspt->quantum,varspt->seat_numbers);
+          }
+          else {
+            if (!varspt->bShowSeatNumbers)
+              printf("%d %d\n",varspt->quantum,varspt->table_count);
+            else
+              printf("%d %d %s\n",varspt->quantum,varspt->table_count,varspt->seat_numbers);
+          }
         }
 
         print_location = 1;
@@ -3572,6 +3596,9 @@ void run_filter(struct vars *varspt)
 
       if (varspt->bShowTableCount)
         printf(" %d",varspt->table_count);
+
+      if (varspt->bShowSeatNumbers)
+        printf(" %s",varspt->seat_numbers);
 
       if (varspt->bVerbose) {
         if (!varspt->bGetDateFromFilename) {
