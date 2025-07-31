@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-other)\n"
+"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-hijack) (-other)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -199,6 +199,7 @@ struct vars {
   int my_seat_ix;
   bool bAmUtg;
   bool bAmCutoff;
+  bool bAmHijack;
   char seat_numbers[MAX_SEATS+1];
   bool bTerse;
   bool bVerbose;
@@ -357,6 +358,8 @@ struct vars {
   int utg;
   bool bCutoff;
   int cutoff;
+  bool bHijack;
+  int hijack;
   bool bOther;
   int other;
   bool bDeuceOrTreyOff;
@@ -534,7 +537,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 156)) {
+  if ((argc < 3) || (argc > 157)) {
     printf(usage);
     return 1;
   }
@@ -546,6 +549,7 @@ int main(int argc,char **argv)
   local_vars.bAmButton = false;
   local_vars.bAmUtg = false;
   local_vars.bAmCutoff = false;
+  local_vars.bAmHijack = false;
   local_vars.bTerse = false;
   local_vars.bVerbose = false;
   local_vars.bVerboseStyle2 = false;
@@ -689,6 +693,8 @@ int main(int argc,char **argv)
   local_vars.utg = 0;
   local_vars.bCutoff = false;
   local_vars.cutoff = 0;
+  local_vars.bHijack = false;
+  local_vars.hijack = 0;
   local_vars.bOther = false;
   local_vars.other = 0;
   local_vars.bDeuceOrTreyOff = false;
@@ -1067,6 +1073,10 @@ int main(int argc,char **argv)
       local_vars.bCutoff = true;
       local_vars.cutoff = 1;
     }
+    else if (!strcmp(argv[curr_arg],"-hijack")) {
+      local_vars.bHijack = true;
+      local_vars.hijack = 1;
+    }
     else if (!strcmp(argv[curr_arg],"-other")) {
       local_vars.bOther = true;
       local_vars.other = 1;
@@ -1431,8 +1441,8 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.button + local_vars.small_blind + local_vars.big_blind +
-     local_vars.utg + local_vars.cutoff + local_vars.other > 1) {
-    printf("can only specify one of -button, -small_blind, -big_blind, -utg, -cutoff, and -other\n");
+     local_vars.utg + local_vars.cutoff + local_vars.hijack + local_vars.other > 1) {
+    printf("can only specify one of -button, -small_blind, -big_blind, -utg, -cutoff, -hijack, and -other\n");
     return 38;
   }
 
@@ -1669,6 +1679,7 @@ int main(int argc,char **argv)
     local_vars.bAmButton = false;
     local_vars.bAmUtg = false;
     local_vars.bAmCutoff = false;
+    local_vars.bAmHijack = false;
     local_vars.bHaveDeuceOrTreyOff = false;
     local_vars.bHaveVoluntaryBet = false;
     local_vars.bHaveChasedFlush = false;
@@ -3197,7 +3208,9 @@ void run_filter(struct vars *varspt)
   if (!varspt->bBigBlind || varspt->bPostedBigBlind) {
   if (!varspt->bUtg || varspt->bAmUtg) {
   if (!varspt->bCutoff || varspt->bAmCutoff) {
-  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind && !varspt->bUtg && !varspt->bCutoff)) {
+  if (!varspt->bHijack || varspt->bAmHijack) {
+  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind &&
+    !varspt->bUtg && !varspt->bCutoff && !varspt->bHijack)) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
@@ -3717,6 +3730,7 @@ void run_filter(struct vars *varspt)
   }
   }
   }
+  }
 
   if (print_location)
     run_filter_calls2++;
@@ -3852,9 +3866,11 @@ static void set_position_booleans(struct vars *varspt)
   int seat_number;
   int utg_ix;
   int cutoff_ix;
+  int hijack_ix;
 
   varspt->bAmUtg = false;
   varspt->bAmCutoff = false;
+  varspt->bAmHijack = false;
 
   if (varspt->bAmButton)
     return;
@@ -3902,6 +3918,24 @@ static void set_position_booleans(struct vars *varspt)
 
   if (varspt->my_seat_ix == cutoff_ix) {
     varspt->bAmCutoff = true;
+    return;
+  }
+
+  if (varspt->table_count < 6)
+    return;
+
+  hijack_ix = button_ix;
+
+  // check if I'm in the hijack; the hijack player is in the second position
+  // to the right of the dealer
+  hijack_ix -= 2;
+
+  // check for underflow
+  if (hijack_ix < 0)
+    hijack_ix += varspt->table_count;
+
+  if (varspt->my_seat_ix == hijack_ix) {
+    varspt->bAmHijack = true;
     return;
   }
 }
