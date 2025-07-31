@@ -3848,8 +3848,10 @@ static int get_button_seat(char *line)
 
 static void set_position_booleans(struct vars *varspt)
 {
-  int n;
+  int button_ix;
   int seat_number;
+  int utg_ix;
+  int cutoff_ix;
 
   varspt->bAmUtg = false;
   varspt->bAmCutoff = false;
@@ -3860,25 +3862,27 @@ static void set_position_booleans(struct vars *varspt)
   if (varspt->table_count < 4)
     return;
 
-  for (n = 0; n < varspt->table_count; n++) {
-    seat_number = varspt->seat_numbers[n] - '0';
+  for (button_ix = 0; button_ix < varspt->table_count; button_ix++) {
+    seat_number = varspt->seat_numbers[button_ix] - '0';
 
     if (seat_number == varspt->button_seat)
       break;
   }
 
-  if (n == varspt->table_count)
+  if (button_ix == varspt->table_count)
     return; // should never get here
+
+  utg_ix = button_ix;
 
   // check if I'm under the gun; the utg player is in the third position
   // to the left of the dealer
-  n += 3;
+  utg_ix += 3;
 
   // check for overflow
-  if (n >= varspt->table_count)
-    n -= varspt->table_count;
+  if (utg_ix >= varspt->table_count)
+    utg_ix -= varspt->table_count;
 
-  if (varspt->my_seat_ix == n) {
+  if (varspt->my_seat_ix == utg_ix) {
     varspt->bAmUtg = true;
     return;
   }
@@ -3886,15 +3890,17 @@ static void set_position_booleans(struct vars *varspt)
   if (varspt->table_count < 5)
     return;
 
+  cutoff_ix = button_ix;
+
   // check if I'm in the cutoff; the cutoff player is in the first position
   // to the right of the dealer
-  n -= 1;
+  cutoff_ix -= 1;
 
   // check for underflow
-  if (n < 0)
-    n += varspt->table_count;
+  if (cutoff_ix < 0)
+    cutoff_ix += varspt->table_count;
 
-  if (varspt->my_seat_ix == n) {
+  if (varspt->my_seat_ix == cutoff_ix) {
     varspt->bAmCutoff = true;
     return;
   }
