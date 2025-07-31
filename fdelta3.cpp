@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-button) (-small_blind) (-big_blind) (-small_or_big_blind) (-other)\n"
+"  (-button) (-small_blind) (-big_blind) (-small_or_big_blind) (-utg) (-other)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -171,8 +171,9 @@ static HandType get_winning_hand_typ_id(char *line,int line_len);
 static void run_filter(struct vars *varspt);
 static void do_balance_processing(struct vars *varspt);
 static char *style2(char *filename);
-int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs);
-int get_button_seat(char *line);
+static int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs);
+static int get_button_seat(char *line);
+static void set_position_booleans(struct vars *varspt);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -195,6 +196,8 @@ struct vars {
   int line_no;
   int button_seat;
   bool bAmButton;
+  int my_seat_ix;
+  bool bAmUtg;
   char seat_numbers[MAX_SEATS+1];
   bool bTerse;
   bool bVerbose;
@@ -351,6 +354,8 @@ struct vars {
   int big_blind;
   bool bSmallOrBigBlind;
   int small_or_big_blind;
+  bool bUtg;
+  int utg;
   bool bOther;
   int other;
   bool bDeuceOrTreyOff;
@@ -522,14 +527,13 @@ int main(int argc,char **argv)
   int curr_stack;
   int boss_stack;
   int boss_seat_ix;
-  int my_seat_ix;
   int work_hand_index;
   char specified_hand[4];
   char specified_winning_hand[4];
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 155)) {
+  if ((argc < 3) || (argc > 156)) {
     printf(usage);
     return 1;
   }
@@ -539,6 +543,7 @@ int main(int argc,char **argv)
   local_vars.line_no = 0;
   local_vars.button_seat = 0;
   local_vars.bAmButton = false;
+  local_vars.bAmUtg = false;
   local_vars.bTerse = false;
   local_vars.bVerbose = false;
   local_vars.bVerboseStyle2 = false;
@@ -680,6 +685,8 @@ int main(int argc,char **argv)
   local_vars.big_blind = 0;
   local_vars.bSmallOrBigBlind = false;
   local_vars.small_or_big_blind = 0;
+  local_vars.bUtg = false;
+  local_vars.utg = 0;
   local_vars.bOther = false;
   local_vars.other = 0;
   local_vars.bDeuceOrTreyOff = false;
@@ -1054,6 +1061,10 @@ int main(int argc,char **argv)
       local_vars.bSmallOrBigBlind = true;
       local_vars.small_or_big_blind = 1;
     }
+    else if (!strcmp(argv[curr_arg],"-utg")) {
+      local_vars.bUtg = true;
+      local_vars.utg = 1;
+    }
     else if (!strcmp(argv[curr_arg],"-other")) {
       local_vars.bOther = true;
       local_vars.other = 1;
@@ -1417,8 +1428,9 @@ int main(int argc,char **argv)
     return 37;
   }
 
-  if (local_vars.button + local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind + local_vars.other > 1) {
-    printf("can only specify one of -button, -small_blind, -big_blind, -small_or_big_blind, and -other\n");
+  if (local_vars.button + local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind +
+     local_vars.utg + local_vars.other > 1) {
+    printf("can only specify one of -button, -small_blind, -big_blind, -small_or_big_blind, -utg, and -other\n");
     return 38;
   }
 
@@ -1653,6 +1665,7 @@ int main(int argc,char **argv)
     local_vars.bPostedSmallBlind = false;
     local_vars.bPostedBigBlind = false;
     local_vars.bAmButton = false;
+    local_vars.bAmUtg = false;
     local_vars.bHaveDeuceOrTreyOff = false;
     local_vars.bHaveVoluntaryBet = false;
     local_vars.bHaveChasedFlush = false;
@@ -1812,7 +1825,7 @@ int main(int argc,char **argv)
           if (!strncmp(line,"*** ",4)) {
             num_street_markers++;
 
-            if (my_seat_ix == boss_seat_ix)
+            if (local_vars.my_seat_ix == boss_seat_ix)
               local_vars.am_table_boss = 1;
 
             break;
@@ -1850,7 +1863,7 @@ int main(int argc,char **argv)
                 else
                   local_vars.bAmButton = false;
 
-                my_seat_ix = local_vars.table_count - 1;
+                local_vars.my_seat_ix = local_vars.table_count - 1;
                 local_vars.starting_balance = curr_stack;
                 local_vars.num_hands++;
                 local_vars.bFolded = false;
@@ -2591,6 +2604,8 @@ int main(int argc,char **argv)
           if (local_vars.debug_level == 1)
             printf("line %d SUMMARY line detected; skipping\n",local_vars.line_no);
 
+          set_position_booleans(&local_vars);
+
           local_vars.bSkipping = true;
 
           if (!local_vars.bFolded)
@@ -3178,7 +3193,8 @@ void run_filter(struct vars *varspt)
   if (!varspt->bSmallBlind || varspt->bPostedSmallBlind) {
   if (!varspt->bBigBlind || varspt->bPostedBigBlind) {
   if (!varspt->bSmallOrBigBlind || varspt->bPostedSmallBlind || varspt->bPostedBigBlind) {
-  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind)) {
+  if (!varspt->bUtg || varspt->bAmUtg) {
+  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind && !varspt->bUtg)) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
@@ -3697,6 +3713,7 @@ void run_filter(struct vars *varspt)
   }
   }
   }
+  }
 
   if (print_location)
     run_filter_calls2++;
@@ -3801,7 +3818,7 @@ static char *style2(char *filename)
   return style2_buf;
 }
 
-int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs)
+static int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs)
 {
   int n;
 
@@ -3813,7 +3830,7 @@ int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs)
   return 0;
 }
 
-int get_button_seat(char *line)
+static int get_button_seat(char *line)
 {
   char *cpt;
   int button_seat;
@@ -3824,4 +3841,39 @@ int get_button_seat(char *line)
   }
 
   return 0; // should never get here
+}
+
+static void set_position_booleans(struct vars *varspt)
+{
+  int n;
+  int seat_number;
+
+  if (varspt->bAmButton)
+    return;
+
+  if (varspt->table_count < 4)
+    return;
+
+  for (n = 0; n < varspt->table_count; n++) {
+    seat_number = varspt->seat_numbers[n] - '0';
+
+    if (seat_number == varspt->button_seat)
+      break;
+  }
+
+  if (n == varspt->table_count)
+    return; // should never get here
+
+  // check if I'm under the gun; the utg player is in the third position
+  // to the left of the dealer
+  n += 3;
+
+  // check for overflow
+  if (n >= varspt->table_count)
+    n -= varspt->table_count;
+
+  if (varspt->my_seat_ix == n)
+    varspt->bAmUtg = true;
+  else
+    varspt->bAmUtg = false;
 }
