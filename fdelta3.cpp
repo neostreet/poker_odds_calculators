@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-button) (-small_blind) (-big_blind) (-utg) (-other)\n"
+"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-other)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -198,6 +198,7 @@ struct vars {
   bool bAmButton;
   int my_seat_ix;
   bool bAmUtg;
+  bool bAmCutoff;
   char seat_numbers[MAX_SEATS+1];
   bool bTerse;
   bool bVerbose;
@@ -354,6 +355,8 @@ struct vars {
   int big_blind;
   bool bUtg;
   int utg;
+  bool bCutoff;
+  int cutoff;
   bool bOther;
   int other;
   bool bDeuceOrTreyOff;
@@ -531,7 +534,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 155)) {
+  if ((argc < 3) || (argc > 156)) {
     printf(usage);
     return 1;
   }
@@ -542,6 +545,7 @@ int main(int argc,char **argv)
   local_vars.button_seat = 0;
   local_vars.bAmButton = false;
   local_vars.bAmUtg = false;
+  local_vars.bAmCutoff = false;
   local_vars.bTerse = false;
   local_vars.bVerbose = false;
   local_vars.bVerboseStyle2 = false;
@@ -683,6 +687,8 @@ int main(int argc,char **argv)
   local_vars.big_blind = 0;
   local_vars.bUtg = false;
   local_vars.utg = 0;
+  local_vars.bCutoff = false;
+  local_vars.cutoff = 0;
   local_vars.bOther = false;
   local_vars.other = 0;
   local_vars.bDeuceOrTreyOff = false;
@@ -1057,6 +1063,10 @@ int main(int argc,char **argv)
       local_vars.bUtg = true;
       local_vars.utg = 1;
     }
+    else if (!strcmp(argv[curr_arg],"-cutoff")) {
+      local_vars.bCutoff = true;
+      local_vars.cutoff = 1;
+    }
     else if (!strcmp(argv[curr_arg],"-other")) {
       local_vars.bOther = true;
       local_vars.other = 1;
@@ -1421,8 +1431,8 @@ int main(int argc,char **argv)
   }
 
   if (local_vars.button + local_vars.small_blind + local_vars.big_blind +
-     local_vars.utg + local_vars.other > 1) {
-    printf("can only specify one of -button, -small_blind, -big_blind, -utg, and -other\n");
+     local_vars.utg + local_vars.cutoff + local_vars.other > 1) {
+    printf("can only specify one of -button, -small_blind, -big_blind, -utg, -cutoff, and -other\n");
     return 38;
   }
 
@@ -1658,6 +1668,7 @@ int main(int argc,char **argv)
     local_vars.bPostedBigBlind = false;
     local_vars.bAmButton = false;
     local_vars.bAmUtg = false;
+    local_vars.bAmCutoff = false;
     local_vars.bHaveDeuceOrTreyOff = false;
     local_vars.bHaveVoluntaryBet = false;
     local_vars.bHaveChasedFlush = false;
@@ -3185,7 +3196,8 @@ void run_filter(struct vars *varspt)
   if (!varspt->bSmallBlind || varspt->bPostedSmallBlind) {
   if (!varspt->bBigBlind || varspt->bPostedBigBlind) {
   if (!varspt->bUtg || varspt->bAmUtg) {
-  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind && !varspt->bUtg)) {
+  if (!varspt->bCutoff || varspt->bAmCutoff) {
+  if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind && !varspt->bUtg && !varspt->bCutoff)) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
@@ -3704,6 +3716,7 @@ void run_filter(struct vars *varspt)
   }
   }
   }
+  }
 
   if (print_location)
     run_filter_calls2++;
@@ -3838,6 +3851,9 @@ static void set_position_booleans(struct vars *varspt)
   int n;
   int seat_number;
 
+  varspt->bAmUtg = false;
+  varspt->bAmCutoff = false;
+
   if (varspt->bAmButton)
     return;
 
@@ -3862,8 +3878,24 @@ static void set_position_booleans(struct vars *varspt)
   if (n >= varspt->table_count)
     n -= varspt->table_count;
 
-  if (varspt->my_seat_ix == n)
+  if (varspt->my_seat_ix == n) {
     varspt->bAmUtg = true;
-  else
-    varspt->bAmUtg = false;
+    return;
+  }
+
+  if (varspt->table_count < 5)
+    return;
+
+  // check if I'm in the cutoff; the cutoff player is in the first position
+  // to the right of the dealer
+  n -= 1;
+
+  // check for underflow
+  if (n < 0)
+    n += varspt->table_count;
+
+  if (varspt->my_seat_ix == n) {
+    varspt->bAmCutoff = true;
+    return;
+  }
 }
