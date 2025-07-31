@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-button) (-small_blind) (-big_blind) (-small_or_big_blind) (-utg) (-other)\n"
+"  (-button) (-small_blind) (-big_blind) (-utg) (-other)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -352,8 +352,6 @@ struct vars {
   int small_blind;
   bool bBigBlind;
   int big_blind;
-  bool bSmallOrBigBlind;
-  int small_or_big_blind;
   bool bUtg;
   int utg;
   bool bOther;
@@ -533,7 +531,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 156)) {
+  if ((argc < 3) || (argc > 155)) {
     printf(usage);
     return 1;
   }
@@ -683,8 +681,6 @@ int main(int argc,char **argv)
   local_vars.small_blind = 0;
   local_vars.bBigBlind = false;
   local_vars.big_blind = 0;
-  local_vars.bSmallOrBigBlind = false;
-  local_vars.small_or_big_blind = 0;
   local_vars.bUtg = false;
   local_vars.utg = 0;
   local_vars.bOther = false;
@@ -1057,10 +1053,6 @@ int main(int argc,char **argv)
       local_vars.bBigBlind = true;
       local_vars.big_blind = 1;
     }
-    else if (!strcmp(argv[curr_arg],"-small_or_big_blind")) {
-      local_vars.bSmallOrBigBlind = true;
-      local_vars.small_or_big_blind = 1;
-    }
     else if (!strcmp(argv[curr_arg],"-utg")) {
       local_vars.bUtg = true;
       local_vars.utg = 1;
@@ -1428,9 +1420,9 @@ int main(int argc,char **argv)
     return 37;
   }
 
-  if (local_vars.button + local_vars.small_blind + local_vars.big_blind + local_vars.small_or_big_blind +
+  if (local_vars.button + local_vars.small_blind + local_vars.big_blind +
      local_vars.utg + local_vars.other > 1) {
-    printf("can only specify one of -button, -small_blind, -big_blind, -small_or_big_blind, -utg, and -other\n");
+    printf("can only specify one of -button, -small_blind, -big_blind, -utg, and -other\n");
     return 38;
   }
 
@@ -3192,7 +3184,6 @@ void run_filter(struct vars *varspt)
   if (!varspt->bButton || varspt->bAmButton) {
   if (!varspt->bSmallBlind || varspt->bPostedSmallBlind) {
   if (!varspt->bBigBlind || varspt->bPostedBigBlind) {
-  if (!varspt->bSmallOrBigBlind || varspt->bPostedSmallBlind || varspt->bPostedBigBlind) {
   if (!varspt->bUtg || varspt->bAmUtg) {
   if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind && !varspt->bUtg)) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
@@ -3629,7 +3620,6 @@ void run_filter(struct vars *varspt)
       else
         putchar(0x0a);
     }
-  }
   }
   }
   }
