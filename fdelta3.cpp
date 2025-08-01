@@ -3210,7 +3210,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bCutoff || varspt->bAmCutoff) {
   if (!varspt->bHijack || varspt->bAmHijack) {
   if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind &&
-    !varspt->bUtg && !varspt->bCutoff && !varspt->bHijack)) {
+    !varspt->bAmUtg && !varspt->bAmCutoff && !varspt->bAmHijack)) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
