@@ -60,7 +60,7 @@ static char usage[] =
 "  (-show_num_possible_checks) (-filter_percentage)\n"
 "  (-show_running_total) (-show_num_positive_deltas)\n"
 "  (-only_discrepancy) (-showdown_handhand) (-showdown_hand2hand)\n"
-"  (-winning_handhand) (-only_premium_hands) (-show_winning_hand_hole_cards)\n"
+"  (-winning_handhand) (-premium) (-not_premium) (-show_winning_hand_hole_cards)\n"
 "  (-only_folded_preflop) (-show_roi) (-sitting_out)\n"
 "  (-hand_type_on_flophand_type) (-exact_countcount) (-first_hand_only)\n"
 "  (-twin_abbrevs) (-twin_hands) (-identical_twin_hands) (-except_last_hand)\n"
@@ -210,7 +210,8 @@ struct vars {
   bool bWinningHandTypeSpecified;
   bool bHandTypIdSpecified;
   bool bHandSpecified;
-  bool bOnlyPremiumHands;
+  bool bPremium;
+  bool bNotPremium;
   bool bShowWinningHandHoleCards;
   bool bShowWinningHandHoleCardIxs;
   bool bShowWinningHandHoleCardsAbbrev;
@@ -385,6 +386,7 @@ struct vars {
   int hand_number;
   bool bHaveSpecifiedHand;
   bool bHavePremiumHand;
+  bool bHaveNotPremiumHand;
   bool bHaveSpecifiedShowdownHand;
   bool bHaveSpecifiedShowdownHand2;
   bool bHaveSpecifiedWinningHand;
@@ -537,7 +539,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 157)) {
+  if ((argc < 3) || (argc > 158)) {
     printf(usage);
     return 1;
   }
@@ -559,7 +561,8 @@ int main(int argc,char **argv)
   local_vars.bWinningHandTypeSpecified = false;
   local_vars.bHandTypIdSpecified = false;
   local_vars.bHandSpecified = false;
-  local_vars.bOnlyPremiumHands = false;
+  local_vars.bPremium = false;
+  local_vars.bNotPremium = false;
   local_vars.bShowWinningHandHoleCards = false;
   local_vars.bShowWinningHandHoleCardIxs = false;
   local_vars.bShowWinningHandHoleCardsAbbrev = false;
@@ -774,8 +777,11 @@ int main(int argc,char **argv)
           local_vars.specified_hand_ixs.ix[0] = -1;
       }
     }
-    else if (!strcmp(argv[curr_arg],"-only_premium_hands")) {
-      local_vars.bOnlyPremiumHands = true;
+    else if (!strcmp(argv[curr_arg],"-premium")) {
+      local_vars.bPremium = true;
+    }
+    else if (!strcmp(argv[curr_arg],"-not_premium")) {
+      local_vars.bNotPremium = true;
     }
     else if (!strcmp(argv[curr_arg],"-show_winning_hand_hole_cards")) {
       local_vars.bShowWinningHandHoleCards = true;
@@ -1561,6 +1567,11 @@ int main(int argc,char **argv)
     return 61;
   }
 
+  if (local_vars.bPremium && local_vars.bNotPremium) {
+    printf("can't specify both -premium and -not_premium\n");
+    return 62;
+  }
+
   if (local_vars.bHutOuts || local_vars.bHutOutsDiff || local_vars.bHufOuts) {
     local_vars.bShowdown = true;
     local_vars.bShowdownCount = true;
@@ -1577,7 +1588,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 62;
+    return 63;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -1686,6 +1697,7 @@ int main(int argc,char **argv)
     local_vars.bHaveBadRiverMoney = false;
     local_vars.bHaveDiscrepancy = false;
     local_vars.bHavePremiumHand = false;
+    local_vars.bHaveNotPremiumHand = false;
     local_vars.bHaveMagicFlush = false;
     local_vars.bHaveAnyAllIn = false;
     local_vars.bHaveAceRag = false;
@@ -1917,6 +1929,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveBadRiverMoney = false;
                 local_vars.bHaveDiscrepancy = false;
                 local_vars.bHavePremiumHand = false;
+                local_vars.bHaveNotPremiumHand = false;
                 local_vars.bHaveMagicFlush = false;
                 local_vars.bHaveAnyAllIn = false;
                 local_vars.bHaveAceRag = false;
@@ -2031,7 +2044,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 63;
+          return 64;
         }
 
         continue;
@@ -2221,7 +2234,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,local_vars.line_no);
-                    return 64;
+                    return 65;
                   }
                 }
               }
@@ -2236,8 +2249,10 @@ int main(int argc,char **argv)
               }
             }
 
-            if (local_vars.bOnlyPremiumHands)
+            if (local_vars.bPremium)
               local_vars.bHavePremiumHand = is_premium_hand(local_vars.hole_cards_abbrev,&premium_ix);
+            else if (local_vars.bNotPremium)
+              local_vars.bHaveNotPremiumHand = !is_premium_hand(local_vars.hole_cards_abbrev,&premium_ix);
 
             if (local_vars.bTwinAbbrevs) {
               retval = abbrev_index_of_hand(&line[n],&local_vars.curr_abbrev_index);
@@ -2493,7 +2508,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,local_vars.line_no);
-              return 65;
+              return 66;
             }
           }
 
@@ -2524,7 +2539,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,local_vars.line_no);
-            return 66;
+            return 67;
           }
 
           turn_hand.NewCards(cards[0],cards[1],cards[2],
@@ -2562,7 +2577,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,local_vars.line_no);
-              return 67;
+              return 68;
             }
 
             holdem_hand.NewCards(cards[0],cards[1],cards[2],
@@ -3167,7 +3182,8 @@ void run_filter(struct vars *varspt)
   if (!varspt->bWinningHandTypeSpecified || (varspt->curr_winning_hand_typ_id == varspt->winning_hand_typ_id)) {
   if (!varspt->bHandTypIdSpecified || (varspt->poker_hand.GetHandType() == varspt->hand_typ_id)) {
   if (!varspt->bHandSpecified || varspt->bHaveSpecifiedHand) {
-  if (!varspt->bOnlyPremiumHands || varspt->bHavePremiumHand) {
+  if (!varspt->bPremium || varspt->bHavePremiumHand) {
+  if (!varspt->bNotPremium || varspt->bHaveNotPremiumHand) {
   if (!varspt->bShowdownHandSpecified || varspt->bHaveSpecifiedShowdownHand) {
   if (!varspt->bShowdownHand2Specified || varspt->bHaveSpecifiedShowdownHand2) {
   if (!varspt->bWinningHandSpecified || varspt->bHaveSpecifiedWinningHand) {
@@ -3645,6 +3661,7 @@ void run_filter(struct vars *varspt)
       else
         putchar(0x0a);
     }
+  }
   }
   }
   }
