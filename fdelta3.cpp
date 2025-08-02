@@ -43,7 +43,7 @@ static char usage[] =
 "  (-max_collected)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
-"  (-hand_typ_idid)\n"
+"  (-hand_typ_idid) (-timestamp)\n"
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_gevalue) (-sum_by_table_count)\n"
@@ -174,6 +174,7 @@ static char *style2(char *filename);
 static int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs);
 static int get_button_seat(char *line);
 static void set_position_booleans(struct vars *varspt);
+static void populate_timestamp(char *line,char *timestamp);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -190,9 +191,13 @@ enum quantum_typ {
   QUANTUM_TYPE_ROI
 };
 
+// sample timestamp: 2023/09/13 11:35:05 ET
+#define TIMESTAMP_LEN 22
+
 #define MAX_SEATS 9
 
 struct vars {
+  char timestamp[TIMESTAMP_LEN+1];
   int line_no;
   int button_seat;
   bool bAmButton;
@@ -201,6 +206,7 @@ struct vars {
   bool bAmCutoff;
   bool bAmHijack;
   char seat_numbers[MAX_SEATS+1];
+  bool bTimestamp;
   bool bTerse;
   bool bVerbose;
   bool bVerboseStyle2;
@@ -539,13 +545,14 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 158)) {
+  if ((argc < 3) || (argc > 159)) {
     printf(usage);
     return 1;
   }
 
   init_plain_hand_type_lens();
 
+  local_vars.bTimestamp = false;
   local_vars.line_no = 0;
   local_vars.button_seat = 0;
   local_vars.bAmButton = false;
@@ -721,7 +728,9 @@ int main(int argc,char **argv)
   bFirstFileOnly = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
-    if (!strcmp(argv[curr_arg],"-terse"))
+    if (!strcmp(argv[curr_arg],"-timestamp"))
+      local_vars.bTimestamp = true;
+    else if (!strcmp(argv[curr_arg],"-terse"))
       local_vars.bTerse = true;
     else if (!strcmp(argv[curr_arg],"-verbose"))
       local_vars.bVerbose = true;
@@ -1785,6 +1794,9 @@ int main(int argc,char **argv)
         line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
         pokerstars,POKERSTARS_LEN,
         &ix)) {
+
+        if (local_vars.bTimestamp)
+          populate_timestamp(line,local_vars.timestamp);
 
 #ifdef STUD_AND_RAZZ
         local_vars.bStud = false;
@@ -3547,8 +3559,14 @@ void run_filter(struct vars *varspt)
                       (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
                   }
                   else {
-                    printf("%s",
-                      (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                    if (!varspt->bTimestamp) {
+                      printf("%s",
+                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                    }
+                    else {
+                      printf("%s %s",
+                        (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),varspt->timestamp);
+                    }
                   }
 
                   print_location = 10;
@@ -3955,4 +3973,32 @@ static void set_position_booleans(struct vars *varspt)
     varspt->bAmHijack = true;
     return;
   }
+}
+
+static void populate_timestamp(char *line,char *timestamp)
+{
+  int m;
+  int n;
+  int len;
+
+  len = strlen(line);
+
+  for (n = len - 1; n >= 0; n--) {
+    if (line[n] == '-')
+      break;
+  }
+
+  if (n < 0) {
+    // should never get here
+    timestamp[0] = 0;
+    return;
+  }
+
+  m = n + 2;
+
+  for (n = 0; (n < TIMESTAMP_LEN) && (n + m < len); n++) {
+    timestamp[n] = line[n + m];
+  }
+
+  timestamp[n] = 0;
 }
