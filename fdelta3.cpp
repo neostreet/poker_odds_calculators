@@ -43,7 +43,7 @@ static char usage[] =
 "  (-max_collected)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
-"  (-hand_typ_idid) (-timestamp)\n"
+"  (-hand_typ_idid) (-timestamp) (-index)\n"
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_gevalue) (-sum_by_table_count)\n"
@@ -207,6 +207,7 @@ struct vars {
   bool bAmHijack;
   char seat_numbers[MAX_SEATS+1];
   bool bTimestamp;
+  bool bIndex;
   bool bTerse;
   bool bVerbose;
   bool bVerboseStyle2;
@@ -545,7 +546,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 159)) {
+  if ((argc < 3) || (argc > 160)) {
     printf(usage);
     return 1;
   }
@@ -553,6 +554,7 @@ int main(int argc,char **argv)
   init_plain_hand_type_lens();
 
   local_vars.bTimestamp = false;
+  local_vars.bIndex = false;
   local_vars.line_no = 0;
   local_vars.button_seat = 0;
   local_vars.bAmButton = false;
@@ -730,6 +732,8 @@ int main(int argc,char **argv)
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-timestamp"))
       local_vars.bTimestamp = true;
+    else if (!strcmp(argv[curr_arg],"-index"))
+      local_vars.bIndex = true;
     else if (!strcmp(argv[curr_arg],"-terse"))
       local_vars.bTerse = true;
     else if (!strcmp(argv[curr_arg],"-verbose"))
@@ -3676,8 +3680,13 @@ void run_filter(struct vars *varspt)
         else
           printf("\t%s\n",varspt->date_string);
       }
-      else
+      else {
+        if (varspt->bIndex) {
+          printf("%d",hand_no+1);
+        }
+
         putchar(0x0a);
+      }
     }
   }
   }
