@@ -3916,7 +3916,7 @@ static void set_position_booleans(struct vars *varspt)
   varspt->bAmCutoff = false;
   varspt->bAmHijack = false;
 
-  if (varspt->bAmButton)
+  if ((varspt->bAmButton) || (varspt->bPostedSmallBlind) || (varspt->bPostedBigBlind))
     return;
 
   if (varspt->table_count < 4)
