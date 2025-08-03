@@ -12,7 +12,7 @@ static int premium_hand_counts[NUM_PREMIUM_HAND_ABBREVS];
 
 static char usage[] =
 "usage: permute_starting_hands0 (-usage) (-card_strings) (-print_offset)\n"
-"  (-unique_first_cards) (-abbrev) (-premium) (-aggreg)\n";
+"  (-unique_first_cards) (-abbrev) (-premium) (-aggreg) (-aggreg2)\n";
 
 int main(int argc,char **argv)
 {
@@ -26,12 +26,16 @@ int main(int argc,char **argv)
   bool bAbbrev;
   bool bPremium;
   bool bAggreg;
+  bool bAggreg2;
   int premium_ix;
   int abbrev_ix;
   int cards[NUM_HOLE_CARDS_IN_HOLDEM_HAND];
   char hole_cards[6];
   char hole_cards_abbrev[4];
   int prev_first_card;
+  int num_pairs;
+  int num_suited_nonpairs;
+  int num_nonsuited_nonpairs;
 
   bUsage = false;
   bCardStrings = false;
@@ -40,6 +44,7 @@ int main(int argc,char **argv)
   bAbbrev = false;
   bPremium = false;
   bAggreg = false;
+  bAggreg2 = false;
 
   for (curr_arg = 1; curr_arg < argc; curr_arg++) {
     if (!strcmp(argv[curr_arg],"-usage"))
@@ -58,6 +63,10 @@ int main(int argc,char **argv)
       bAggreg = true;
       bAbbrev = true;
     }
+    else if (!strcmp(argv[curr_arg],"-aggreg2")) {
+      bAggreg2 = true;
+      bCardStrings = true;
+    }
     else
       break;
   }
@@ -65,6 +74,11 @@ int main(int argc,char **argv)
   if (bUsage) {
     printf(usage);
     return 0;
+  }
+
+  if (bAggreg && bAggreg2) {
+    printf("can't specify both -aggreg and -aggreg2\n");
+    return 1;
   }
 
   if (bAggreg) {
@@ -76,6 +90,11 @@ int main(int argc,char **argv)
       for (n = 0; n < NUM_HAND_ABBREVS; n++)
         hand_counts[n] = 0;
     }
+  }
+  else if (bAggreg2) {
+    num_pairs = 0;
+    num_suited_nonpairs = 0;
+    num_nonsuited_nonpairs = 0;
   }
 
   hole_cards[2] = ' ';
@@ -117,6 +136,16 @@ int main(int argc,char **argv)
         hand_counts[abbrev_ix]++;
         goto end_loop;
       }
+      else if (bAggreg2) {
+        if (hole_cards[0] == hole_cards[3])
+          num_pairs++;
+        else if (hole_cards[1] == hole_cards[4])
+          num_suited_nonpairs++;
+        else
+          num_nonsuited_nonpairs++;
+
+        goto end_loop;
+      }
 
       if (bCardStrings) {
         if (!bAbbrev)
@@ -150,6 +179,11 @@ end_loop:
         printf("%2d %s\n",hand_counts[n],hand_abbrevs[n]);
       }
     }
+  }
+  else if (bAggreg2) {
+    printf("num_pairs = %d\n",num_pairs);
+    printf("num_suited_nonpairs = %d\n",num_suited_nonpairs);
+    printf("num_nonsuited_nonpairs = %d\n",num_nonsuited_nonpairs);
   }
 
   return 0;
