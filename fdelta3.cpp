@@ -158,7 +158,7 @@ static bool Contains(bool bCaseSens,char *line,int line_len,int line_no,int code
   char *string,int string_len,int *index);
 static int get_work_amount(char *line,int line_len);
 static void normalize_hole_cards(char *hole_cards);
-static int get_date_from_path(char *path,char slash_char,int num_slashes,char **date_string_ptr);
+static int get_date_from_path(char *path,char **date_str_ptr);
 static void get_table_name(char *line,int line_len,char *table_name,int max_table_name_len);
 static int bottom_two(char *line,int line_len,char *hole_cards);
 static int get_num_hands_in_file(FILE *fptr,char *player_name,int player_name_len);
@@ -1637,7 +1637,7 @@ int main(int argc,char **argv)
       break;
 
     if (local_vars.bGetDateFromFilename) {
-      retval = get_date_from_path(filename,'\\',3,&local_vars.date_string);
+      retval = get_date_from_path(filename,&local_vars.date_string);
 
       if (retval) {
         printf("get_date_from_path() failed on %s: %d\n",filename,retval);
@@ -2878,59 +2878,31 @@ static void normalize_hole_cards(char *hole_cards)
   }
 }
 
-static char sql_date_string[12];
+#define MAX_DATE_STR_LEN 128
+static char date_str[MAX_DATE_STR_LEN+1];
 
-static int get_date_from_path(char *path,char slash_char,int num_slashes,char **date_string_ptr)
+static int get_date_from_path(char *path,char **date_str_ptr)
 {
+  int m;
   int n;
   int len;
-  int slash_count;
-  bool bTournamentLetter;
 
   len = strlen(path);
-  slash_count = 0;
-  bTournamentLetter = false;
 
   for (n = len - 1; (n >= 0); n--) {
-    if (path[n] == slash_char) {
-      if ((n > 0) && (path[n-1] >= 'a') && (path[n-1] <= 'z')) {
-        num_slashes++;
-        bTournamentLetter = true;
-      }
-
+    if (path[n] == '\\')
       break;
-    }
   }
 
-  for (n = len - 1; (n >= 0); n--) {
-    if (path[n] == slash_char) {
-      slash_count++;
-
-      if (slash_count == num_slashes)
-        break;
-    }
-  }
-
-  if (slash_count != num_slashes)
+  if (n < 0)
     return 1;
 
-  if (path[n+5] != slash_char)
-    return 2;
+  for (m = 0; (m < n) && (m < MAX_DATE_STR_LEN - 1); m++)
+    date_str[m] = path[m];
 
-  strncpy(sql_date_string,&path[n+1],4);
-  sql_date_string[4] = '-';
-  strncpy(&sql_date_string[5],&path[n+6],2);
-  sql_date_string[7] = '-';
-  strncpy(&sql_date_string[8],&path[n+8],2);
+  date_str[m] = 0;
 
-  if (!bTournamentLetter)
-    sql_date_string[10] = 0;
-  else {
-    sql_date_string[10] = path[n+11];
-    sql_date_string[11] = 0;
-  }
-
-  *date_string_ptr = sql_date_string;
+  *date_str_ptr = date_str;
 
   return 0;
 }
