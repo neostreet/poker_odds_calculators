@@ -2405,7 +2405,9 @@ int main(int argc,char **argv)
           local_vars.work = get_work_amount(line,line_len);
           spent_this_street += local_vars.work;
 
-          if (street == 3)
+          if (!street)
+            local_vars.vpip = 1;
+          else if (street == 3)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
@@ -2437,7 +2439,9 @@ int main(int argc,char **argv)
           local_vars.work = get_work_amount(line,line_len);
           spent_this_street = local_vars.work;
 
-          if (street == 3)
+          if (!street)
+            local_vars.vpip = 1;
+          else if (street == 3)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
