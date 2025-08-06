@@ -1791,8 +1791,8 @@ int main(int argc,char **argv)
       if (local_vars.line_no == dbg_line_no)
         dbg = 1;
 
-      if (local_vars.debug_level == 1)
-        printf("line %d %s\n",local_vars.line_no,line);
+      if (local_vars.debug_level == 3)
+        printf("file %d hand %d line %d %s\n",file_no,file_no,hand_no,local_vars.line_no,line);
 
       if (Contains(true,
         line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
@@ -1979,7 +1979,7 @@ int main(int argc,char **argv)
                 local_vars.collected_from_pot_count = 0;
 
                 if (local_vars.debug_level == 1)
-                  printf("line %d starting_balance = %d\n",local_vars.line_no,local_vars.starting_balance);
+                  printf("file %d hand %d line %d starting_balance = %d\n",file_no,hand_no,local_vars.line_no,local_vars.starting_balance);
 
                 if (Contains(true,
                   line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
@@ -2029,7 +2029,7 @@ int main(int argc,char **argv)
 
                 if (local_vars.debug_level == 2) {
                   printf("set bPostedSmallBlind\n");
-                  printf("line %d: line %d\n",__LINE__,local_vars.line_no);
+                  printf("file %d hand %d line %d: line %d\n",file_no,hand_no,__LINE__,local_vars.line_no);
                 }
               }
               else if (Contains(true,
@@ -2041,8 +2041,9 @@ int main(int argc,char **argv)
               }
 
               if (local_vars.debug_level == 1) {
-                printf("line %d street %d POSTS work = %d, spent_this_street = %d\n",
-                  local_vars.line_no,street,local_vars.work,spent_this_street);
+                printf("file %d hand %d line %d street %d POSTS work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
+                  file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+                  (street == num_street_markers));
               }
 
               if (Contains(true,
@@ -2322,8 +2323,8 @@ int main(int argc,char **argv)
           local_vars.collected_from_pot_count++;
 
           if (local_vars.debug_level == 1) {
-            printf("line %d street %d COLLECTED work = %d, collected_from_pot = %d\n",
-              local_vars.line_no,street,local_vars.work,local_vars.collected_from_pot);
+            printf("file %d hand %d line %d street %d COLLECTED work = %d, collected_from_pot = %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,local_vars.collected_from_pot);
           }
 
           continue;
@@ -2333,8 +2334,9 @@ int main(int argc,char **argv)
           spent_this_street -= local_vars.uncalled_bet_amount;
 
           if (local_vars.debug_level == 1) {
-            printf("line %d street %d UNCALLED uncalled_bet_amount = %d, spent_this_street = %d\n",
-              local_vars.line_no,street,local_vars.uncalled_bet_amount,spent_this_street);
+            printf("file %d hand %d line %d street %d UNCALLED uncalled_bet_amount = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.uncalled_bet_amount,spent_this_street,num_street_markers,
+              (street == num_street_markers));
           }
 
           continue;
@@ -2349,8 +2351,9 @@ int main(int argc,char **argv)
           spent_this_street = 0;
 
           if (local_vars.debug_level == 1) {
-            printf("line %d street %d FOLDS spent_this_street = %d, local_vars.spent_this_hand = %d\n",
-              local_vars.line_no,street,spent_this_street,local_vars.spent_this_hand);
+            printf("file %d hand %d line %d street %d FOLDS spent_this_street = %d, local_vars.spent_this_hand = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,spent_this_street,local_vars.spent_this_hand,num_street_markers,
+              (street == num_street_markers));
           }
 
           local_vars.bFolded = true;
@@ -2376,8 +2379,9 @@ int main(int argc,char **argv)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
-            printf("line %d street %d BETS work = %d, spent_this_street = %d\n",
-              local_vars.line_no,street,local_vars.work,spent_this_street);
+            printf("file %d hand %d line %d street %d BETS work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+              (street == num_street_markers));
           }
 
           if (local_vars.show_num_decisions)
@@ -2399,8 +2403,9 @@ int main(int argc,char **argv)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
-            printf("line %d street %d CALLS work = %d, spent_this_street = %d\n",
-              local_vars.line_no,street,local_vars.work,spent_this_street);
+            printf("file %d hand %d line %d street %d CALLS work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+              (street == num_street_markers));
           }
 
           if (local_vars.show_num_decisions)
@@ -2430,8 +2435,9 @@ int main(int argc,char **argv)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
-            printf("line %d street %d RAISES work = %d, spent_this_street = %d\n",
-              local_vars.line_no,street,local_vars.work,spent_this_street);
+            printf("file %d hand %d line %d street %d RAISES work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+              (street == num_street_markers));
           }
 
           if (local_vars.show_num_decisions)
@@ -2647,7 +2653,7 @@ int main(int argc,char **argv)
         }
         else if (!strncmp(line,summary,SUMMARY_LEN)) {
           if (local_vars.debug_level == 1)
-            printf("line %d SUMMARY line detected; skipping\n",local_vars.line_no);
+            printf("file %d hand %d line %d SUMMARY line detected; skipping\n",file_no,hand_no,local_vars.line_no);
 
           set_position_booleans(&local_vars);
 
@@ -3145,7 +3151,7 @@ void run_filter(struct vars *varspt)
 
   if (varspt->debug_level == 2) {
     printf("top of run_filter()\n");
-    printf("line %d: line %d\n",__LINE__,varspt->line_no);
+    printf("file %d hand %d line %d: line %d\n",file_no,hand_no,__LINE__,varspt->line_no);
   }
 
   if (varspt->bSummarizing || !varspt->bSkipZero || (varspt->delta != 0)) {
