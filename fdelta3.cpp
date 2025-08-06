@@ -31,14 +31,14 @@ static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug_levelval) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
-"  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-only_lost)\n"
-"  (-only_count) (-only_won) (-showdown) (-no_showdown)\n"
+"  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-lost)\n"
+"  (-only_count) (-won) (-showdown) (-no_showdown)\n"
 "  (-showdown_countcount) (-showdown_count_gtcount)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
 "  (-call_in_on_the_river) (-fall_in) (-not_fall_in)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
-"  (-show_collected) (-show_spent) (-show_opm) (-only_wash)\n"
+"  (-show_collected) (-show_spent) (-show_opm) (-wash)\n"
 "  (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
@@ -257,11 +257,11 @@ struct vars {
   bool bNoRiverMoney;
   bool bStealthTwoPair;
   bool bNormalize;
-  bool bOnlyLost;
+  bool bLost;
   int only_count;
   bool bExactCount;
   int exact_count;
-  bool bOnlyWon;
+  bool bWon;
   bool bShowdown;
   bool bNoShowdown;
   bool bShowdownCount;
@@ -305,7 +305,7 @@ struct vars {
   int num_positive_deltas;
   int wins;
   bool bAceOnTheRiver;
-  bool bOnlyWash;
+  bool bWash;
   bool bNoDelta;
   bool bHoleCardsUsed;
   bool bOnlySuited;
@@ -600,10 +600,10 @@ int main(int argc,char **argv)
   local_vars.bNoRiverMoney = false;
   local_vars.bStealthTwoPair = false;
   local_vars.bNormalize = false;
-  local_vars.bOnlyLost = false;
+  local_vars.bLost = false;
   local_vars.only_count = 0;
   local_vars.bExactCount = false;
-  local_vars.bOnlyWon = false;
+  local_vars.bWon = false;
   local_vars.bShowdown = false;
   local_vars.bNoShowdown = false;
   local_vars.bShowdownCount = false;
@@ -644,7 +644,7 @@ int main(int argc,char **argv)
   local_vars.running_total = 0;
   local_vars.show_num_positive_deltas = 0;
   local_vars.bAceOnTheRiver = false;
-  local_vars.bOnlyWash = false;
+  local_vars.bWash = false;
   local_vars.sum_quantum = 0;
   local_vars.sum_abs_delta = 0;
   local_vars.max_delta = 0;
@@ -899,8 +899,8 @@ int main(int argc,char **argv)
       local_vars.bStealthTwoPair = true;
     else if (!strcmp(argv[curr_arg],"-normalize"))
       local_vars.bNormalize = true;
-    else if (!strcmp(argv[curr_arg],"-only_lost"))
-      local_vars.bOnlyLost = true;
+    else if (!strcmp(argv[curr_arg],"-lost"))
+      local_vars.bLost = true;
     else if (!strcmp(argv[curr_arg],"-only_count"))
       local_vars.only_count = 1;
     else if (!strncmp(argv[curr_arg],"-exact_count",12)) {
@@ -908,8 +908,8 @@ int main(int argc,char **argv)
       sscanf(&argv[curr_arg][12],"%d",&local_vars.exact_count);
       local_vars.only_count = 1;
     }
-    else if (!strcmp(argv[curr_arg],"-only_won"))
-      local_vars.bOnlyWon = true;
+    else if (!strcmp(argv[curr_arg],"-won"))
+      local_vars.bWon = true;
     else if (!strcmp(argv[curr_arg],"-showdown"))
       local_vars.bShowdown = true;
     else if (!strcmp(argv[curr_arg],"-no_showdown"))
@@ -990,8 +990,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-ace_on_the_river"))
       local_vars.bAceOnTheRiver = true;
-    else if (!strcmp(argv[curr_arg],"-only_wash"))
-      local_vars.bOnlyWash = true;
+    else if (!strcmp(argv[curr_arg],"-wash"))
+      local_vars.bWash = true;
     else if (!strcmp(argv[curr_arg],"-sum_quantum"))
       local_vars.sum_quantum = 1;
     else if (!strcmp(argv[curr_arg],"-sum_abs_delta"))
@@ -1314,7 +1314,7 @@ int main(int argc,char **argv)
     local_vars.bSawFlop = true;
 
   if (local_vars.bUberflush) {
-    local_vars.bOnlyLost = true;
+    local_vars.bLost = true;
     local_vars.hand_typ_id = FLUSH;
     local_vars.bHandTypeSpecified = true;
   }
@@ -1341,8 +1341,8 @@ int main(int argc,char **argv)
   if (local_vars.bHandTypIdGeSpecified && !local_vars.bSawFlop && !local_vars.bSawRiver)
     local_vars.bSawFlop = true;
 
-  if (local_vars.bOnlyLost && local_vars.bOnlyWon) {
-    printf("can't specify both -only_lost and -only_won\n");
+  if (local_vars.bLost && local_vars.bWon) {
+    printf("can't specify both -lost and -won\n");
     return 19;
   }
 
@@ -1383,13 +1383,13 @@ int main(int argc,char **argv)
     return 25;
   }
 
-  if (local_vars.bOnlyLost && local_vars.bOnlyWash) {
-    printf("can't specify both -only_lost and -only_wash\n");
+  if (local_vars.bLost && local_vars.bWash) {
+    printf("can't specify both -lost and -wash\n");
     return 26;
   }
 
-  if (local_vars.bOnlyWon && local_vars.bOnlyWash) {
-    printf("can't specify both -only_won and -only_wash\n");
+  if (local_vars.bWon && local_vars.bWash) {
+    printf("can't specify both -won and -wash\n");
     return 27;
   }
 
@@ -3175,9 +3175,9 @@ void run_filter(struct vars *varspt)
   if (!varspt->bShowdownHandSpecified || varspt->bHaveSpecifiedShowdownHand) {
   if (!varspt->bShowdownHand2Specified || varspt->bHaveSpecifiedShowdownHand2) {
   if (!varspt->bWinningHandSpecified || varspt->bHaveSpecifiedWinningHand) {
-  if (!varspt->bOnlyLost || (varspt->delta < 0)) {
-  if (!varspt->bOnlyWon || (varspt->delta > 0)) {
-  if (!varspt->bOnlyWash || (varspt->delta == 0)) {
+  if (!varspt->bLost || (varspt->delta < 0)) {
+  if (!varspt->bWon || (varspt->delta > 0)) {
+  if (!varspt->bWash || (varspt->delta == 0)) {
   if (!varspt->bShowdown || varspt->bHaveShowdown) {
   if (!varspt->bShowdownCount || varspt->bHaveShowdownCount) {
   if (!varspt->bShowdownCountGt || varspt->bHaveShowdownCountGt) {
