@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-hijack) (-other)\n"
+"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-hijack) (-other) (-vpip)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -370,6 +370,7 @@ struct vars {
   int hijack;
   bool bOther;
   int other;
+  bool bVpip;
   bool bDeuceOrTreyOff;
   bool bVoluntaryBet;
   bool bNoVoluntaryBet;
@@ -449,6 +450,7 @@ struct vars {
   PokerHand poker_hand_on_river;
   int table_count;
   int table_count_to_match;
+  int vpip;
   int starting_balance;
   int ending_balance;
   int prev_ending_balance;
@@ -546,7 +548,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 160)) {
+  if ((argc < 3) || (argc > 161)) {
     printf(usage);
     return 1;
   }
@@ -709,6 +711,7 @@ int main(int argc,char **argv)
   local_vars.hijack = 0;
   local_vars.bOther = false;
   local_vars.other = 0;
+  local_vars.bVpip = false;
   local_vars.bDeuceOrTreyOff = false;
   local_vars.bVoluntaryBet = false;
   local_vars.bNoVoluntaryBet = false;
@@ -1100,6 +1103,8 @@ int main(int argc,char **argv)
       local_vars.bOther = true;
       local_vars.other = 1;
     }
+    else if (!strcmp(argv[curr_arg],"-vpip"))
+      local_vars.bVpip = true;
     else if (!strcmp(argv[curr_arg],"-deuce_or_trey_off"))
       local_vars.bDeuceOrTreyOff = true;
     else if (!strcmp(argv[curr_arg],"-voluntary_bet"))
@@ -1847,6 +1852,7 @@ int main(int argc,char **argv)
         get_table_name(line,line_len,table_name,MAX_TABLE_NAME_LEN);
 
         local_vars.table_count = 0;
+        local_vars.vpip = 0;
         boss_stack = 0;
         local_vars.am_table_boss = 0;
         local_vars.bHaveKnockout = false;
@@ -3221,6 +3227,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bHijack || varspt->bAmHijack) {
   if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind &&
     !varspt->bAmUtg && !varspt->bAmCutoff && !varspt->bAmHijack)) {
+  if (!varspt->bVpip || varspt->vpip) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
@@ -3666,6 +3673,7 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
   }
   }
   }
