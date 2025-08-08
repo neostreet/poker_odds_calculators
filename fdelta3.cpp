@@ -40,7 +40,7 @@ static char usage[] =
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
 "  (-show_collected) (-show_spent) (-show_opm) (-wash)\n"
 "  (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
-"  (-max_collected)\n"
+"  (-max_collected) (-rollback)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
 "  (-hand_typ_idid) (-timestamp) (-index)\n"
@@ -372,6 +372,7 @@ struct vars {
   int other;
   bool bVpip;
   bool bDidntVpip;
+  bool bRollback;
   bool bDeuceOrTreyOff;
   bool bVoluntaryBet;
   bool bNoVoluntaryBet;
@@ -549,7 +550,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 162)) {
+  if ((argc < 3) || (argc > 163)) {
     printf(usage);
     return 1;
   }
@@ -714,6 +715,7 @@ int main(int argc,char **argv)
   local_vars.other = 0;
   local_vars.bVpip = false;
   local_vars.bDidntVpip = false;
+  local_vars.bRollback = false;
   local_vars.bDeuceOrTreyOff = false;
   local_vars.bVoluntaryBet = false;
   local_vars.bNoVoluntaryBet = false;
@@ -1109,6 +1111,8 @@ int main(int argc,char **argv)
       local_vars.bVpip = true;
     else if (!strcmp(argv[curr_arg],"-didnt_vpip"))
       local_vars.bDidntVpip = true;
+    else if (!strcmp(argv[curr_arg],"-rollback"))
+      local_vars.bRollback = true;
     else if (!strcmp(argv[curr_arg],"-deuce_or_trey_off"))
       local_vars.bDeuceOrTreyOff = true;
     else if (!strcmp(argv[curr_arg],"-voluntary_bet"))
