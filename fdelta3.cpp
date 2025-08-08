@@ -50,7 +50,7 @@ static char usage[] =
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
 "  (-counterfeit) (-show_num_decisions) (-won_side_pot) (-won_main_pot) (-last_hand_only)\n"
 "  (-winning_percentage) (-get_date_from_filename) (-no_hole_cards)\n"
-"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-hijack) (-other) (-vpip)\n"
+"  (-button) (-small_blind) (-big_blind) (-utg) (-cutoff) (-hijack) (-other) (-vpip) (-didnt_vpip)\n"
 "  (-deuce_or_trey_off) (-voluntary_bet) (-no_voluntary_bet)\n"
 "  (-chased_flush) (-river_card_used) (-both_hole_cards_used) (-show_river)\n"
 "  (-hand_typ_id_geid) (-bad_river_money) (-show_wagered) (-uberflush)\n"
@@ -371,6 +371,7 @@ struct vars {
   bool bOther;
   int other;
   bool bVpip;
+  bool bDidntVpip;
   bool bDeuceOrTreyOff;
   bool bVoluntaryBet;
   bool bNoVoluntaryBet;
@@ -548,7 +549,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 161)) {
+  if ((argc < 3) || (argc > 162)) {
     printf(usage);
     return 1;
   }
@@ -712,6 +713,7 @@ int main(int argc,char **argv)
   local_vars.bOther = false;
   local_vars.other = 0;
   local_vars.bVpip = false;
+  local_vars.bDidntVpip = false;
   local_vars.bDeuceOrTreyOff = false;
   local_vars.bVoluntaryBet = false;
   local_vars.bNoVoluntaryBet = false;
@@ -1105,6 +1107,8 @@ int main(int argc,char **argv)
     }
     else if (!strcmp(argv[curr_arg],"-vpip"))
       local_vars.bVpip = true;
+    else if (!strcmp(argv[curr_arg],"-didnt_vpip"))
+      local_vars.bDidntVpip = true;
     else if (!strcmp(argv[curr_arg],"-deuce_or_trey_off"))
       local_vars.bDeuceOrTreyOff = true;
     else if (!strcmp(argv[curr_arg],"-voluntary_bet"))
@@ -1590,6 +1594,11 @@ int main(int argc,char **argv)
     return 62;
   }
 
+  if (local_vars.bVpip && local_vars.bDidntVpip) {
+    printf("can't specify both -vpip and -didnt_vpip\n");
+    return 63;
+  }
+
   if (local_vars.bHutOuts || local_vars.bHutOutsDiff || local_vars.bHufOuts) {
     local_vars.bShowdown = true;
     local_vars.bShowdownCount = true;
@@ -1606,7 +1615,7 @@ int main(int argc,char **argv)
 
   if ((fptr0 = fopen(argv[curr_arg],"r")) == NULL) {
     printf(couldnt_open,argv[curr_arg]);
-    return 63;
+    return 64;
   }
 
   if (!local_vars.bSawRiver && (local_vars.bChasedFlush || local_vars.bRiverCardUsed || local_vars.bShowRiver))
@@ -2067,7 +2076,7 @@ int main(int argc,char **argv)
 
         if (local_vars.table_count > MAX_TABLE_COUNT) {
           printf("%s: too many players at the table\n",filename);
-          return 64;
+          return 65;
         }
 
         continue;
@@ -2257,7 +2266,7 @@ int main(int argc,char **argv)
                   if (retval) {
                     printf("invalid card string %s on line %d\n",
                       card_string,local_vars.line_no);
-                    return 65;
+                    return 66;
                   }
                 }
               }
@@ -2540,7 +2549,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,local_vars.line_no);
-              return 66;
+              return 67;
             }
           }
 
@@ -2571,7 +2580,7 @@ int main(int argc,char **argv)
           if (retval) {
             printf("invalid card string %s on line %d\n",
               card_string,local_vars.line_no);
-            return 67;
+            return 68;
           }
 
           turn_hand.NewCards(cards[0],cards[1],cards[2],
@@ -2609,7 +2618,7 @@ int main(int argc,char **argv)
             if (retval) {
               printf("invalid card string %s on line %d\n",
                 card_string,local_vars.line_no);
-              return 68;
+              return 69;
             }
 
             holdem_hand.NewCards(cards[0],cards[1],cards[2],
@@ -3232,6 +3241,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bOther || (!varspt->bAmButton && !varspt->bPostedSmallBlind && !varspt->bPostedBigBlind &&
     !varspt->bAmUtg && !varspt->bAmCutoff && !varspt->bAmHijack)) {
   if (!varspt->bVpip || varspt->vpip) {
+  if (!varspt->bDidntVpip || !varspt->vpip) {
   if (!varspt->bDeuceOrTreyOff || varspt->bHaveDeuceOrTreyOff) {
   if (!varspt->bVoluntaryBet || varspt->bHaveVoluntaryBet) {
   if (!varspt->bNoVoluntaryBet || !varspt->bHaveVoluntaryBet) {
@@ -3677,6 +3687,7 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
   }
   }
   }
