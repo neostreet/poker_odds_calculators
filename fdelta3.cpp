@@ -37,9 +37,9 @@ static char usage[] =
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
 "  (-call_in_on_the_river) (-fall_in) (-not_fall_in)\n"
-"  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected)\n"
-"  (-show_collected) (-show_spent) (-show_opm) (-wash)\n"
-"  (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
+"  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected) (-show_collected)\n"
+"  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent)\n"
+"  (-show_opm) (-wash) (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected) (-rollback)\n"
 "  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
@@ -179,6 +179,8 @@ static void populate_timestamp(char *line,char *timestamp);
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
   QUANTUM_TYPE_COLLECTED,
+  QUANTUM_TYPE_VOLUNTARILY_SPENT,
+  QUANTUM_TYPE_INVOLUNTARILY_SPENT,
   QUANTUM_TYPE_SPENT,
   QUANTUM_TYPE_OPM,
   QUANTUM_TYPE_NUMDECISIONS,
@@ -291,6 +293,8 @@ struct vars {
   bool bAceNonRag;
   bool bOnlyAnte;
   int show_collected;
+  int show_voluntarily_spent;
+  int show_involuntarily_spent;
   int show_spent;
   int show_opm;
   int show_num_decisions;
@@ -470,7 +474,8 @@ struct vars {
   int hole_cards_used;
   int num_hands;
   int num_hands_in_file;
-  int spent_this_hand;
+  int voluntarily_spent_this_hand;
+  int involuntarily_spent_this_hand;
   int work;
   int numdecs;
   int wagered_amount;
@@ -530,7 +535,8 @@ int main(int argc,char **argv)
   int max_streets;
   int ante;
   int bring_in;
-  int spent_this_street;
+  int voluntarily_spent_this_street;
+  int involuntarily_spent_this_street;
   int end_ix;
   int dbg;
   int cards[NUM_CARDS_IN_HOLDEM_POOL];
@@ -550,7 +556,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 163)) {
+  if ((argc < 3) || (argc > 165)) {
     printf(usage);
     return 1;
   }
@@ -637,6 +643,8 @@ int main(int argc,char **argv)
   local_vars.bOnlyAnte = false;
   local_vars.quantum_type = QUANTUM_TYPE_DELTA;
   local_vars.show_collected = 0;
+  local_vars.show_voluntarily_spent = 0;
+  local_vars.show_involuntarily_spent = 0;
   local_vars.show_spent = 0;
   local_vars.show_opm = 0;
   local_vars.show_num_decisions = 0;
@@ -962,6 +970,14 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[curr_arg],"-show_collected")) {
       local_vars.show_collected = 1;
       local_vars.quantum_type = QUANTUM_TYPE_COLLECTED;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_voluntarily_spent")) {
+      local_vars.show_voluntarily_spent = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_VOLUNTARILY_SPENT;
+    }
+    else if (!strcmp(argv[curr_arg],"-show_involuntarily_spent")) {
+      local_vars.show_involuntarily_spent = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_INVOLUNTARILY_SPENT;
     }
     else if (!strcmp(argv[curr_arg],"-show_spent")) {
       local_vars.show_spent = 1;
@@ -1384,15 +1400,17 @@ int main(int argc,char **argv)
     return 24;
   }
 
-  if (local_vars.show_collected + local_vars.show_spent + local_vars.show_opm +
-    local_vars.show_num_decisions + local_vars.show_wagered +
+  if (local_vars.show_collected +
+    local_vars.show_voluntarily_spent + local_vars.show_involuntarily_spent + local_vars.show_spent +
+    local_vars.show_opm + local_vars.show_num_decisions + local_vars.show_wagered +
     local_vars.show_table_boss + local_vars.show_num_possible_checks +
     local_vars.show_running_total + local_vars.show_num_positive_deltas +
     local_vars.show_roi > 1) {
-    printf("can only specify one of -show_collected, -show_spent, -show_opm,\n"
-      "  show_num_decisions, show_wagered, show_table_boss,\n"
-      "  show_num_possible_checks, show_running_total, show_num_positive_deltas\n"
-      "  show_roi\n");
+    printf("can only specify one of -show_collected,\n"
+      "  -show_voluntarily_spent, -show_involuntarily_spent, -show_spent,\n"
+      "  -show_opm, -show_num_decisions, -show_wagered, -show_table_boss,\n"
+      "  -show_num_possible_checks, -show_running_total, -show_num_positive_deltas,\n"
+      "  and -show_roi\n");
     return 25;
   }
 
@@ -1991,8 +2009,10 @@ int main(int argc,char **argv)
                 num_street_markers = 0;
                 ante = 0;
                 bring_in = 0;
-                spent_this_street = 0;
-                local_vars.spent_this_hand = 0;
+                voluntarily_spent_this_street = 0;
+                involuntarily_spent_this_street = 0;
+                local_vars.voluntarily_spent_this_hand = 0;
+                local_vars.involuntarily_spent_this_hand = 0;
                 local_vars.uncalled_bet_amount = 0;
                 local_vars.collected_from_pot = 0;
                 local_vars.collected_from_pot_count = 0;
@@ -2019,7 +2039,7 @@ int main(int argc,char **argv)
               posts_the_ante,POSTS_THE_ANTE_LEN,
               &ix)) {
               ante = get_work_amount(line,line_len);
-              local_vars.spent_this_hand = ante;
+              local_vars.involuntarily_spent_this_hand = ante;
               local_vars.bHaveAnte = true;
 
               if (Contains(true,
@@ -2037,7 +2057,7 @@ int main(int argc,char **argv)
               posts,POSTS_LEN,
               &ix)) {
               local_vars.work = get_work_amount(line,line_len);
-              spent_this_street += local_vars.work;
+              involuntarily_spent_this_street += local_vars.work;
 
               if (Contains(true,
                 line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
@@ -2060,8 +2080,8 @@ int main(int argc,char **argv)
               }
 
               if (local_vars.debug_level == 1) {
-                printf("file %d hand %d line %d street %d POSTS work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
-                  file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+                printf("file %d hand %d line %d street %d POSTS work = %d, voluntarily_spent_this_street = %d, num_street_markers = %d, %d\n",
+                  file_no,hand_no,local_vars.line_no,street,local_vars.work,voluntarily_spent_this_street,num_street_markers,
                   (street == num_street_markers));
               }
 
@@ -2333,9 +2353,11 @@ int main(int argc,char **argv)
           sscanf(&line[ix + COLLECTED_LEN],"%d",&local_vars.work);
 
           if (!local_vars.collected_from_pot_count) {
-            local_vars.spent_this_hand += spent_this_street;
+            local_vars.voluntarily_spent_this_hand += voluntarily_spent_this_street;
+            local_vars.involuntarily_spent_this_hand += involuntarily_spent_this_street;
             street++;
-            spent_this_street = 0;
+            voluntarily_spent_this_street = 0;
+            involuntarily_spent_this_street = 0;
           }
 
           local_vars.collected_from_pot += local_vars.work;
@@ -2350,11 +2372,11 @@ int main(int argc,char **argv)
         }
         else if (!strncmp(line,uncalled_bet,UNCALLED_BET_LEN)) {
           sscanf(&line[UNCALLED_BET_LEN],"%d",&local_vars.uncalled_bet_amount);
-          spent_this_street -= local_vars.uncalled_bet_amount;
+          voluntarily_spent_this_street -= local_vars.uncalled_bet_amount;
 
           if (local_vars.debug_level == 1) {
-            printf("file %d hand %d line %d street %d UNCALLED uncalled_bet_amount = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
-              file_no,hand_no,local_vars.line_no,street,local_vars.uncalled_bet_amount,spent_this_street,num_street_markers,
+            printf("file %d hand %d line %d street %d UNCALLED uncalled_bet_amount = %d, voluntarily_spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.uncalled_bet_amount,voluntarily_spent_this_street,num_street_markers,
               (street == num_street_markers));
           }
 
@@ -2365,13 +2387,15 @@ int main(int argc,char **argv)
           folds,FOLDS_LEN,
           &ix)) {
 
-          local_vars.spent_this_hand += spent_this_street;
+          local_vars.voluntarily_spent_this_hand += voluntarily_spent_this_street;
+          local_vars.involuntarily_spent_this_hand += involuntarily_spent_this_street;
 
-          spent_this_street = 0;
+          voluntarily_spent_this_street = 0;
+          involuntarily_spent_this_street = 0;
 
           if (local_vars.debug_level == 1) {
-            printf("file %d hand %d line %d street %d FOLDS spent_this_street = %d, local_vars.spent_this_hand = %d, num_street_markers = %d, %d\n",
-              file_no,hand_no,local_vars.line_no,street,spent_this_street,local_vars.spent_this_hand,num_street_markers,
+            printf("file %d hand %d line %d street %d FOLDS voluntarily_spent_this_street = %d, local_vars.voluntarily_spent_this_hand = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,voluntarily_spent_this_street,local_vars.voluntarily_spent_this_hand,num_street_markers,
               (street == num_street_markers));
           }
 
@@ -2392,14 +2416,14 @@ int main(int argc,char **argv)
           bets,BETS_LEN,
           &ix)) {
           local_vars.work = get_work_amount(line,line_len);
-          spent_this_street += local_vars.work;
+          voluntarily_spent_this_street += local_vars.work;
 
           if (street == 3)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
-            printf("file %d hand %d line %d street %d BETS work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
-              file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+            printf("file %d hand %d line %d street %d BETS work = %d, voluntarily_spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,voluntarily_spent_this_street,num_street_markers,
               (street == num_street_markers));
           }
 
@@ -2416,7 +2440,7 @@ int main(int argc,char **argv)
           calls,CALLS_LEN,
           &ix)) {
           local_vars.work = get_work_amount(line,line_len);
-          spent_this_street += local_vars.work;
+          voluntarily_spent_this_street += local_vars.work;
 
           if (!street)
             local_vars.vpip = 1;
@@ -2424,8 +2448,8 @@ int main(int argc,char **argv)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
-            printf("file %d hand %d line %d street %d CALLS work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
-              file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+            printf("file %d hand %d line %d street %d CALLS work = %d, voluntarily_spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,voluntarily_spent_this_street,num_street_markers,
               (street == num_street_markers));
           }
 
@@ -2450,7 +2474,8 @@ int main(int argc,char **argv)
           raises,RAISES_LEN,
           &ix)) {
           local_vars.work = get_work_amount(line,line_len);
-          spent_this_street = local_vars.work;
+
+          voluntarily_spent_this_street = local_vars.work - involuntarily_spent_this_street;
 
           if (!street)
             local_vars.vpip = 1;
@@ -2458,8 +2483,8 @@ int main(int argc,char **argv)
             local_vars.bSpentRiverMoney = true;
 
           if (local_vars.debug_level == 1) {
-            printf("file %d hand %d line %d street %d RAISES work = %d, spent_this_street = %d, num_street_markers = %d, %d\n",
-              file_no,hand_no,local_vars.line_no,street,local_vars.work,spent_this_street,num_street_markers,
+            printf("file %d hand %d line %d street %d RAISES work = %d, voluntarily_spent_this_street = %d, num_street_markers = %d, %d\n",
+              file_no,hand_no,local_vars.line_no,street,local_vars.work,voluntarily_spent_this_street,num_street_markers,
               (street == num_street_markers));
           }
 
@@ -2484,7 +2509,7 @@ int main(int argc,char **argv)
           brings_in_for,BRINGS_IN_FOR_LEN,
           &ix)) {
           bring_in = get_work_amount(line,line_len);
-          spent_this_street += bring_in;
+          voluntarily_spent_this_street += bring_in;
           continue;
         }
         else if ((local_vars.bShowdownCount || local_vars.bShowdownCountGt) &&
@@ -2734,11 +2759,14 @@ int main(int argc,char **argv)
           num_street_markers++;
 
           if (num_street_markers > 1) {
-            if (street <= max_streets)
-              local_vars.spent_this_hand += spent_this_street;
+            if (street <= max_streets) {
+              local_vars.voluntarily_spent_this_hand += voluntarily_spent_this_street;
+              local_vars.involuntarily_spent_this_hand += involuntarily_spent_this_street;
+            }
 
             street++;
-            spent_this_street = 0;
+            voluntarily_spent_this_street = 0;
+            involuntarily_spent_this_street = 0;
           }
         }
       }
@@ -3618,6 +3646,8 @@ void run_filter(struct vars *varspt)
 
           break;
         case QUANTUM_TYPE_COLLECTED:
+        case QUANTUM_TYPE_VOLUNTARILY_SPENT:
+        case QUANTUM_TYPE_INVOLUNTARILY_SPENT:
         case QUANTUM_TYPE_SPENT:
         case QUANTUM_TYPE_NUMDECISIONS:
         case QUANTUM_TYPE_WAGERED:
@@ -3787,7 +3817,8 @@ void run_filter(struct vars *varspt)
 
 static void do_balance_processing(struct vars *varspt)
 {
-  varspt->ending_balance = varspt->starting_balance - varspt->spent_this_hand + varspt->collected_from_pot;
+  varspt->ending_balance = varspt->starting_balance - varspt->voluntarily_spent_this_hand
+    - varspt->involuntarily_spent_this_hand + varspt->collected_from_pot;
 
   if (varspt->starting_balance * 2 <= varspt->ending_balance)
     varspt->bHaveDoubleUp = true;
@@ -3796,7 +3827,7 @@ static void do_balance_processing(struct vars *varspt)
     varspt->hit_felt_in_session_count++;
 
   varspt->delta = varspt->ending_balance - varspt->starting_balance;
-  varspt->wagered_amount = varspt->spent_this_hand + varspt->uncalled_bet_amount;
+  varspt->wagered_amount = varspt->voluntarily_spent_this_hand + varspt->uncalled_bet_amount;
 
   if (varspt->show_running_total)
     varspt->running_total += varspt->delta;
@@ -3826,8 +3857,16 @@ static void do_balance_processing(struct vars *varspt)
       varspt->quantum = varspt->collected_from_pot;
 
       break;
+    case QUANTUM_TYPE_VOLUNTARILY_SPENT:
+      varspt->quantum = varspt->voluntarily_spent_this_hand;
+
+      break;
+    case QUANTUM_TYPE_INVOLUNTARILY_SPENT:
+      varspt->quantum = varspt->involuntarily_spent_this_hand;
+
+      break;
     case QUANTUM_TYPE_SPENT:
-      varspt->quantum = varspt->spent_this_hand;
+      varspt->quantum = varspt->voluntarily_spent_this_hand + varspt->involuntarily_spent_this_hand;
 
       break;
     case QUANTUM_TYPE_OPM:
