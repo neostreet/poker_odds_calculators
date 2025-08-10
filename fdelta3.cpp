@@ -38,10 +38,9 @@ static char usage[] =
 "  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
 "  (-call_in_on_the_river) (-fall_in) (-not_fall_in)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected) (-show_collected)\n"
-"  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent)\n"
+"  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent) (-show_rollback)\n"
 "  (-show_opm) (-wash) (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
-"  (-max_collected) (-rollback)\n"
-"  (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
+"  (-max_collected) (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
 "  (-hand_typ_idid) (-timestamp) (-index)\n"
 "  (-show_hand_typ_id) (-didnt_see_flop)\n"
@@ -182,6 +181,7 @@ enum quantum_typ {
   QUANTUM_TYPE_VOLUNTARILY_SPENT,
   QUANTUM_TYPE_INVOLUNTARILY_SPENT,
   QUANTUM_TYPE_SPENT,
+  QUANTUM_TYPE_ROLLBACK,
   QUANTUM_TYPE_OPM,
   QUANTUM_TYPE_NUMDECISIONS,
   QUANTUM_TYPE_WAGERED,
@@ -296,6 +296,7 @@ struct vars {
   int show_voluntarily_spent;
   int show_involuntarily_spent;
   int show_spent;
+  int show_rollback;
   int show_opm;
   int show_num_decisions;
   int show_wagered;
@@ -376,7 +377,6 @@ struct vars {
   int other;
   bool bVpip;
   bool bDidntVpip;
-  bool bRollback;
   bool bDeuceOrTreyOff;
   bool bVoluntaryBet;
   bool bNoVoluntaryBet;
@@ -646,6 +646,7 @@ int main(int argc,char **argv)
   local_vars.show_voluntarily_spent = 0;
   local_vars.show_involuntarily_spent = 0;
   local_vars.show_spent = 0;
+  local_vars.show_rollback = 0;
   local_vars.show_opm = 0;
   local_vars.show_num_decisions = 0;
   local_vars.show_wagered = 0;
@@ -723,7 +724,6 @@ int main(int argc,char **argv)
   local_vars.other = 0;
   local_vars.bVpip = false;
   local_vars.bDidntVpip = false;
-  local_vars.bRollback = false;
   local_vars.bDeuceOrTreyOff = false;
   local_vars.bVoluntaryBet = false;
   local_vars.bNoVoluntaryBet = false;
@@ -983,6 +983,10 @@ int main(int argc,char **argv)
       local_vars.show_spent = 1;
       local_vars.quantum_type = QUANTUM_TYPE_SPENT;
     }
+    else if (!strcmp(argv[curr_arg],"-show_rollback")) {
+      local_vars.show_rollback = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_ROLLBACK;
+    }
     else if (!strcmp(argv[curr_arg],"-show_opm")) {
       local_vars.show_opm = 1;
       local_vars.quantum_type = QUANTUM_TYPE_OPM;
@@ -1127,8 +1131,6 @@ int main(int argc,char **argv)
       local_vars.bVpip = true;
     else if (!strcmp(argv[curr_arg],"-didnt_vpip"))
       local_vars.bDidntVpip = true;
-    else if (!strcmp(argv[curr_arg],"-rollback"))
-      local_vars.bRollback = true;
     else if (!strcmp(argv[curr_arg],"-deuce_or_trey_off"))
       local_vars.bDeuceOrTreyOff = true;
     else if (!strcmp(argv[curr_arg],"-voluntary_bet"))
@@ -1402,13 +1404,13 @@ int main(int argc,char **argv)
 
   if (local_vars.show_collected +
     local_vars.show_voluntarily_spent + local_vars.show_involuntarily_spent + local_vars.show_spent +
-    local_vars.show_opm + local_vars.show_num_decisions + local_vars.show_wagered +
+    local_vars.show_rollback + local_vars.show_opm + local_vars.show_num_decisions + local_vars.show_wagered +
     local_vars.show_table_boss + local_vars.show_num_possible_checks +
     local_vars.show_running_total + local_vars.show_num_positive_deltas +
     local_vars.show_roi > 1) {
     printf("can only specify one of -show_collected,\n"
       "  -show_voluntarily_spent, -show_involuntarily_spent, -show_spent,\n"
-      "  -show_opm, -show_num_decisions, -show_wagered, -show_table_boss,\n"
+      "  -show_rollback, -show_opm, -show_num_decisions, -show_wagered, -show_table_boss,\n"
       "  -show_num_possible_checks, -show_running_total, -show_num_positive_deltas,\n"
       "  and -show_roi\n");
     return 25;
@@ -3649,6 +3651,7 @@ void run_filter(struct vars *varspt)
         case QUANTUM_TYPE_VOLUNTARILY_SPENT:
         case QUANTUM_TYPE_INVOLUNTARILY_SPENT:
         case QUANTUM_TYPE_SPENT:
+        case QUANTUM_TYPE_ROLLBACK:
         case QUANTUM_TYPE_NUMDECISIONS:
         case QUANTUM_TYPE_WAGERED:
         case QUANTUM_TYPE_TABLE_BOSS:
@@ -3867,6 +3870,10 @@ static void do_balance_processing(struct vars *varspt)
       break;
     case QUANTUM_TYPE_SPENT:
       varspt->quantum = varspt->voluntarily_spent_this_hand + varspt->involuntarily_spent_this_hand;
+
+      break;
+    case QUANTUM_TYPE_ROLLBACK:
+      varspt->quantum = (varspt->involuntarily_spent_this_hand * -1) - varspt->delta;
 
       break;
     case QUANTUM_TYPE_OPM:
