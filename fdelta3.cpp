@@ -255,6 +255,9 @@ struct vars {
   bool bSawRiver;
   bool bOnlyFolded;
   bool bOnlyFoldedPreflop;
+  bool bOnlyFoldedOnTheFlop;
+  bool bOnlyFoldedOnTheTurn;
+  bool bOnlyFoldedOnTheRiver;
   bool bRiverMoney;
   bool bNoRiverMoney;
   bool bStealthTwoPair;
@@ -435,6 +438,9 @@ struct vars {
   HandType hand_typ_id_ge;
   bool bFolded;
   bool bFoldedPreflop;
+  bool bFoldedOnTheFlop;
+  bool bFoldedOnTheTurn;
+  bool bFoldedOnTheRiver;
   bool bSkipping;
   bool bPostedSmallBlind;
   bool bPostedBigBlind;
@@ -556,7 +562,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 165)) {
+  if ((argc < 3) || (argc > 168)) {
     printf(usage);
     return 1;
   }
@@ -606,6 +612,9 @@ int main(int argc,char **argv)
   local_vars.bSawRiver = false;
   local_vars.bOnlyFolded = false;
   local_vars.bOnlyFoldedPreflop = false;
+  local_vars.bOnlyFoldedOnTheFlop = false;
+  local_vars.bOnlyFoldedOnTheTurn = false;
+  local_vars.bOnlyFoldedOnTheRiver = false;
   local_vars.bRiverMoney = false;
   local_vars.bNoRiverMoney = false;
   local_vars.bStealthTwoPair = false;
@@ -902,10 +911,16 @@ int main(int argc,char **argv)
       local_vars.bSawFlop = true;
     else if (!strcmp(argv[curr_arg],"-saw_river"))
       local_vars.bSawRiver = true;
-    else if (!strcmp(argv[curr_arg],"-only_folded_preflop"))
-      local_vars.bOnlyFoldedPreflop = true;
     else if (!strcmp(argv[curr_arg],"-only_folded"))
       local_vars.bOnlyFolded = true;
+    else if (!strcmp(argv[curr_arg],"-only_folded_preflop"))
+      local_vars.bOnlyFoldedPreflop = true;
+    else if (!strcmp(argv[curr_arg],"-only_folded_on_the_flop"))
+      local_vars.bOnlyFoldedOnTheFlop = true;
+    else if (!strcmp(argv[curr_arg],"-only_folded_on_the_turn"))
+      local_vars.bOnlyFoldedOnTheTurn = true;
+    else if (!strcmp(argv[curr_arg],"-only_folded_on_the_river"))
+      local_vars.bOnlyFoldedOnTheRiver = true;
     else if (!strcmp(argv[curr_arg],"-river_money"))
       local_vars.bRiverMoney = true;
     else if (!strcmp(argv[curr_arg],"-no_river_money"))
@@ -1708,6 +1723,9 @@ int main(int argc,char **argv)
     local_vars.line_no = 0;
     local_vars.bFolded = false;
     local_vars.bFoldedPreflop = false;
+    local_vars.bFoldedOnTheFlop = false;
+    local_vars.bFoldedOnTheTurn = false;
+    local_vars.bFoldedOnTheRiver = false;
     local_vars.bSkipping = false;
     local_vars.num_hands = 0;
     local_vars.bHaveSpecifiedHand = false;
@@ -1949,6 +1967,9 @@ int main(int argc,char **argv)
                 local_vars.num_hands++;
                 local_vars.bFolded = false;
                 local_vars.bFoldedPreflop = false;
+                local_vars.bFoldedOnTheFlop = false;
+                local_vars.bFoldedOnTheTurn = false;
+                local_vars.bFoldedOnTheRiver = false;
                 local_vars.bSkipping = false;
                 local_vars.bHaveSpecifiedHand = false;
                 local_vars.bHaveSpecifiedShowdownHand = false;
@@ -3212,6 +3233,9 @@ void run_filter(struct vars *varspt)
   if (!varspt->bSkipFolded || !varspt->bFolded) {
   if (!varspt->bOnlyFolded || varspt->bFolded) {
   if (!varspt->bOnlyFoldedPreflop || varspt->bFoldedPreflop) {
+  if (!varspt->bOnlyFoldedOnTheFlop || varspt->bFoldedOnTheFlop) {
+  if (!varspt->bOnlyFoldedOnTheTurn || varspt->bFoldedOnTheTurn) {
+  if (!varspt->bOnlyFoldedOnTheRiver || varspt->bFoldedOnTheRiver) {
   if (!varspt->bSawFlop || varspt->bHaveFlop) {
   if (!varspt->bDidntSeeFlop || !varspt->bHaveFlop) {
   if (!varspt->bStealthTwoPair || varspt->bHaveStealthTwoPair) {
@@ -3724,6 +3748,9 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
+  }
+  }
   }
   }
   }
