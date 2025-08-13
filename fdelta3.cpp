@@ -2424,8 +2424,14 @@ int main(int argc,char **argv)
 
           local_vars.bFolded = true;
 
-          if (!local_vars.bHaveFlop)
+          if (!local_vars.bHaveFlop2)
             local_vars.bFoldedPreflop = true;
+          else if (!local_vars.bHaveTurn2)
+            local_vars.bFoldedOnTheFlop = true;
+          else if (!local_vars.bHaveRiver2)
+            local_vars.bFoldedOnTheTurn = true;
+          else
+            local_vars.bFoldedOnTheRiver = true;
 
           if (local_vars.show_num_decisions)
             local_vars.numdecs++;
