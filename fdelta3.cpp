@@ -38,7 +38,7 @@ static char usage[] =
 "  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
 "  (-call_in_on_the_river) (-fall_in) (-not_fall_in)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected) (-show_collected)\n"
-"  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent) (-show_rollback)\n"
+"  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent) (-show_uncalled) (-show_rollback)\n"
 "  (-show_opm) (-wash) (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected) (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
@@ -72,7 +72,7 @@ static char usage[] =
 "  (-show_opponent_hole_cards_abbrev)\n"
 "  (-broadway) (-magic_flush) (-any_all_in) (-no_all_in)\n"
 "  (-hut_outs_diff) (-ace_rag) (-suited_ace) (-ace_non_rag)\n"
-"  (-only_ante) (-first_file_only) (-show_hand_type_on_flop)\n"
+"  (-only_uncalled) (-first_file_only) (-show_hand_type_on_flop)\n"
 "  (-show_hand_type_on_turn) (-show_hand_type_on_river) player_name filename\n";
 static char couldnt_open[] = "couldn't open %s\n";
 
@@ -181,6 +181,7 @@ enum quantum_typ {
   QUANTUM_TYPE_VOLUNTARILY_SPENT,
   QUANTUM_TYPE_INVOLUNTARILY_SPENT,
   QUANTUM_TYPE_SPENT,
+  QUANTUM_TYPE_UNCALLED,
   QUANTUM_TYPE_ROLLBACK,
   QUANTUM_TYPE_OPM,
   QUANTUM_TYPE_NUMDECISIONS,
@@ -294,11 +295,12 @@ struct vars {
   bool bAceRag;
   bool bSuitedAce;
   bool bAceNonRag;
-  bool bOnlyAnte;
+  bool bOnlyUncalled;
   int show_collected;
   int show_voluntarily_spent;
   int show_involuntarily_spent;
   int show_spent;
+  int show_uncalled;
   int show_rollback;
   int show_opm;
   int show_num_decisions;
@@ -512,7 +514,6 @@ struct vars {
   bool bHaveAceRag;
   bool bHaveSuitedAce;
   bool bHaveAceNonRag;
-  bool bHaveAnte;
 };
 
 static int dbg_line_no;
@@ -562,7 +563,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 168)) {
+  if ((argc < 3) || (argc > 169)) {
     printf(usage);
     return 1;
   }
@@ -649,12 +650,13 @@ int main(int argc,char **argv)
   local_vars.bAceRag = false;
   local_vars.bSuitedAce = false;
   local_vars.bAceNonRag = false;
-  local_vars.bOnlyAnte = false;
+  local_vars.bOnlyUncalled = false;
   local_vars.quantum_type = QUANTUM_TYPE_DELTA;
   local_vars.show_collected = 0;
   local_vars.show_voluntarily_spent = 0;
   local_vars.show_involuntarily_spent = 0;
   local_vars.show_spent = 0;
+  local_vars.show_uncalled = 0;
   local_vars.show_rollback = 0;
   local_vars.show_opm = 0;
   local_vars.show_num_decisions = 0;
@@ -998,6 +1000,10 @@ int main(int argc,char **argv)
       local_vars.show_spent = 1;
       local_vars.quantum_type = QUANTUM_TYPE_SPENT;
     }
+    else if (!strcmp(argv[curr_arg],"-show_uncalled")) {
+      local_vars.show_uncalled = 1;
+      local_vars.quantum_type = QUANTUM_TYPE_UNCALLED;
+    }
     else if (!strcmp(argv[curr_arg],"-show_rollback")) {
       local_vars.show_rollback = 1;
       local_vars.quantum_type = QUANTUM_TYPE_ROLLBACK;
@@ -1257,8 +1263,8 @@ int main(int argc,char **argv)
       local_vars.bSuitedAce = true;
     else if (!strcmp(argv[curr_arg],"-ace_non_rag"))
       local_vars.bAceNonRag = true;
-    else if (!strcmp(argv[curr_arg],"-only_ante"))
-      local_vars.bOnlyAnte = true;
+    else if (!strcmp(argv[curr_arg],"-only_uncalled"))
+      local_vars.bOnlyUncalled = true;
     else if (!strcmp(argv[curr_arg],"-first_file_only"))
       bFirstFileOnly = true;
     else
@@ -1419,12 +1425,12 @@ int main(int argc,char **argv)
 
   if (local_vars.show_collected +
     local_vars.show_voluntarily_spent + local_vars.show_involuntarily_spent + local_vars.show_spent +
-    local_vars.show_rollback + local_vars.show_opm + local_vars.show_num_decisions + local_vars.show_wagered +
-    local_vars.show_table_boss + local_vars.show_num_possible_checks +
+    local_vars.show_uncalled + local_vars.show_rollback + local_vars.show_opm + local_vars.show_num_decisions +
+    local_vars.show_wagered + local_vars.show_table_boss + local_vars.show_num_possible_checks +
     local_vars.show_running_total + local_vars.show_num_positive_deltas +
     local_vars.show_roi > 1) {
     printf("can only specify one of -show_collected,\n"
-      "  -show_voluntarily_spent, -show_involuntarily_spent, -show_spent,\n"
+      "  -show_voluntarily_spent, -show_involuntarily_spent, -show_spent, -show_uncalled,\n"
       "  -show_rollback, -show_opm, -show_num_decisions, -show_wagered, -show_table_boss,\n"
       "  -show_num_possible_checks, -show_running_total, -show_num_positive_deltas,\n"
       "  and -show_roi\n");
@@ -1772,7 +1778,6 @@ int main(int argc,char **argv)
     local_vars.bHaveAceRag = false;
     local_vars.bHaveSuitedAce = false;
     local_vars.bHaveAceNonRag = false;
-    local_vars.bHaveAnte = false;
     bFirstHand = true;
 
     if (local_vars.bWonSidePot)
@@ -2011,7 +2016,6 @@ int main(int argc,char **argv)
                 local_vars.bHaveAceRag = false;
                 local_vars.bHaveSuitedAce = false;
                 local_vars.bHaveAceNonRag = false;
-                local_vars.bHaveAnte = false;
 
                 if (local_vars.bWonSidePot)
                   local_vars.bHaveWonSidePot = false;
@@ -2063,7 +2067,6 @@ int main(int argc,char **argv)
               &ix)) {
               ante = get_work_amount(line,line_len);
               local_vars.involuntarily_spent_this_hand = ante;
-              local_vars.bHaveAnte = true;
 
               if (Contains(true,
                 line,line_len,local_vars.line_no,__LINE__,local_vars.debug_level,
@@ -2395,7 +2398,6 @@ int main(int argc,char **argv)
         }
         else if (!strncmp(line,uncalled_bet,UNCALLED_BET_LEN)) {
           sscanf(&line[UNCALLED_BET_LEN],"%d",&local_vars.uncalled_bet_amount);
-          voluntarily_spent_this_street -= local_vars.uncalled_bet_amount;
 
           if (local_vars.debug_level == 1) {
             printf("file %d hand %d line %d street %d UNCALLED uncalled_bet_amount = %d, voluntarily_spent_this_street = %d, num_street_markers = %d, %d\n",
@@ -3325,7 +3327,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bAceRag || (varspt->bHaveAceRag)) {
   if (!varspt->bAceNonRag || (varspt->bHaveAceNonRag)) {
   if (!varspt->bSuitedAce || (varspt->bHaveSuitedAce)) {
-  if (!varspt->bOnlyAnte || (varspt->bHaveAnte)) {
+  if (!varspt->bOnlyUncalled || (varspt->uncalled_bet_amount)) {
   if (varspt->bHutOuts || varspt->bHutOutsDiff) {
     card_value_from_card_string(&varspt->hole_cards[0],&cards[0]);
     card_value_from_card_string(&varspt->hole_cards[3],&cards[1]);
@@ -3681,6 +3683,7 @@ void run_filter(struct vars *varspt)
         case QUANTUM_TYPE_VOLUNTARILY_SPENT:
         case QUANTUM_TYPE_INVOLUNTARILY_SPENT:
         case QUANTUM_TYPE_SPENT:
+        case QUANTUM_TYPE_UNCALLED:
         case QUANTUM_TYPE_ROLLBACK:
         case QUANTUM_TYPE_NUMDECISIONS:
         case QUANTUM_TYPE_WAGERED:
@@ -3854,7 +3857,7 @@ void run_filter(struct vars *varspt)
 static void do_balance_processing(struct vars *varspt)
 {
   varspt->ending_balance = varspt->starting_balance - varspt->voluntarily_spent_this_hand
-    - varspt->involuntarily_spent_this_hand + varspt->collected_from_pot;
+    - varspt->involuntarily_spent_this_hand + varspt->collected_from_pot + varspt->uncalled_bet_amount;
 
   if (varspt->starting_balance * 2 <= varspt->ending_balance)
     varspt->bHaveDoubleUp = true;
@@ -3903,6 +3906,10 @@ static void do_balance_processing(struct vars *varspt)
       break;
     case QUANTUM_TYPE_SPENT:
       varspt->quantum = varspt->voluntarily_spent_this_hand + varspt->involuntarily_spent_this_hand;
+
+      break;
+    case QUANTUM_TYPE_UNCALLED:
+      varspt->quantum = varspt->uncalled_bet_amount;
 
       break;
     case QUANTUM_TYPE_ROLLBACK:
