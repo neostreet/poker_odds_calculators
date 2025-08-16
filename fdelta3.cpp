@@ -3624,8 +3624,9 @@ void run_filter(struct vars *varspt)
                 }
                 else {
                   if (!varspt->bNoDelta) {
-                    printf("%10d (%10d %10d) %s",varspt->delta,varspt->ending_balance,varspt->starting_balance,
-                      (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards));
+                    printf("%10d %s (%10d %10d)",varspt->delta,
+                      (varspt->bAbbrev ? varspt->hole_cards_abbrev : varspt->hole_cards),
+                      varspt->ending_balance,varspt->starting_balance);
                   }
                   else {
                     if (!varspt->bTimestamp) {
