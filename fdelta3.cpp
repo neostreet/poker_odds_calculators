@@ -32,7 +32,7 @@ static char usage[] =
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
 "  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
 "  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-lost)\n"
-"  (-only_count) (-won) (-showdown) (-no_showdown)\n"
+"  (-only_count) (-won) (-showdown) (-no_showdown) (-table_showdown)\n"
 "  (-showdown_countcount) (-showdown_count_gtcount)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
 "  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
@@ -269,6 +269,7 @@ struct vars {
   int exact_count;
   bool bWon;
   bool bShowdown;
+  bool bTableShowdown;
   bool bNoShowdown;
   bool bShowdownCount;
   bool bShowdownCountGt;
@@ -421,6 +422,7 @@ struct vars {
   bool bHaveBottomTwo;
   bool bSpentRiverMoney;
   bool bHaveShowdown;
+  bool bHaveTableShowdown;
   bool bHaveShowdownCount;
   bool bHaveShowdownCountGt;
   bool bHaveAllIn;
@@ -563,7 +565,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 169)) {
+  if ((argc < 3) || (argc > 170)) {
     printf(usage);
     return 1;
   }
@@ -625,6 +627,7 @@ int main(int argc,char **argv)
   local_vars.bExactCount = false;
   local_vars.bWon = false;
   local_vars.bShowdown = false;
+  local_vars.bTableShowdown = false;
   local_vars.bNoShowdown = false;
   local_vars.bShowdownCount = false;
   local_vars.bShowdownCountGt = false;
@@ -944,6 +947,8 @@ int main(int argc,char **argv)
       local_vars.bWon = true;
     else if (!strcmp(argv[curr_arg],"-showdown"))
       local_vars.bShowdown = true;
+    else if (!strcmp(argv[curr_arg],"-table_showdown"))
+      local_vars.bTableShowdown = true;
     else if (!strcmp(argv[curr_arg],"-no_showdown"))
       local_vars.bNoShowdown = true;
     else if (!strncmp(argv[curr_arg],"-showdown_count_gt",23)) {
@@ -1750,6 +1755,7 @@ int main(int argc,char **argv)
     local_vars.bHaveStealthTwoPair = false;
     local_vars.bHaveBottomTwo = false;
     local_vars.bHaveShowdown = false;
+    local_vars.bHaveTableShowdown = false;
     showdown_count = 0;
     local_vars.bHaveShowdownCount = false;
     local_vars.bHaveShowdownCountGt = false;
@@ -3270,6 +3276,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bWon || (varspt->delta > 0)) {
   if (!varspt->bWash || (varspt->delta == 0)) {
   if (!varspt->bShowdown || varspt->bHaveShowdown) {
+  if (!varspt->bTableShowdown || varspt->bHaveTableShowdown) {
   if (!varspt->bShowdownCount || varspt->bHaveShowdownCount) {
   if (!varspt->bShowdownCountGt || varspt->bHaveShowdownCountGt) {
   if (!varspt->bNoShowdown || !varspt->bHaveShowdown) {
@@ -3758,6 +3765,7 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
   }
   }
   }
