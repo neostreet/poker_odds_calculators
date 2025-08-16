@@ -951,13 +951,13 @@ int main(int argc,char **argv)
       local_vars.bTableShowdown = true;
     else if (!strcmp(argv[curr_arg],"-no_showdown"))
       local_vars.bNoShowdown = true;
-    else if (!strncmp(argv[curr_arg],"-showdown_count_gt",23)) {
+    else if (!strncmp(argv[curr_arg],"-showdown_count_gt",18)) {
       local_vars.bShowdownCountGt = true;
-      sscanf(&argv[curr_arg][23],"%d",&local_vars.showdown_count);
+      sscanf(&argv[curr_arg][18],"%d",&local_vars.showdown_count);
     }
-    else if (!strncmp(argv[curr_arg],"-showdown_count",20)) {
+    else if (!strncmp(argv[curr_arg],"-showdown_count",15)) {
       local_vars.bShowdownCount = true;
-      sscanf(&argv[curr_arg][20],"%d",&local_vars.showdown_count);
+      sscanf(&argv[curr_arg][15],"%d",&local_vars.showdown_count);
     }
     else if (!strcmp(argv[curr_arg],"-very_best_hand"))
       local_vars.bVeryBestHand = true;
