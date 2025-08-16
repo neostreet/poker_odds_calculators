@@ -1998,6 +1998,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveStealthTwoPair = false;
                 local_vars.bHaveBottomTwo = false;
                 local_vars.bHaveShowdown = false;
+                local_vars.bHaveTableShowdown = false;
                 showdown_count = 0;
                 local_vars.bHaveShowdownCount = false;
                 local_vars.bHaveShowdownCountGt = false;
@@ -2712,6 +2713,8 @@ int main(int argc,char **argv)
         else if (!strncmp(line,show_down,SHOW_DOWN_LEN)) {
           if (!local_vars.bFolded)
             local_vars.bHaveShowdown = true;
+
+          local_vars.bHaveTableShowdown = true;
         }
         else if ((local_vars.bShowdownCount || local_vars.bShowdownCountGt) &&
           Contains(true,
