@@ -30,7 +30,7 @@ static char table_name[MAX_TABLE_NAME_LEN+1];
 static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug_levelval) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
-"  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-only_folded)\n"
+"  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-didnt_see_river) (-only_folded)\n"
 "  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-lost)\n"
 "  (-only_count) (-won) (-showdown) (-no_showdown) (-table_showdown)\n"
 "  (-showdown_countcount) (-showdown_count_gtcount)\n"
@@ -254,6 +254,7 @@ struct vars {
   bool bShowHand;
   bool bSawFlop;
   bool bSawRiver;
+  bool bDidntSeeRiver;
   bool bOnlyFolded;
   bool bOnlyFoldedPreflop;
   bool bOnlyFoldedOnTheFlop;
@@ -565,7 +566,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 170)) {
+  if ((argc < 3) || (argc > 171)) {
     printf(usage);
     return 1;
   }
@@ -613,6 +614,7 @@ int main(int argc,char **argv)
   local_vars.bShowHand = false;
   local_vars.bSawFlop = false;
   local_vars.bSawRiver = false;
+  local_vars.bDidntSeeRiver = false;
   local_vars.bOnlyFolded = false;
   local_vars.bOnlyFoldedPreflop = false;
   local_vars.bOnlyFoldedOnTheFlop = false;
@@ -916,6 +918,8 @@ int main(int argc,char **argv)
       local_vars.bSawFlop = true;
     else if (!strcmp(argv[curr_arg],"-saw_river"))
       local_vars.bSawRiver = true;
+    else if (!strcmp(argv[curr_arg],"-didnt_see_river"))
+      local_vars.bDidntSeeRiver = true;
     else if (!strcmp(argv[curr_arg],"-only_folded"))
       local_vars.bOnlyFolded = true;
     else if (!strcmp(argv[curr_arg],"-only_folded_preflop"))
@@ -3258,6 +3262,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bStealthTwoPair || varspt->bHaveStealthTwoPair) {
   if (!varspt->bBottomTwo || varspt->bHaveBottomTwo) {
   if (!varspt->bSawRiver || varspt->bHaveRiver) {
+  if (!varspt->bDidntSeeRiver || !varspt->bHaveRiver) {
   if (!varspt->bAceOnTheRiver || varspt->bHaveAceOnTheRiver) {
   if (!varspt->bRiverMoney || varspt->bSpentRiverMoney) {
   if (!varspt->bNoRiverMoney || !varspt->bSpentRiverMoney) {
@@ -3768,6 +3773,7 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
   }
   }
   }
