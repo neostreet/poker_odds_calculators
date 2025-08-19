@@ -35,7 +35,7 @@ static char usage[] =
 "  (-only_count) (-won) (-showdown) (-no_showdown) (-table_showdown)\n"
 "  (-showdown_countcount) (-showdown_count_gtcount)\n"
 "  (-very_best_hand) (-table_countn) (-all_in) (-not_all_in)\n"
-"  (-all_in_preflop) (-all_in_postflop) (-call_in)\n"
+"  (-all_in_preflop) (-all_in_postflop) (-call_in) (-not_call_in)\n"
 "  (-call_in_on_the_river) (-fall_in) (-not_fall_in)\n"
 "  (-hit_felt) (-didnt_hit_felt) (-no_uncalled) (-no_collected) (-show_collected)\n"
 "  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent) (-show_uncalled) (-show_rollback)\n"
@@ -282,6 +282,7 @@ struct vars {
   bool bAllInPreflop;
   bool bAllInPostflop;
   bool bCallIn;
+  bool bNotCallIn;
   bool bCallInOnTheRiver;
   bool bFallIn;
   bool bNotFallIn;
@@ -566,7 +567,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 171)) {
+  if ((argc < 3) || (argc > 172)) {
     printf(usage);
     return 1;
   }
@@ -640,6 +641,7 @@ int main(int argc,char **argv)
   local_vars.bAllInPreflop = false;
   local_vars.bAllInPostflop = false;
   local_vars.bCallIn = false;
+  local_vars.bNotCallIn = false;
   local_vars.bCallInOnTheRiver = false;
   local_vars.bFallIn = false;
   local_vars.bNotFallIn = false;
@@ -979,6 +981,8 @@ int main(int argc,char **argv)
       local_vars.bAllInPostflop = true;
     else if (!strcmp(argv[curr_arg],"-call_in"))
       local_vars.bCallIn = true;
+    else if (!strcmp(argv[curr_arg],"-not_call_in"))
+      local_vars.bNotCallIn = true;
     else if (!strcmp(argv[curr_arg],"-call_in_on_the_river"))
       local_vars.bCallInOnTheRiver = true;
     else if (!strcmp(argv[curr_arg],"-fall_in"))
@@ -3294,6 +3298,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bAllInPreflop || varspt->bHaveAllInPreflop) {
   if (!varspt->bAllInPostflop || varspt->bHaveAllInPostflop) {
   if (!varspt->bCallIn || varspt->bHaveCallIn) {
+  if (!varspt->bNotCallIn || !varspt->bHaveCallIn) {
   if (!varspt->bCallInOnTheRiver || varspt->bHaveCallInOnTheRiver) {
   if (!varspt->bFallIn || varspt->bHaveFallIn) {
   if (!varspt->bNotFallIn || !varspt->bHaveFallIn) {
@@ -3773,6 +3778,7 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
   }
   }
   }
