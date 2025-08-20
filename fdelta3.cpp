@@ -30,7 +30,8 @@ static char table_name[MAX_TABLE_NAME_LEN+1];
 static char usage[] =
 "usage: fdelta3 (-terse) (-verbose) (-debug_levelval) (-hand_typehand_type) (-handhand)\n"
 "  (-skip_folded) (-abbrev) (-skip_zero) (-only_zero) (-show_board)\n"
-"  (-show_hand_type) (-show_hand) (-saw_flop) (-saw_river) (-didnt_see_river) (-only_folded)\n"
+"  (-show_hand_type) (-show_hand) (-only_folded)\n"
+"  (-saw_flop) (-didnt_see_flop) (-saw_turn) (-didnt_see_turn) (-saw_river) (-didnt_see_river)\n"
 "  (-river_money) (-no_river_money) (-stealth_two_pair) (-normalize) (-lost)\n"
 "  (-only_count) (-won) (-showdown) (-no_showdown) (-table_showdown)\n"
 "  (-showdown_countcount) (-showdown_count_gtcount)\n"
@@ -42,8 +43,7 @@ static char usage[] =
 "  (-show_opm) (-wash) (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected) (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
 "  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
-"  (-hand_typ_idid) (-timestamp) (-index)\n"
-"  (-show_hand_typ_id) (-didnt_see_flop)\n"
+"  (-hand_typ_idid) (-timestamp) (-index) (-show_hand_typ_id)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_gevalue) (-sum_by_table_count)\n"
 "  (-show_table_name) (-show_table_count) (-show_seat_numbers) (-show_hand_count) (-bottom_two)\n"
@@ -253,6 +253,9 @@ struct vars {
   bool bShowHandTypId;
   bool bShowHand;
   bool bSawFlop;
+  bool bDidntSeeFlop;
+  bool bSawTurn;
+  bool bDidntSeeTurn;
   bool bSawRiver;
   bool bDidntSeeRiver;
   bool bOnlyFolded;
@@ -325,7 +328,6 @@ struct vars {
   bool bOnlyNonsuited;
   bool bFlopped;
   bool bPocketPair;
-  bool bDidntSeeFlop;
   bool bOnlyWinningSession;
   bool bOnlyLosingSession;
   bool bNeverHitFeltInSession;
@@ -416,6 +418,7 @@ struct vars {
   bool bHaveOpponentHoleCards;
   bool bHaveFlop;
   bool bHaveFlop2;
+  bool bHaveTurn;
   bool bHaveTurn2;
   bool bHaveRiver;
   bool bHaveRiver2;
@@ -567,7 +570,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 172)) {
+  if ((argc < 3) || (argc > 174)) {
     printf(usage);
     return 1;
   }
@@ -614,6 +617,9 @@ int main(int argc,char **argv)
   local_vars.bShowHandTypId = false;
   local_vars.bShowHand = false;
   local_vars.bSawFlop = false;
+  local_vars.bDidntSeeFlop = false;
+  local_vars.bSawTurn = false;
+  local_vars.bDidntSeeTurn = false;
   local_vars.bSawRiver = false;
   local_vars.bDidntSeeRiver = false;
   local_vars.bOnlyFolded = false;
@@ -691,7 +697,6 @@ int main(int argc,char **argv)
   local_vars.bOnlyNonsuited = false;
   local_vars.bFlopped = false;
   local_vars.bPocketPair = false;
-  local_vars.bDidntSeeFlop = false;
   local_vars.bOnlyWinningSession = false;
   local_vars.bOnlyLosingSession = false;
   local_vars.bNeverHitFeltInSession = false;
@@ -918,6 +923,12 @@ int main(int argc,char **argv)
       local_vars.bShowHand = true;
     else if (!strcmp(argv[curr_arg],"-saw_flop"))
       local_vars.bSawFlop = true;
+    else if (!strcmp(argv[curr_arg],"-didnt_see_flop"))
+      local_vars.bDidntSeeFlop = true;
+    else if (!strcmp(argv[curr_arg],"-saw_turn"))
+      local_vars.bSawTurn = true;
+    else if (!strcmp(argv[curr_arg],"-didnt_see_turn"))
+      local_vars.bDidntSeeTurn = true;
     else if (!strcmp(argv[curr_arg],"-saw_river"))
       local_vars.bSawRiver = true;
     else if (!strcmp(argv[curr_arg],"-didnt_see_river"))
@@ -1081,8 +1092,6 @@ int main(int argc,char **argv)
       local_vars.bPocketPair = true;
     else if (!strncmp(argv[curr_arg],"-only_local_vars.hand_number",17))
       sscanf(&argv[curr_arg][17],"%d",&local_vars.hand_number);
-    else if (!strcmp(argv[curr_arg],"-didnt_see_flop"))
-      local_vars.bDidntSeeFlop = true;
     else if (!strcmp(argv[curr_arg],"-only_winning_session"))
       local_vars.bOnlyWinningSession = true;
     else if (!strcmp(argv[curr_arg],"-only_losing_session"))
@@ -1755,6 +1764,7 @@ int main(int argc,char **argv)
     local_vars.bHaveOpponentHoleCards = false;
     local_vars.bHaveFlop = false;
     local_vars.bHaveFlop2 = false;
+    local_vars.bHaveTurn = false;
     local_vars.bHaveTurn2 = false;
     local_vars.bHaveRiver = false;
     local_vars.bHaveRiver2 = false;
@@ -1998,6 +2008,7 @@ int main(int argc,char **argv)
                 local_vars.bHaveOpponentHoleCards = false;
                 local_vars.bHaveFlop = false;
                 local_vars.bHaveFlop2 = false;
+                local_vars.bHaveTurn = false;
                 local_vars.bHaveTurn2 = false;
                 local_vars.bHaveRiver = false;
                 local_vars.bHaveRiver2 = false;
@@ -2669,6 +2680,11 @@ int main(int argc,char **argv)
 
           if (local_vars.bChasedFlush)
             local_vars.bHaveChasedFlush = four_to_a_flush(cards);
+
+          local_vars.bHaveTurn2 = true;
+
+          if (!local_vars.bFolded)
+            local_vars.bHaveTurn = true;
         }
         else if (!strncmp(line,river,RIVER_LEN)) {
           if (!local_vars.bStud && !local_vars.bRazz) {
@@ -3263,10 +3279,12 @@ void run_filter(struct vars *varspt)
   if (!varspt->bOnlyFoldedOnTheRiver || varspt->bFoldedOnTheRiver) {
   if (!varspt->bSawFlop || varspt->bHaveFlop) {
   if (!varspt->bDidntSeeFlop || !varspt->bHaveFlop) {
-  if (!varspt->bStealthTwoPair || varspt->bHaveStealthTwoPair) {
-  if (!varspt->bBottomTwo || varspt->bHaveBottomTwo) {
+  if (!varspt->bSawTurn || varspt->bHaveTurn) {
+  if (!varspt->bDidntSeeTurn || !varspt->bHaveTurn) {
   if (!varspt->bSawRiver || varspt->bHaveRiver) {
   if (!varspt->bDidntSeeRiver || !varspt->bHaveRiver) {
+  if (!varspt->bStealthTwoPair || varspt->bHaveStealthTwoPair) {
+  if (!varspt->bBottomTwo || varspt->bHaveBottomTwo) {
   if (!varspt->bAceOnTheRiver || varspt->bHaveAceOnTheRiver) {
   if (!varspt->bRiverMoney || varspt->bSpentRiverMoney) {
   if (!varspt->bNoRiverMoney || !varspt->bSpentRiverMoney) {
@@ -3778,6 +3796,8 @@ void run_filter(struct vars *varspt)
         putchar(0x0a);
       }
     }
+  }
+  }
   }
   }
   }
