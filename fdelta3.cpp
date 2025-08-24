@@ -174,6 +174,7 @@ static int hand_ix_match(int hand_ix,struct hand_ixs *specified_hand_ixs);
 static int get_button_seat(char *line);
 static void set_position_booleans(struct vars *varspt);
 static void populate_timestamp(char *line,char *timestamp);
+static bool have_pocket_pair(struct vars *varspt);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -3326,7 +3327,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bNoCollected || (varspt->collected_from_pot == 0)) {
   if (!varspt->bOnlySuited || (varspt->hole_cards[1] == varspt->hole_cards[4])) {
   if (!varspt->bOnlyNonsuited || (varspt->hole_cards[1] != varspt->hole_cards[4])) {
-  if (!varspt->bPocketPair || (!varspt->bAbbrev && (varspt->hole_cards[0] == varspt->hole_cards[3])) || (varspt->bAbbrev && (varspt->hole_cards_abbrev[0] == varspt->hole_cards_abbrev[1]))) {
+  if (!varspt->bPocketPair || have_pocket_pair(varspt)) {
   if ((varspt->hand_number == -1) || (varspt->num_hands == varspt->hand_number)) {
   if (!varspt->bDeltaGe || (varspt->delta >= varspt->delta_ge_val)) {
   if (!varspt->bCollectedGe || (varspt->collected_from_pot >= varspt->collected_ge_val)) {
@@ -4145,4 +4146,18 @@ static void populate_timestamp(char *line,char *timestamp)
   }
 
   timestamp[n] = 0;
+}
+
+static bool have_pocket_pair(struct vars *varspt)
+{
+  if (!varspt->bAbbrev) {
+    if (varspt->hole_cards[0] == varspt->hole_cards[3])
+      return true;
+  }
+  else {
+    if (varspt->hole_cards_abbrev[0] == varspt->hole_cards_abbrev[1])
+      return true;
+  }
+
+  return false;
 }
