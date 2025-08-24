@@ -42,7 +42,7 @@ static char usage[] =
 "  (-show_voluntarilty_spent) (-show_involuntarily_spent) (-show_spent) (-show_uncalled) (-show_rollback)\n"
 "  (-show_opm) (-wash) (-sum_quantum) (-sum_abs_delta) (-max_delta) (-min_delta) (-max_abs_delta)\n"
 "  (-max_collected) (-max_delta_hand_type) (-no_delta) (-hole_cards_used)\n"
-"  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-only_hand_numbern)\n"
+"  (-only_suited) (-only_nonsuited) (-flopped) (-pocket_pair) (-suited_connectors) (-only_hand_numbern)\n"
 "  (-hand_typ_idid) (-timestamp) (-index) (-show_hand_typ_id)\n"
 "  (-only_winning_session) (-only_losing_session) (-never_hit_felt_in_session)\n"
 "  (-collected_gevalue) (-sum_by_table_count)\n"
@@ -175,6 +175,7 @@ static int get_button_seat(char *line);
 static void set_position_booleans(struct vars *varspt);
 static void populate_timestamp(char *line,char *timestamp);
 static bool have_pocket_pair(struct vars *varspt);
+static bool have_suited_connectors(struct vars *varspt);
 
 enum quantum_typ {
   QUANTUM_TYPE_DELTA,
@@ -329,6 +330,7 @@ struct vars {
   bool bOnlyNonsuited;
   bool bFlopped;
   bool bPocketPair;
+  bool bSuitedConnectors;
   bool bOnlyWinningSession;
   bool bOnlyLosingSession;
   bool bNeverHitFeltInSession;
@@ -571,7 +573,7 @@ int main(int argc,char **argv)
   bool bFirstFileOnly;
   int premium_ix;
 
-  if ((argc < 3) || (argc > 174)) {
+  if ((argc < 3) || (argc > 175)) {
     printf(usage);
     return 1;
   }
@@ -698,6 +700,7 @@ int main(int argc,char **argv)
   local_vars.bOnlyNonsuited = false;
   local_vars.bFlopped = false;
   local_vars.bPocketPair = false;
+  local_vars.bSuitedConnectors = false;
   local_vars.bOnlyWinningSession = false;
   local_vars.bOnlyLosingSession = false;
   local_vars.bNeverHitFeltInSession = false;
@@ -1091,6 +1094,8 @@ int main(int argc,char **argv)
       local_vars.bFlopped = true;
     else if (!strcmp(argv[curr_arg],"-pocket_pair"))
       local_vars.bPocketPair = true;
+    else if (!strcmp(argv[curr_arg],"-suited_connectors"))
+      local_vars.bSuitedConnectors = true;
     else if (!strncmp(argv[curr_arg],"-only_local_vars.hand_number",17))
       sscanf(&argv[curr_arg][17],"%d",&local_vars.hand_number);
     else if (!strcmp(argv[curr_arg],"-only_winning_session"))
@@ -3328,6 +3333,7 @@ void run_filter(struct vars *varspt)
   if (!varspt->bOnlySuited || (varspt->hole_cards[1] == varspt->hole_cards[4])) {
   if (!varspt->bOnlyNonsuited || (varspt->hole_cards[1] != varspt->hole_cards[4])) {
   if (!varspt->bPocketPair || have_pocket_pair(varspt)) {
+  if (!varspt->bSuitedConnectors || have_suited_connectors(varspt)) {
   if ((varspt->hand_number == -1) || (varspt->num_hands == varspt->hand_number)) {
   if (!varspt->bDeltaGe || (varspt->delta >= varspt->delta_ge_val)) {
   if (!varspt->bCollectedGe || (varspt->collected_from_pot >= varspt->collected_ge_val)) {
@@ -3894,6 +3900,7 @@ void run_filter(struct vars *varspt)
   }
   }
   }
+  }
 
   if (print_location)
     run_filter_calls2++;
@@ -4160,4 +4167,68 @@ static bool have_pocket_pair(struct vars *varspt)
   }
 
   return false;
+}
+
+static bool have_suited_connectors(struct vars *varspt)
+{
+  int retval;
+  int rank[2];
+  int diff;
+
+  if (!varspt->bAbbrev) {
+    if (varspt->hole_cards[1] != varspt->hole_cards[4])
+      return false;
+
+    retval = get_rank_index(varspt->hole_cards[0],&rank[0]);
+
+    if (retval)
+      return false;
+
+    retval = get_rank_index(varspt->hole_cards[3],&rank[1]);
+
+    if (retval)
+      return false;
+
+    if (rank[0] == rank[1])
+      return false;
+
+    if (rank[0] > rank[1])
+      diff = rank[0] - rank[1];
+    else
+      diff = rank[1] - rank[0];
+
+    if ((diff == 1) || (diff == 12))
+      return true;
+    else
+      return false;
+  }
+  else {
+    if (varspt->hole_cards_abbrev[2] != 's')
+      return false;
+
+    retval = get_rank_index(varspt->hole_cards_abbrev[0],&rank[0]);
+
+    if (retval)
+      return false;
+
+    retval = get_rank_index(varspt->hole_cards_abbrev[1],&rank[1]);
+
+    if (retval)
+      return false;
+
+    if (rank[0] == rank[1])
+      return false;
+
+    if (rank[0] > rank[1])
+      diff = rank[0] - rank[1];
+    else
+      diff = rank[1] - rank[0];
+
+    if ((diff == 1) || (diff == 12))
+      return true;
+    else
+      return false;
+  }
+
+  return false; // should never get here
 }
