@@ -91,10 +91,7 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
-    if (!bTerse)
-      printf("%s\n",line);
-    else
-      printf("%s ",line);
+    printf("%s\n",line);
 
     line_no++;
 
