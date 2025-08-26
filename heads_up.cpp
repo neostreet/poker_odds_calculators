@@ -91,6 +91,9 @@ int main(int argc,char **argv)
     if (feof(fptr))
       break;
 
+    if (line_no)
+      putchar(0x0a);
+
     printf("%s\n",line);
 
     line_no++;
