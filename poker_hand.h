@@ -44,7 +44,6 @@ enum FlopType {
 };
 
 #define NUM_CARDS_IN_DECK (NUM_SUITS * NUM_CARDS_IN_SUIT)
-#define NUM_CARDS_IN_SHORT_DECK 36
 
 #define suit_of(card) (card / NUM_CARDS_IN_SUIT)
 #define rank_of(card) (card % NUM_CARDS_IN_SUIT)
@@ -461,8 +460,6 @@ class PokerHand {
 
   void SetDebugLevel(int debug_level);
 
-  int GetNumCardsInDeck();
-
   private:
 
   hand _card;
@@ -481,7 +478,6 @@ class PokerHand {
   int _quick_ix;
 
   int _debug_level;
-  int _num_cards_in_deck;
 };
 
 ostream& operator<<(ostream& out,const PokerHand& hand);
@@ -655,10 +651,6 @@ class HeadsUp {
 
   HeadsUp(int card1,int card2,int card3,int card4);
   void NewCards(int card1,int card2,int card3,int card4);
-  void BurntCards(
-    int card1,int card2,int card3,int card4, int card5,
-    int card6,int card7,int card8,int card9, int card10,
-    int card11,int card12,int card13,int card14);
   struct outcomes * GetOutcomes();
 
   void Evaluate(bool bVerbose);
@@ -666,8 +658,6 @@ class HeadsUp {
   private:
 
   int _cards[NUM_HEADS_UP_CARDS];
-  int _num_burnt_cards;
-  int _burnt_cards[MAX_HEADS_UP_BURNT_CARDS];
   bool _have_cards;
   struct outcomes _outcomes[2];
   bool _evaluated;
