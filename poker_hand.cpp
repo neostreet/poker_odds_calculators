@@ -27,7 +27,6 @@ PokerHand::PokerHand()
   _verbose = false;
   _plain = false;
   _debug_level = 0;
-  _num_cards_in_deck = NUM_CARDS_IN_DECK;
 }
 
 // copy constructor
@@ -54,7 +53,6 @@ PokerHand::PokerHand(const PokerHand& hand)
   _quick_ix = hand._quick_ix;
 
   _debug_level = hand._debug_level;
-  _num_cards_in_deck = hand._num_cards_in_deck;
 }
 
 // assignment operator
@@ -81,7 +79,6 @@ PokerHand& PokerHand::operator=(const PokerHand& hand)
   _quick_ix = hand._quick_ix;
 
   _debug_level = hand._debug_level;
-  _num_cards_in_deck = hand._num_cards_in_deck;
 
   return *this;
 }
@@ -112,7 +109,6 @@ PokerHand::PokerHand(int card1,int card2,int card3,int card4, int card5, int num
   _hand_evaluated = false;
   _verbose = false;
   _plain = false;
-  _num_cards_in_deck = num_cards_in_deck;
 }
 
 PokerHand::PokerHand(int num_cards_in_deck)
@@ -122,7 +118,6 @@ PokerHand::PokerHand(int num_cards_in_deck)
   _hand_evaluated = false;
   _verbose = false;
   _plain = false;
-  _num_cards_in_deck = num_cards_in_deck;
 }
 
 void PokerHand::NewCards(int card1,int card2,int card3,int card4, int card5)
@@ -444,24 +439,13 @@ bool PokerHand::Straight()
   int n;
 
   // first, handle the special case of a wheel ({A, 2, 3, 4, 5} in a regular deck
-  // and {A, 6, 7, 8, 9} in a short deck)
 
-  if (_num_cards_in_deck == NUM_CARDS_IN_DECK) {
-    if ((_rank.cards[_order.cards[0]] == ACE) &&
-        (_rank.cards[_order.cards[1]] == FIVE) &&
-        (_rank.cards[_order.cards[2]] == FOUR) &&
-        (_rank.cards[_order.cards[3]] == THREE) &&
-        (_rank.cards[_order.cards[4]] == TWO))
-      return 1;
-  }
-  else if (_num_cards_in_deck == NUM_CARDS_IN_SHORT_DECK) {
-    if ((_rank.cards[_order.cards[0]] == ACE) &&
-        (_rank.cards[_order.cards[1]] == NINE) &&
-        (_rank.cards[_order.cards[2]] == EIGHT) &&
-        (_rank.cards[_order.cards[3]] == SEVEN) &&
-        (_rank.cards[_order.cards[4]] == SIX))
-      return 1;
-  }
+  if ((_rank.cards[_order.cards[0]] == ACE) &&
+      (_rank.cards[_order.cards[1]] == FIVE) &&
+      (_rank.cards[_order.cards[2]] == FOUR) &&
+      (_rank.cards[_order.cards[3]] == THREE) &&
+      (_rank.cards[_order.cards[4]] == TWO))
+    return 1;
 
   for (n = 1; n < NUM_CARDS_IN_HAND; n++) {
     if (_rank.cards[_order.cards[n-1]] != _rank.cards[_order.cards[n]] + 1)
@@ -1072,11 +1056,6 @@ int *PokerHand::GetCards()
 void PokerHand::SetDebugLevel(int debug_level)
 {
   _debug_level = debug_level;
-}
-
-int PokerHand::GetNumCardsInDeck()
-{
-  return _num_cards_in_deck;
 }
 
 // default constructor
@@ -1900,7 +1879,6 @@ HeadsUp::HeadsUp()
 {
   _have_cards = false;
   _evaluated = false;
-  _num_burnt_cards = 0;
 }
 
 // copy constructor
@@ -1913,13 +1891,8 @@ HeadsUp::HeadsUp(const HeadsUp& hu)
     _cards[n] = hu._cards[n];
   }
 
-  for (n = 0; n < hu._num_burnt_cards; n++) {
-    _burnt_cards[n] = hu._burnt_cards[n];
-  }
-
   _have_cards = hu._have_cards;
   _evaluated = hu._evaluated;
-  _num_burnt_cards = hu._num_burnt_cards;
 }
 
 // assignment operator
@@ -1932,13 +1905,8 @@ HeadsUp& HeadsUp::operator=(const HeadsUp& hu)
     _cards[n] = hu._cards[n];
   }
 
-  for (n = 0; n < hu._num_burnt_cards; n++) {
-    _burnt_cards[n] = hu._burnt_cards[n];
-  }
-
   _have_cards = hu._have_cards;
   _evaluated = hu._evaluated;
-  _num_burnt_cards = hu._num_burnt_cards;
 
   return *this;
 }
@@ -1971,111 +1939,6 @@ void HeadsUp::NewCards(int card1,int card2,int card3,int card4)
   _evaluated = false;
 }
 
-void HeadsUp::BurntCards(
-  int card1,int card2,int card3,int card4, int card5,
-  int card6,int card7,int card8,int card9, int card10,
-  int card11,int card12,int card13,int card14)
-{
-  if (card1 == -1) {
-    _num_burnt_cards = 0;
-    return;
-  }
-
-  _burnt_cards[0] = card1 % NUM_CARDS_IN_DECK;
-
-  if (card2 == -1) {
-    _num_burnt_cards = 1;
-    return;
-  }
-
-  _burnt_cards[1] = card2 % NUM_CARDS_IN_DECK;
-
-  if (card3 == -1) {
-    _num_burnt_cards = 2;
-    return;
-  }
-
-  _burnt_cards[2] = card3 % NUM_CARDS_IN_DECK;
-
-  if (card4 == -1) {
-    _num_burnt_cards = 3;
-    return;
-  }
-
-  _burnt_cards[3] = card4 % NUM_CARDS_IN_DECK;
-
-  if (card5 == -1) {
-    _num_burnt_cards = 4;
-    return;
-  }
-
-  _burnt_cards[4] = card5 % NUM_CARDS_IN_DECK;
-
-  if (card6 == -1) {
-    _num_burnt_cards = 5;
-    return;
-  }
-
-  _burnt_cards[5] = card6 % NUM_CARDS_IN_DECK;
-
-  if (card7 == -1) {
-    _num_burnt_cards = 6;
-    return;
-  }
-
-  _burnt_cards[6] = card7 % NUM_CARDS_IN_DECK;
-
-  if (card8 == -1) {
-    _num_burnt_cards = 7;
-    return;
-  }
-
-  _burnt_cards[7] = card8 % NUM_CARDS_IN_DECK;
-
-  if (card9 == -1) {
-    _num_burnt_cards = 8;
-    return;
-  }
-
-  _burnt_cards[8] = card9 % NUM_CARDS_IN_DECK;
-
-  if (card10 == -1) {
-    _num_burnt_cards = 9;
-    return;
-  }
-
-  _burnt_cards[9] = card10 % NUM_CARDS_IN_DECK;
-
-  if (card11 == -1) {
-    _num_burnt_cards = 10;
-    return;
-  }
-
-  _burnt_cards[10] = card11 % NUM_CARDS_IN_DECK;
-
-  if (card12 == -1) {
-    _num_burnt_cards = 11;
-    return;
-  }
-
-  _burnt_cards[11] = card12 % NUM_CARDS_IN_DECK;
-
-  if (card13 == -1) {
-    _num_burnt_cards = 12;
-    return;
-  }
-
-  _burnt_cards[12] = card13 % NUM_CARDS_IN_DECK;
-
-  if (card14 == -1) {
-    _num_burnt_cards = 13;
-    return;
-  }
-
-  _burnt_cards[13] = card14 % NUM_CARDS_IN_DECK;
-  _num_burnt_cards = 14;
-}
-
 struct outcomes * HeadsUp::GetOutcomes()
 {
   return _outcomes;
@@ -2095,7 +1958,7 @@ void HeadsUp::Evaluate(bool bVerbose)
   PokerHand hand[2];
   int ret_compare;
 
-  num_remaining_cards = NUM_REMAINING_HEADS_UP_CARDS - _num_burnt_cards;
+  num_remaining_cards = NUM_REMAINING_HEADS_UP_CARDS;
 
   m = 0;
 
@@ -2105,15 +1968,8 @@ void HeadsUp::Evaluate(bool bVerbose)
         break;
     }
 
-    if (o == NUM_HEADS_UP_CARDS) {
-      for (o = 0; o < _num_burnt_cards; o++) {
-        if (n == _burnt_cards[o])
-          break;
-      }
-
-      if (o == _num_burnt_cards)
-        remaining_cards[m++] = n;
-    }
+    if (o == NUM_HEADS_UP_CARDS)
+      remaining_cards[m++] = n;
   }
 
   for (n = 0; n < 2; n++) {
