@@ -52,12 +52,13 @@ enum FlopType {
 #define NUM_NONSUITED_NONPAIRS NUM_SUITED_NONPAIRS
 
 #define NUM_HEADS_UP_CARDS 4
-#define MAX_HEADS_UP_BURNT_CARDS 14
 #define NUM_REMAINING_HEADS_UP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_CARDS)
 #define NUM_HEADS_UP_FLOP_CARDS 7
 #define NUM_REMAINING_HEADS_UP_FLOP_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_FLOP_CARDS)
 #define NUM_HEADS_UP_TURN_CARDS 8
 #define NUM_REMAINING_HEADS_UP_TURN_CARDS (NUM_CARDS_IN_DECK - NUM_HEADS_UP_TURN_CARDS)
+#define NUM_THREE_HANDED_CARDS 6
+#define NUM_REMAINING_THREE_HANDED_CARDS (NUM_CARDS_IN_DECK - NUM_THREE_HANDED_CARDS)
 
 #define PAIR_PERIODICITY               221.0
 #define ANY_PAIR_PERIODICITY            17.0
@@ -712,6 +713,32 @@ class HeadsUpTurn {
   int _cards[NUM_HEADS_UP_TURN_CARDS];
   bool _have_cards;
   struct outcomes _outcomes[2];
+  bool _evaluated;
+};
+
+class ThreeHanded {
+  public:
+
+  // default constructor
+  ThreeHanded();
+  // copy constructor
+  ThreeHanded(const ThreeHanded&);
+  // assignment operator
+  ThreeHanded& operator=(const ThreeHanded&);
+  // destructor
+  ~ThreeHanded();
+
+  ThreeHanded(int card1,int card2,int card3,int card4,int card5,int card6);
+  void NewCards(int card1,int card2,int card3,int card4,int card5,int card6);
+  struct outcomes * GetOutcomes();
+
+  void Evaluate();
+
+  private:
+
+  int _cards[NUM_THREE_HANDED_CARDS];
+  bool _have_cards;
+  struct outcomes _outcomes[3];
   bool _evaluated;
 };
 
