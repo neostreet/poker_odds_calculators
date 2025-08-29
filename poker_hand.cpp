@@ -2359,6 +2359,184 @@ void HeadsUpTurn::Evaluate(bool bVerbose)
   }
 }
 
+// default constructor
+
+ThreeHanded::ThreeHanded()
+{
+  _have_cards = false;
+  _evaluated = false;
+}
+
+// copy constructor
+
+ThreeHanded::ThreeHanded(const ThreeHanded& hu)
+{
+  int n;
+
+  for (n = 0; n < NUM_THREE_HANDED_CARDS; n++) {
+    _cards[n] = hu._cards[n];
+  }
+
+  _have_cards = hu._have_cards;
+  _evaluated = hu._evaluated;
+}
+
+// assignment operator
+
+ThreeHanded& ThreeHanded::operator=(const ThreeHanded& hu)
+{
+  int n;
+
+  for (n = 0; n < NUM_THREE_HANDED_CARDS; n++) {
+    _cards[n] = hu._cards[n];
+  }
+
+  _have_cards = hu._have_cards;
+  _evaluated = hu._evaluated;
+
+  return *this;
+}
+
+// destructor
+
+ThreeHanded::~ThreeHanded()
+{
+}
+
+ThreeHanded::ThreeHanded(int card1,int card2,int card3,int card4,int card5,int card6)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _cards[5] = card6 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+void ThreeHanded::NewCards(int card1,int card2,int card3,int card4,int card5,int card6)
+{
+  _cards[0] = card1 % NUM_CARDS_IN_DECK;
+  _cards[1] = card2 % NUM_CARDS_IN_DECK;
+  _cards[2] = card3 % NUM_CARDS_IN_DECK;
+  _cards[3] = card4 % NUM_CARDS_IN_DECK;
+  _cards[4] = card5 % NUM_CARDS_IN_DECK;
+  _cards[5] = card6 % NUM_CARDS_IN_DECK;
+
+  _have_cards = true;
+  _evaluated = false;
+}
+
+struct outcomes * ThreeHanded::GetOutcomes()
+{
+  return _outcomes;
+}
+
+void ThreeHanded::Evaluate()
+{
+  int m;
+  int n;
+  int o;
+  int p;
+  int q;
+  int r;
+  int num_remaining_cards;
+  int remaining_cards[NUM_REMAINING_THREE_HANDED_CARDS];
+  HoldemPokerHand holdem_hand[3];
+  PokerHand hand[3];
+  int ret_compare[3];
+
+  num_remaining_cards = NUM_REMAINING_THREE_HANDED_CARDS;
+
+  m = 0;
+
+  for (n = 0; n < NUM_CARDS_IN_DECK; n++) {
+    for (o = 0; o < NUM_THREE_HANDED_CARDS; o++) {
+      if (n == _cards[o])
+        break;
+    }
+
+    if (o == NUM_THREE_HANDED_CARDS)
+      remaining_cards[m++] = n;
+  }
+
+  for (n = 0; n < 3; n++) {
+    _outcomes[n].wins = 0;
+    _outcomes[n].losses = 0;
+    _outcomes[n].ties = 0;
+  }
+
+  for (r = 0; ; ) {
+    get_permutation_instance_five(num_remaining_cards,&m,&n,&o,&p,&q,r);
+
+    holdem_hand[0].NewCards(_cards[0],_cards[1],
+      remaining_cards[m],remaining_cards[n],
+      remaining_cards[o],remaining_cards[p],
+      remaining_cards[q]);
+
+    holdem_hand[1].NewCards(_cards[2],_cards[3],
+      remaining_cards[m],remaining_cards[n],
+      remaining_cards[o],remaining_cards[p],
+      remaining_cards[q]);
+
+    holdem_hand[2].NewCards(_cards[4],_cards[5],
+      remaining_cards[m],remaining_cards[n],
+      remaining_cards[o],remaining_cards[p],
+      remaining_cards[q]);
+
+    hand[0] = holdem_hand[0].BestPokerHand();
+    hand[1] = holdem_hand[1].BestPokerHand();
+    hand[2] = holdem_hand[2].BestPokerHand();
+
+    ret_compare[0] = hand[0].Compare(hand[1],0);
+    ret_compare[1] = hand[0].Compare(hand[2],0);
+    ret_compare[2] = hand[1].Compare(hand[2],0);
+
+    if ((ret_compare[0] == 1) && (ret_compare[1] == 1)) {
+      _outcomes[0].wins++;
+      _outcomes[1].losses++;
+      _outcomes[2].losses++;
+    }
+    else if ((ret_compare[0] == -1) && (ret_compare[2] == 1)) {
+      _outcomes[0].losses++;
+      _outcomes[1].wins++;
+      _outcomes[2].losses++;
+    }
+    else if ((ret_compare[1] == -1) && (ret_compare[2] == -1)) {
+      _outcomes[0].losses++;
+      _outcomes[1].losses++;
+      _outcomes[2].wins++;
+    }
+    else if (!ret_compare[0] && !ret_compare[1] && !ret_compare[2]) {
+      _outcomes[0].ties++;
+      _outcomes[1].ties++;
+      _outcomes[2].ties++;
+    }
+    else if (!ret_compare[0]) {
+      _outcomes[0].ties++;
+      _outcomes[1].ties++;
+      _outcomes[2].losses++;
+    }
+    else if (!ret_compare[1]) {
+      _outcomes[0].ties++;
+      _outcomes[1].losses++;
+      _outcomes[2].ties++;
+    }
+    else  {
+      _outcomes[0].losses++;
+      _outcomes[1].ties++;
+      _outcomes[2].ties++;
+    }
+
+    r++;
+
+    if (m == num_remaining_cards - 5)
+      break;
+  }
+}
+
 void get_permutation_instance_two(
   int set_size,
   int *m,int *n,
